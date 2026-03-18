@@ -86,7 +86,7 @@ class PosterGenerator @Inject constructor() {
         // 添加手绘边框
         val borderPaint = Paint().apply {
             color = style.borderColor
-            style = Paint.Style.STROKE
+            this.style = Paint.Style.STROKE
             strokeWidth = style.borderWidth
             isAntiAlias = true
             pathEffect = DashPathEffect(floatArrayOf(30f, 15f), 0f)

@@ -135,12 +135,12 @@ class TrailAnimator @Inject constructor() {
     /**
      * 获取插值器
      */
-    private fun getInterpolator(easeType: Easing): Interpolator {
+    private fun getInterpolator(easeType: Easing): android.view.animation.Interpolator {
         return when (easeType) {
-            Easing.LINEAR -> LinearInterpolator()
-            Easing.EASE_IN_OUT_QUAD -> AccelerateDecelerateInterpolator()
-            Easing.EASE_OUT_BOUNCE -> BounceInterpolator()
-            Easing.EASE_IN_ELASTIC -> AnticipateInterpolator()
+            Easing.LINEAR -> android.view.animation.LinearInterpolator()
+            Easing.EASE_IN_OUT_QUAD -> android.view.animation.AccelerateDecelerateInterpolator()
+            Easing.EASE_OUT_BOUNCE -> android.view.animation.BounceInterpolator()
+            Easing.EASE_IN_ELASTIC -> android.view.animation.AnticipateInterpolator()
         }
     }
 

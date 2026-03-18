@@ -1,11 +1,14 @@
 // app/src/main/java/com/example/travel_footprint_android/domain/service/ExportService.kt
 package com.example.travel_footprint_android.domain.service
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.core.content.FileProvider
 import com.example.travel_footprint_android.data.repository.JourneyRepository
 import com.example.travel_footprint_android.data.repository.FootprintRepository
+import kotlinx.coroutines.flow.first
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -34,10 +37,10 @@ class ExportService @Inject constructor(
         resolution: String = "medium"
     ): Bitmap? {
         // 获取旅程数据
-        val journey = journeyRepository.getJourneyById(journeyId).value ?: return null
+        val journey = journeyRepository.getJourneyById(journeyId).first() ?: return null
 
         // 获取足迹数据
-        val footprints = footprintRepository.getFootprintsForMap(journeyId).value
+        val footprints = footprintRepository.getFootprintsForMap(journeyId).first()
 
         // 生成地图截图
         val mapBitmap = mapRenderService.captureForExport(false) ?: return null
@@ -83,8 +86,8 @@ class ExportService @Inject constructor(
         ZipOutputStream(FileOutputStream(backupFile)).use { zipOut ->
 
             // 1. 导出旅程数据为JSON
-            val journey = journeyRepository.getJourneyById(journeyId).value
-            val footprints = footprintRepository.getFootprintsForMap(journeyId).value
+            val journey = journeyRepository.getJourneyById(journeyId).first()
+            val footprints = footprintRepository.getFootprintsForMap(journeyId).first()
 
             val metadata = mapOf(
                 "journey" to journey,
@@ -135,16 +138,16 @@ class ExportService @Inject constructor(
     /**
      * 分享图片
      */
-    fun shareImage(bitmap: Bitmap, title: String): Uri? {
+    fun shareImage(bitmap: Bitmap, title: String, context: Context): Uri? {
         val fileName = "share_${System.currentTimeMillis()}.jpg"
         val file = File(localFileManager.getCacheDirectory(), fileName)
 
-        return if (FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        return if (FileOutputStream(file).use {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it)
             }) {
-            androidx.core.content.FileProvider.getUriForFile(
-                localFileManager.getAppDirectory().context,
-                "${localFileManager.getAppDirectory().context.packageName}.fileprovider",
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
                 file
             )
         } else {

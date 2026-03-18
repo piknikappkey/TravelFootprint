@@ -4,7 +4,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp") version "1.9.20-1.0.14"  // 添加版本号
-    id("kotlin-kapt")
 }
 
 android {
@@ -51,10 +50,6 @@ android {
     }
 }
 
-// kapt 配置放在 android 块外面
-kapt {
-    correctErrorTypes = true
-}
 
 // ksp 配置
 ksp {
@@ -77,7 +72,7 @@ dependencies {
 
     // ================== Hilt ==================
     implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
+    ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     // ================== Room ==================

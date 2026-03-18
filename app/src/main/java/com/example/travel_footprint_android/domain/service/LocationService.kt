@@ -3,9 +3,11 @@ package com.example.travel_footprint_android.domain.service
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.example.travel_footprint_android.utils.LocationUtils
@@ -92,8 +94,8 @@ class LocationService @Inject constructor(
      */
     fun hasLocationPermission(): Boolean {
         return android.Manifest.permission.ACCESS_FINE_LOCATION.let { permission ->
-            android.content.pm.PackageManager.PERMISSION_GRANTED ==
-                    android.content.ContextCompat.checkSelfPermission(context, permission)
+            PackageManager.PERMISSION_GRANTED ==
+                    ContextCompat.checkSelfPermission(context, permission)
         }
     }
 }

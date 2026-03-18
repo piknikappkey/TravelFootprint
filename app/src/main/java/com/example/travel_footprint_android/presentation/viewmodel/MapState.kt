@@ -24,14 +24,6 @@ data class CameraPosition(
     val bearing: Float = 0f
 )
 
-data class JourneyListState(
-    val isLoading: Boolean = false,
-    val journeys: List<Journey> = emptyList(),
-    val searchQuery: String = "",
-    val selectedJourney: Journey? = null,
-    val error: String? = null
-)
-
 data class GalleryState(
     val isLoading: Boolean = false,
     val photos: List<MediaItem> = emptyList(),

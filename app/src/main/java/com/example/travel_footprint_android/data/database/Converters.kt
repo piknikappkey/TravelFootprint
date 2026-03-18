@@ -8,6 +8,10 @@ import java.util.Date
 
 class Converters {
 
+    companion object {
+        val gson = Gson()
+    }
+
     // Date 转换
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {
@@ -22,13 +26,13 @@ class Converters {
     // List<String> 转换（用于 journeyImagePaths）
     @TypeConverter
     fun fromStringList(value: List<String>?): String? {
-        return Gson().toJson(value)
+        return gson.toJson(value)
     }
 
     @TypeConverter
     fun toStringList(value: String?): List<String>? {
-        if (value == null) return emptyList()
+        if (value == null) return null
         val type = object : TypeToken<List<String>>() {}.type
-        return Gson().fromJson(value, type)
+        return gson.fromJson(value, type)
     }
 }

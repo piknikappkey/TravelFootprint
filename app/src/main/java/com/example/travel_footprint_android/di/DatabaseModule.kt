@@ -5,7 +5,6 @@ import android.content.Context
 import androidx.room.Room
 import com.example.travel_footprint_android.data.dao.*
 import com.example.travel_footprint_android.data.database.AppDatabase
-import com.example.travel_footprint_android.data.database.Converters
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,9 +25,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "travel_journal.db"
-        )
-            .addTypeConverter(Converters())
-            .build()
+        ).build()
     }
 
     @Provides
