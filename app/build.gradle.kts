@@ -98,6 +98,9 @@ dependencies {
     // 定位服务需要
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
 
