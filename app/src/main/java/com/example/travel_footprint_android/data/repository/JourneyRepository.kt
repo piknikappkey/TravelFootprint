@@ -4,7 +4,10 @@ package com.example.travel_footprint_android.data.repository
 import com.example.travel_footprint_android.data.dao.JourneyDao
 import com.example.travel_footprint_android.data.dao.FootprintDao
 import com.example.travel_footprint_android.data.entity.Journey
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -40,18 +43,30 @@ class JourneyRepository @Inject constructor(
     }
 
     suspend fun updateJourneyCover(journeyId: Long, imagePath: String) {
-        val journey = journeyDao.getJourneyByIdSuspend(journeyId) ?: return // 如果找不到旅程就返回
-            val updated = journey.copy(coverImagePath = imagePath)
-            journeyDao.updateJourney(updated)
-
+        val journey = journeyDao.getJourneyByIdSuspend(journeyId) ?: return
+        val updated = journey.copy(coverImagePath = imagePath)
+        journeyDao.updateJourney(updated)
     }
 
     suspend fun deleteJourneyWithAllData(journeyId: Long) {
-        // 外键设置为 CASCADE，会自动删除关联的足迹和位置
         journeyDao.deleteJourneyById(journeyId)
     }
 
     suspend fun searchJourneys(keyword: String): List<Journey> {
         return journeyDao.searchJourneys(keyword)
+    }
+
+    suspend fun getFootprintCount(journeyId: Long): Int {
+        return withContext(Dispatchers.IO) {
+            footprintDao.getFootprintCountByJourney(journeyId)
+        }
+    }
+
+    suspend fun getFootprintCounts(): Map<Long, Int> {
+        return withContext(Dispatchers.IO) {
+            val result = footprintDao.getFootprintCountsByJourney()
+            android.util.Log.d("JourneyRepo", "getFootprintCounts result: $result")
+            result.associate { it.journeyId to it.count }
+        }
     }
 }

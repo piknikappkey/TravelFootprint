@@ -9,6 +9,10 @@ import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.travel_footprint_android.data.entity.*
 import com.example.travel_footprint_android.data.dao.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.Date
 
 @Database(
     entities = [
@@ -46,6 +50,23 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             // 数据库创建时的初始化操作
+                            // 插入测试数据
+                            INSTANCE?.let { database ->
+                                // 使用协程在后台线程执行
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    database.journeyDao().insertJourney(
+                                        Journey(
+                                            title = "北京之旅",
+                                            description = "第一次北京旅行",
+                                            startDate = Date(),
+                                            endDate = Date(),
+                                            coverStyle = "watercolor",
+                                            coverImagePath = "",
+                                            journeyImagePaths = emptyList()
+                                        )
+                                    )
+                                }
+                            }
                         }
                     })
                     .build()

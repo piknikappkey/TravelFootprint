@@ -12,25 +12,31 @@ import java.util.Date
 
 @Dao
 interface FootprintDao {
-
+    //插入足迹
     @Insert
     suspend fun insertFootprint(footprint: Footprint): Long
 
+    //更新足迹
     @Update
     suspend fun updateFootprint(footprint: Footprint)
 
+    //删除足迹
     @Delete
     suspend fun deleteFootprint(footprint: Footprint)
 
+    //删除旅程足迹
     @Query("DELETE FROM footprints WHERE journeyId = :journeyId")
     suspend fun deleteFootprintsByJourney(journeyId: Long)
 
+    //查询旅程足迹
     @Query("SELECT * FROM footprints WHERE journeyId = :journeyId ORDER BY createTime")
     fun getFootprintsByJourney(journeyId: Long): Flow<List<Footprint>>
 
+    //查询足迹通过日期
     @Query("SELECT * FROM footprints WHERE createTime BETWEEN :start AND :end ORDER BY createTime")
     suspend fun getFootprintsByDateRange(start: Date, end: Date): List<Footprint>
 
+    //通过喜欢查询足迹
     @Query("SELECT * FROM footprints WHERE rating >= :minRating")
     suspend fun getFootprintsByRating(minRating: Int): List<Footprint>
 
@@ -48,6 +54,31 @@ interface FootprintDao {
     @Transaction
     @Query("SELECT * FROM footprints WHERE id = :footprintId")
     fun getFootprintWithTags(footprintId: Long): Flow<FootprintWithTags>
+
+
+    /**
+     * 获取单个旅程的足迹数量
+     */
+    @Query("SELECT COUNT(*) FROM footprints WHERE journeyId = :journeyId")
+    suspend fun getFootprintCountByJourney(journeyId: Long): Int
+
+    /**
+     * 获取所有旅程的足迹数量（批量查询）
+     */
+    @Query("""
+        SELECT journeyId, COUNT(*) as count 
+        FROM footprints 
+        GROUP BY journeyId
+    """)
+    suspend fun getFootprintCountsByJourney(): List<FootprintCount>
+
+    // 用于批量查询的结果类
+    data class FootprintCount(
+        val journeyId: Long,
+        val count: Int
+    )
+
+
 }
 
 data class FootprintWithMedia(
