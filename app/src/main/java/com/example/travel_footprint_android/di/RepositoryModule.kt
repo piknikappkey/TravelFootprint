@@ -1,7 +1,7 @@
 // app/src/main/java/com/example/travel_footprint_android/di/RepositoryModule.kt
 package com.example.travel_footprint_android.di
 
-import com.example.travel_footprint_android.data.dao.*  // 导入所有 DAO
+import com.example.travel_footprint_android.data.dao.*
 import com.example.travel_footprint_android.data.repository.*
 import com.example.travel_footprint_android.domain.service.FileStorageService
 import com.example.travel_footprint_android.domain.service.LocationService
@@ -19,7 +19,8 @@ object RepositoryModule {
     @Singleton
     fun provideJourneyRepository(
         journeyDao: JourneyDao,
-        footprintDao: FootprintDao
+        footprintDao: FootprintDao,
+        footprintRepository: FootprintRepository  // 改为注入 FootprintRepository
     ): JourneyRepository {
         return JourneyRepository(journeyDao, footprintDao)
     }

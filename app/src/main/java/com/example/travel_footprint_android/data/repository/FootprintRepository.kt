@@ -1,6 +1,7 @@
 // app/src/main/java/com/example/travel_footprint_android/data/repository/FootprintRepository.kt
 package com.example.travel_footprint_android.data.repository
 
+import android.util.Log
 import com.example.travel_footprint_android.data.dao.*
 import com.example.travel_footprint_android.data.entity.*
 import com.example.travel_footprint_android.domain.service.LocationService
@@ -107,4 +108,23 @@ class FootprintRepository @Inject constructor(
     suspend fun clearAllFootprints(journeyId: Long) {
         footprintDao.deleteFootprintsByJourney(journeyId)
     }
+
+    /**
+     * 获取单个旅程的足迹数量
+     */
+    suspend fun getFootprintCount(journeyId: Long): Int {
+        val count = footprintDao.getFootprintCountByJourney(journeyId)
+        Log.d("FootprintRepo", "getFootprintCount($journeyId) = $count")
+        return count
+    }
+
+    /**
+     * 获取所有旅程的足迹数量（批量）
+     */
+    suspend fun getFootprintCounts(): Map<Long, Int> {
+        val result = footprintDao.getFootprintCountsByJourney()
+        Log.d("FootprintRepo", "getFootprintCounts() = $result")
+        return result.associate { it.journeyId to it.count }
+    }
+
 }
