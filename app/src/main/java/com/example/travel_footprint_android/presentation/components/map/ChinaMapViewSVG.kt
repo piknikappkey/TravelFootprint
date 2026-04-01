@@ -68,6 +68,9 @@ fun ChinaMapViewSVG(
                     isVerticalScrollBarEnabled = false
                     isHorizontalScrollBarEnabled = false
 
+                    // 设置初始缩放比例为 150%（比原来大 0.5 倍）
+                    setInitialScale(150)
+
                     webChromeClient = WebChromeClient()
                     webViewClient = object : WebViewClient() {
                         override fun shouldInterceptRequest(
@@ -225,8 +228,8 @@ private fun WebView.loadMapWithInteractions() {
             """.trimIndent()
         )
 
-        // 添加额外的 CSS 来优化移动端体验和居中显示
-        val cssEnhancedSvg = enhancedSvg.replace(
+        // 添加额外的 CSS 来优化移动端体验
+        val finalSvg = enhancedSvg.replace(
             "</style>",
             """
                 .city { 
@@ -239,41 +242,6 @@ private fun WebView.loadMapWithInteractions() {
                 </style>
             """.trimIndent()
         )
-
-        // 包装 SVG 到居中容器，并设置缩放为 1.5 倍
-        val finalSvg = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        display: flex;
-                        justify-content: center;
-                        align-items: flex-start;
-                        min-height: 100vh;
-                        background-color: transparent;
-                        overflow: hidden;
-                        padding-top: 15vh;
-                    }
-                    #map-container {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        transform: scale(1.5);
-                        transform-origin: center top;
-                    }
-                </style>
-            </head>
-            <body>
-                <div id="map-container">
-                    ${cssEnhancedSvg.replace("<svg", "<svg style=\"max-width: 100%; height: auto;\"")}
-                </div>
-            </body>
-            </html>
-        """.trimIndent()
 
         loadDataWithBaseURL(
             null,
