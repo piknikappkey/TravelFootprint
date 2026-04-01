@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/travel_footprint_android/MainActivity.kt
 package com.example.travel_footprint_android
 
 import android.os.Bundle

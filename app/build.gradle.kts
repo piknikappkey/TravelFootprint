@@ -87,6 +87,9 @@ dependencies {
     // ================== 协程 ==================
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // ================== 序列化 ==================
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
     // ================== 测试 ==================
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -98,6 +101,9 @@ dependencies {
 
     // 定位服务需要
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.6")
 
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
