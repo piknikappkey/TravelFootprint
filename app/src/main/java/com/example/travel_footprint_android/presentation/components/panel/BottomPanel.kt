@@ -215,7 +215,7 @@ private val EXPANDED_HEIGHT = 450.dp
 /**
  * 编辑模式高度
  */
-private val EDIT_MODE_HEIGHT = 450.dp
+private val EDIT_MODE_HEIGHT = 500.dp
 
 /**
  * 动画时长（毫秒）
