@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import com.example.travel_footprint_android.presentation.screen.FootprintScreen
 import com.example.travel_footprint_android.presentation.screen.LightenScreen
 
@@ -27,10 +28,22 @@ fun MainNavigation(
             startDestination = Screen.Lighten.route,
             modifier = Modifier.padding(paddingValues)
         ) {
-            composable(Screen.Lighten.route) {
+            composable(
+                route = Screen.Lighten.route,
+                enterTransition = { null },
+                exitTransition = { null },
+                popEnterTransition = { null },
+                popExitTransition = { null }
+            ) {
                 LightenScreen()
             }
-            composable(Screen.Footprint.route) {
+            composable(
+                route = Screen.Footprint.route,
+                enterTransition = { null },
+                exitTransition = { null },
+                popEnterTransition = { null },
+                popExitTransition = { null }
+            ) {
                 FootprintScreen()
             }
         }

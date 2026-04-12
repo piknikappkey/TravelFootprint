@@ -73,6 +73,8 @@ dependencies {
     // ================== Hilt ==================
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("androidx.compose.foundation:foundation")
+    implementation(libs.androidx.ui)
+    implementation(libs.play.services.maps)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
@@ -136,5 +138,20 @@ dependencies {
 
     // Material Icons 扩展（包含更多图标）- 使用 BOM 管理版本
     implementation("androidx.compose.material:material-icons-extended")
+
+    // 高德地图 SDK
+    implementation("com.amap.api:3dmap:10.0.600")
+//    // 3D地图
+//    implementation("com.amap.api:3dmap:9.7.0"){
+//        // 排除 location 相关重复类
+//        exclude(group = "com.amap.api", module = "location")
+//    }
+//    // 定位
+//    implementation("com.amap.api:location:6.4.3")
+//    // 搜索
+//    implementation("com.amap.api:search:9.7.0")
+
+    // 权限库（用于运行时权限申请）
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
 }

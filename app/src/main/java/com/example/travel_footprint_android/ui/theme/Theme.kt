@@ -24,6 +24,8 @@ private val LightColorScheme = lightColorScheme(
     tertiary = Pink40
 
     /* 其他默认颜色 */
+    // 字体颜色--白--浅白--灰--深--黑
+
 )
 
 @Composable

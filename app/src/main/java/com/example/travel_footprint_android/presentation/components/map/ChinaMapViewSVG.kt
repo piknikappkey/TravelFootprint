@@ -68,9 +68,6 @@ fun ChinaMapViewSVG(
                     isVerticalScrollBarEnabled = false
                     isHorizontalScrollBarEnabled = false
 
-                    // 设置初始缩放比例为 150%（比原来大 0.5 倍）
-                    setInitialScale(150)
-
                     webChromeClient = WebChromeClient()
                     webViewClient = object : WebViewClient() {
                         override fun shouldInterceptRequest(
@@ -228,24 +225,61 @@ private fun WebView.loadMapWithInteractions() {
             """.trimIndent()
         )
 
-        // 添加额外的 CSS 来优化移动端体验
-        val finalSvg = enhancedSvg.replace(
-            "</style>",
-            """
-                .city { 
-                    touch-action: manipulation;
-                    -webkit-tap-highlight-color: transparent;
-                }
-                .city:active {
-                    fill: #E8E0D0 !important;
-                }
+        // 创建 HTML 包装器，实现水平居中
+        val htmlWrapper = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        display: flex;
+                        justify-content: center;
+                        align-items: flex-start;
+                        min-height: 100vh;
+                        background: transparent;
+                        overflow: auto;
+                    }
+                    #map-container {
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                    }
+                    svg {
+                        max-width: 100%;
+                        height: auto;
+                        display: block;
+                    }
+                    .city { 
+                        touch-action: manipulation;
+                        -webkit-tap-highlight-color: transparent;
+                    }
+                    .city:active {
+                        fill: #E8E0D0 !important;
+                    }
                 </style>
-            """.trimIndent()
-        )
+            </head>
+            <body>
+                <div id="map-container">
+                    ${enhancedSvg.replace(Regex("(?i)<!DOCTYPE[^>]*>"), "")
+                        .replace(Regex("(?i)<html[^>]*>"), "")
+                        .replace(Regex("(?i)</html>"), "")
+                        .replace(Regex("(?i)<head[^>]*>.*?</head>", RegexOption.DOT_MATCHES_ALL), "")
+                        .replace(Regex("(?i)<body[^>]*>"), "")
+                        .replace(Regex("(?i)</body>"), "")}
+                </div>
+            </body>
+            </html>
+        """.trimIndent()
 
         loadDataWithBaseURL(
             null,
-            finalSvg,
+            htmlWrapper,
             "text/html",
             "UTF-8",
             null
