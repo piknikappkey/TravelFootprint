@@ -127,4 +127,25 @@ class FootprintRepository @Inject constructor(
         return result.associate { it.journeyId to it.count }
     }
 
+
+    // 在 FootprintRepository.kt 中添加
+    suspend fun updateFootprint(footprint: Footprint) {
+        footprintDao.updateFootprint(footprint)
+    }
+
+    // FootprintRepository.kt
+    suspend fun deleteFootprint(footprintId: Long) {
+        // 直接按ID删除
+        footprintDao.deleteFootprintById(footprintId)
+    }
+
+    suspend fun deleteFootprint(footprint: Footprint) {
+        // 按对象删除，内部调用ID版本
+        footprintDao.deleteFootprintById(footprint.id)
+    }
+
+    suspend fun getTagsByFootprint(footprintId: Long): List<Tag> {
+        return tagDao.getTagsByFootprint(footprintId)
+    }
+
 }

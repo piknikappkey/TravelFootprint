@@ -1,13 +1,14 @@
 // app/src/main/java/com/example/travel_footprint_android/domain/service/FileStorageService.kt
 package com.example.travel_footprint_android.domain.service
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
-import com.example.travel_footprint_android.utils.BitmapUtils
-import com.example.travel_footprint_android.utils.Constants
 import com.example.travel_footprint_android.utils.FileUtils
 import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,26 +17,33 @@ class FileStorageService @Inject constructor(
     private val context: Context
 ) {
 
+    private val contentResolver: ContentResolver = context.contentResolver
+
     /**
      * 复制 Uri 到本地存储
      */
-    fun copyUriToLocalStorage(uri: Uri, subFolder: String = ""): String {
-        val fileName = FileUtils.createUniqueFileName("photo", "jpg")
-        val folder = if (subFolder.isNotEmpty()) {
-            File(FileUtils.getPhotosDir(context), subFolder)
-        } else {
-            FileUtils.getPhotosDir(context)
-        }
+    fun copyUriToLocalStorage(uri: Uri, subFolder: String): String {
+        return try {
+            // 创建目标目录
+            val photosDir = File(context.filesDir, subFolder)
+            if (!photosDir.exists()) {
+                photosDir.mkdirs()
+            }
 
-        if (!folder.exists()) {
-            folder.mkdirs()
-        }
+            // 生成唯一文件名
+            val fileName = "photo_${System.currentTimeMillis()}.jpg"
+            val destFile = File(photosDir, fileName)
 
-        val destFile = File(folder, fileName)
+            // 复制文件
+            contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
 
-        return if (FileUtils.copyUriToFile(context, uri, destFile)) {
             destFile.absolutePath
-        } else {
+        } catch (e: Exception) {
+            e.printStackTrace()
             ""
         }
     }
@@ -44,19 +52,45 @@ class FileStorageService @Inject constructor(
      * 生成缩略图
      */
     fun generateThumbnail(imagePath: String): String {
-        val thumbDir = FileUtils.getThumbnailsDir(context)
-        val fileName = File(imagePath).nameWithoutExtension + "_thumb.jpg"
-        val thumbFile = File(thumbDir, fileName)
+        return try {
+            val file = File(imagePath)
+            if (!file.exists()) {
+                return ""
+            }
 
-        return if (BitmapUtils.saveThumbnail(
-                imagePath,
-                thumbFile.absolutePath,
-                Constants.THUMBNAIL_WIDTH,
-                Constants.THUMBNAIL_HEIGHT
-            )
-        ) {
+            // 创建缩略图目录
+            val thumbDir = File(context.cacheDir, "thumbnails")
+            if (!thumbDir.exists()) {
+                thumbDir.mkdirs()
+            }
+
+            // 生成缩略图文件名
+            val thumbName = "thumb_${file.nameWithoutExtension}.jpg"
+            val thumbFile = File(thumbDir, thumbName)
+
+            // 解码图片并缩放
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(imagePath, options)
+
+            // 计算缩放比例（缩略图最大 300px）
+            val scale = maxOf(options.outWidth, options.outHeight) / 300
+            val sampleSize = if (scale > 1) scale else 1
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            val bitmap = BitmapFactory.decodeFile(imagePath, decodeOptions)
+
+            // 保存缩略图
+            FileOutputStream(thumbFile).use { out ->
+                bitmap?.compress(Bitmap.CompressFormat.JPEG, 80, out)
+            }
+
             thumbFile.absolutePath
-        } else {
+        } catch (e: Exception) {
+            e.printStackTrace()
             ""
         }
     }
@@ -65,7 +99,17 @@ class FileStorageService @Inject constructor(
      * 删除本地文件
      */
     fun deleteLocalFile(path: String): Boolean {
-        return FileUtils.deleteFile(path)
+        return try {
+            val file = File(path)
+            if (file.exists()) {
+                file.delete()
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     /**
@@ -77,34 +121,5 @@ class FileStorageService @Inject constructor(
         } catch (e: Exception) {
             0L
         }
-    }
-
-    /**
-     * 获取文件的可读大小
-     */
-    fun getReadableFileSize(path: String): String {
-        val size = getFileSize(path)
-        return FileUtils.getReadableFileSize(size)
-    }
-
-    /**
-     * 保存位图到文件
-     */
-    fun saveBitmapToFile(bitmap: Bitmap, prefix: String = "image"): String {
-        val fileName = FileUtils.createUniqueFileName(prefix, "jpg")
-        val file = File(FileUtils.getExportsDir(context), fileName)
-
-        return if (FileUtils.saveBitmapToFile(bitmap, file)) {
-            file.absolutePath
-        } else {
-            ""
-        }
-    }
-
-    /**
-     * 检查文件是否存在
-     */
-    fun fileExists(path: String): Boolean {
-        return File(path).exists()
     }
 }

@@ -3,7 +3,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp") version "1.9.20-1.0.14"  // 添加版本号
+    id("com.google.devtools.ksp") version "1.9.24-1.0.20"
 }
 
 android {
@@ -34,6 +34,7 @@ android {
         compileOptions {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
+            isCoreLibraryDesugaringEnabled = true
         }
 
         kotlinOptions {
@@ -46,10 +47,9 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 }
-
 
 // ksp 配置
 ksp {
@@ -73,6 +73,7 @@ dependencies {
     // ================== Hilt ==================
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("androidx.compose.foundation:foundation")
+    // ❌ 删除这行: implementation(libs.androidx.compose.remote.creation.core)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
@@ -101,6 +102,9 @@ dependencies {
 
     // 定位服务需要
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // 核心库去糖化（支持Java 8+特性在旧设备上运行）
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.6")
@@ -136,5 +140,11 @@ dependencies {
 
     // Material Icons 扩展（包含更多图标）- 使用 BOM 管理版本
     implementation("androidx.compose.material:material-icons-extended")
+
+    // 图片加载库（用于显示）
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // 权限请求库（可选，简化权限处理）
+    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
 
 }

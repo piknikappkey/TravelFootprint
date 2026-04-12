@@ -1,3 +1,4 @@
+// app/src/main/java/com/example/travel_footprint_android/presentation/navigation/BottomNavigationBar.kt
 package com.example.travel_footprint_android.presentation.navigation
 
 import androidx.compose.material.icons.Icons
@@ -23,20 +24,20 @@ data class BottomNavItem(
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         BottomNavItem(
-            title = "点亮",
+            title = "旅程",
             icon = Icons.Default.Favorite,
-            route = Screen.Lighten.route
+            route = Screen.Journey.route
         ),
         BottomNavItem(
-            title = "足迹",
+            title = "地图",
             icon = Icons.Default.LocationOn,
-            route = Screen.Footprint.route
+            route = "map"
         )
     )
 
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+        val currentRoute = navBackStackEntry?.destination?.route?.substringBefore("/") ?: ""
 
         items.forEach { item ->
             NavigationBarItem(
@@ -45,12 +46,22 @@ fun BottomNavigationBar(navController: NavController) {
                 selected = currentRoute == item.route,
                 onClick = {
                     if (currentRoute != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                        if (item.route == "map") {
+                            navController.navigate(Screen.Journey.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        } else {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 }
