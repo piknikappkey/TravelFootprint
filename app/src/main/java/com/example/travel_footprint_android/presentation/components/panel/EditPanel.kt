@@ -27,14 +27,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.travel_footprint_android.data.repository.GeoDataRepository
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -58,10 +61,26 @@ fun EditPanel(
     onSaveClick: (Set<String>, LocalDate) -> Unit,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val geoDataRepository = remember { GeoDataRepository(context) }
+
     // 内部编辑状态
     var currentSelectedCities by remember { mutableStateOf(selectedCities) }
     var currentLightedTime by remember { mutableStateOf(lightedTime) }
     var showDatePicker by remember { mutableStateOf(false) }
+
+    // 地理数据
+    var provinces by remember { mutableStateOf<List<ProvinceInfo>>(emptyList()) }
+    var citiesByProvince by remember { mutableStateOf<Map<String, List<CityItemInfo>>>(emptyMap()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // 加载地理数据
+    LaunchedEffect(Unit) {
+        val (loadedProvinces, loadedCities) = geoDataRepository.loadAllGeoData()
+        provinces = loadedProvinces
+        citiesByProvince = loadedCities
+        isLoading = false
+    }
 
     Column(
         modifier = Modifier
@@ -79,13 +98,35 @@ fun EditPanel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 省份-城市选择器（占位，后续实现）
-        ProvinceCitySelectorPlaceholder(
-            selectedCities = currentSelectedCities,
-            onCitiesChange = { cities ->
-                currentSelectedCities = cities
+        // 省份-城市选择器
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "加载中...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        )
+        } else {
+            CitySelector(
+                modifier = Modifier.fillMaxWidth(),
+                selectedCities = currentSelectedCities,
+                provinces = provinces,
+                citiesByProvince = citiesByProvince,
+                onCityToggle = { cityAdcode ->
+                    currentSelectedCities = if (currentSelectedCities.contains(cityAdcode)) {
+                        currentSelectedCities - cityAdcode
+                    } else {
+                        currentSelectedCities + cityAdcode
+                    }
+                }
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -155,58 +196,6 @@ private fun PanelHeader(
                 contentDescription = "保存",
                 tint = MaterialTheme.colorScheme.primary
             )
-        }
-    }
-}
-
-/**
- * 省份-城市选择器占位组件
- *
- * 后续会替换为完整的选择器实现
- *
- * @param selectedCities 已选择的城市代码集合
- * @param onCitiesChange 城市选择变化回调
- */
-@Composable
-private fun ProvinceCitySelectorPlaceholder(
-    selectedCities: Set<String>,
-    onCitiesChange: (Set<String>) -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "省份-城市选择器",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "已选择 ${selectedCities.size} 个城市",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 模拟添加城市按钮
-            OutlinedButton(
-                onClick = {
-                    // 模拟添加城市
-                    val newCity = "city_${System.currentTimeMillis()}"
-                    onCitiesChange(selectedCities + newCity)
-                }
-            ) {
-                Text("模拟添加城市")
-            }
         }
     }
 }
