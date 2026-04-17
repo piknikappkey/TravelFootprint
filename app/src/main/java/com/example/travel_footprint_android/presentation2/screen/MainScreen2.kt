@@ -17,9 +17,8 @@ import com.example.travel_footprint_android.presentation2.viewmodel.NavControlle
 @Composable
 fun MainScreen2() {
     /**
-     * 导航控制器
+     * 导航控制器：CustomNavController（单例模式）
      */
-    val navController = remember { CustomNavController() }
 
     /**
      * UI设计
@@ -34,12 +33,12 @@ fun MainScreen2() {
             /**
              * 页面内容
              */
-            CustomNavHost2(navController, modifier = Modifier.weight(1f))
+            CustomNavHost2(modifier = Modifier.weight(1f))
 
             /**
              * 导航内容
              */
-            Navigation2(navController, modifier = Modifier.wrapContentHeight())
+            Navigation2(modifier = Modifier.wrapContentHeight())
         }
     }
 }

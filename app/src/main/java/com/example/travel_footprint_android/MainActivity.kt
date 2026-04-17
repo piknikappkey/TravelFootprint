@@ -23,15 +23,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TravelFootprintTheme {
-                MainScreen2()
+            MainScreen2()
+
+//            TravelFootprintTheme {
 //                Surface(
 //                    modifier = Modifier.fillMaxSize(),
 //                    color = MaterialTheme.colorScheme.background
 //                ) {
 //                    MainNavigation()
 //                }
-            }
+//            }
         }
     }
 }

@@ -75,6 +75,8 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation(libs.androidx.ui)
     implementation(libs.play.services.maps)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.material3)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 

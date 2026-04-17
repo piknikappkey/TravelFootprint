@@ -9,12 +9,11 @@ import com.example.travel_footprint_android.presentation2.viewmodel.NavControlle
 
 @Composable
 fun CustomNavHost2(
-    navController: CustomNavController,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
         // 根据当前目的地显示不同的屏幕
-        when (navController.currentDestination.value) {
+        when (CustomNavController.currentDestination.value) {
             NavPathObj2.lighten -> LightenScreen2()
             NavPathObj2.journey -> JourneyScreen2()
         }
