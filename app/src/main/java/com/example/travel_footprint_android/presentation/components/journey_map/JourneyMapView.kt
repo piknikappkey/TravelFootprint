@@ -1,7 +1,11 @@
 package com.example.travel_footprint_android.presentation.components.journey_map
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 /**
  * 高德地图组件
@@ -10,10 +14,13 @@ import androidx.compose.runtime.Composable
  */
 @Composable
 fun JourneyMapView() {
-    Box() {
+    Box(modifier = Modifier.fillMaxSize()) {
+
         /**
          * 显示高德地图（大小覆盖整个页面）
          */
+        JourneyMapScreen()
+
 
         /**
          * 新建旅程按钮

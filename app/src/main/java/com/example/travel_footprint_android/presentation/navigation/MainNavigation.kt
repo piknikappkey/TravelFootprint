@@ -9,6 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
+import com.example.travel_footprint_android.presentation.screen.FootprintScreen
+import com.example.travel_footprint_android.presentation.screen.LightenScreen
 import com.example.travel_footprint_android.presentation.screen.JourneyListScreen
 import com.example.travel_footprint_android.presentation.screen.MapScreen
 
@@ -27,6 +30,23 @@ fun MainNavigation(
             startDestination = Screen.Journey.route,
             modifier = Modifier.padding(paddingValues)
         ) {
+            composable(
+                route = Screen.Lighten.route,
+                enterTransition = { null },
+                exitTransition = { null },
+                popEnterTransition = { null },
+                popExitTransition = { null }
+            ) {
+                LightenScreen()
+            }
+            composable(
+                route = Screen.Footprint.route,
+                enterTransition = { null },
+                exitTransition = { null },
+                popEnterTransition = { null },
+                popExitTransition = { null }
+            ) {
+                FootprintScreen()
             composable(Screen.Journey.route) {
                 JourneyListScreen(
                     onNavigateToMap = { journeyId ->

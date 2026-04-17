@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.travel_footprint_android.presentation.navigation.MainNavigation
+import com.example.travel_footprint_android.presentation2.screen.MainScreen2
 import com.example.travel_footprint_android.ui.theme.TravelFootprintTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,14 +23,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TravelFootprintTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainNavigation()
-                }
-            }
+            MainScreen2()
+
+//            TravelFootprintTheme {
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.background
+//                ) {
+//                    MainNavigation()
+//                }
+//            }
         }
     }
 }

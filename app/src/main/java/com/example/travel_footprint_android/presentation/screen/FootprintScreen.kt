@@ -13,7 +13,7 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 fun FootprintScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopStart
     ) {
         /**
          * 高德地图组件
