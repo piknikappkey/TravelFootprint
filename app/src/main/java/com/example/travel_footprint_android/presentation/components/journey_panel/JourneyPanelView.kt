@@ -17,6 +17,7 @@ fun JourneyPanelView() {
 
     /**
      * 显示旅程状态
+     * 要求阅读"C:\Users\28037\AndroidStudioProjects\travel-footprint-map-android\文档\05_原型设计\足迹页面（显示旅程）.png"
      * 要依次显示：
      * 旅程标题
      * 一个修改按钮（位于旅程标题同一行的最右边，点击后页面进入编辑旅程状态）

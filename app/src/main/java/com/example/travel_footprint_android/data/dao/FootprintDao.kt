@@ -20,9 +20,13 @@ interface FootprintDao {
     @Update
     suspend fun updateFootprint(footprint: Footprint)
 
-    //删除足迹
+    // 方式1：按对象删除
     @Delete
     suspend fun deleteFootprint(footprint: Footprint)
+
+    // 方式2：按ID删除（推荐）
+    @Query("DELETE FROM footprints WHERE id = :footprintId")
+    suspend fun deleteFootprintById(footprintId: Long)
 
     //删除旅程足迹
     @Query("DELETE FROM footprints WHERE journeyId = :journeyId")

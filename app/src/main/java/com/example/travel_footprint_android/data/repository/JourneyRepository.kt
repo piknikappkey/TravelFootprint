@@ -69,4 +69,9 @@ class JourneyRepository @Inject constructor(
             result.associate { it.journeyId to it.count }
         }
     }
+
+
+    suspend fun updateJourney(journey: Journey) {
+        journeyDao.updateJourney(journey)
+    }
 }

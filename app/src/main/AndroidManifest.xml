@@ -15,6 +15,30 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <!--精确定位-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- ==================== 相机权限 ==================== -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ==================== 存储权限 ==================== -->
+    <!-- Android 12 及以下 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Android 13+ 细分权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- ==================== 位置权限 ==================== -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ==================== 相机特性声明 ==================== -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
 
     <application
         android:name=".MyApplication"
@@ -32,6 +56,8 @@
         <meta-data
             android:name="com.amap.api.v2.apikey"
             android:value="83279a23557952f6b018e06064b2ed24"/>
+        android:requestLegacyExternalStorage="true"
+        tools:targetApi="31">
 
         <activity
             android:name=".MainActivity"
@@ -40,10 +66,11 @@
             android:theme="@style/Theme.Travelfootprintandroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- FileProvider 配置 -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -53,6 +80,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 
 </manifest>

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.presentation.components.map.CityInfo
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.remember
 
 /**
  * 只读面板组件
@@ -217,37 +222,34 @@ private fun CityTagsFlow(
     }
 }
 
-/**
- * 城市标签组件
- *
- * @param city 城市信息
- * @param onLocationClick 定位图标点击回调
- */
 @Composable
 private fun CityTag(
     city: CityInfo,
     onLocationClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .clickable(onClick = onLocationClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(),  // Material 3 的 ripple
+                onClick = onLocationClick
+            )
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        androidx.compose.foundation.layout.Row(
+        Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // 定位图标
             Icon(
                 imageVector = Icons.Default.LocationOn,
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
             )
-
-            // 城市名称
             Text(
                 text = city.name,
                 style = MaterialTheme.typography.bodyMedium,
@@ -258,7 +260,6 @@ private fun CityTag(
         }
     }
 }
-
 /**
  * 更多城市标签组件
  *
