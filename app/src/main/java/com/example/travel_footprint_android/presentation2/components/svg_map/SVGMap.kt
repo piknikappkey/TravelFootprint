@@ -87,8 +87,11 @@ fun InteractiveChinaMap(
                             method.isAccessible = true
                             val contentWidth = method.invoke(view) as Int
                             val scrollX = (contentWidth - view.width) / 2
-                            view.scrollTo(scrollX.coerceAtLeast(0), 0)
-                            Log.d("WebViewClient", "contentWidth = $contentWidth, view.width = ${view.width}, scrollX = $scrollX, scrollX.coerceAtLeast(0) = ${scrollX.coerceAtLeast(0)}")
+                            if(scrollX != 0) {
+                                view.scrollTo(scrollX.coerceAtLeast(0), 0)
+                            } else {
+                                view.scrollTo(340, 0)
+                            }
                         }
                     }
                 }
