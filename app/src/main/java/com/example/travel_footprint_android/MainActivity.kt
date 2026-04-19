@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.example.travel_footprint_android.presentation2.screen.MainScreen2
 //import com.example.travel_footprint_android.presentation.navigation.MainNavigation
 import com.example.travel_footprint_android.ui.theme.TravelFootprintTheme
 import com.example.travel_footprint_android.utils.DebugHelper
@@ -56,14 +57,15 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            TravelFootprintTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen(debugHelper)
-                }
-            }
+            MainScreen2()
+//            TravelFootprintTheme {
+//                Surface(
+//                    modifier = Modifier.fillMaxSize(),
+//                    color = MaterialTheme.colorScheme.background
+//                ) {
+//                    MainScreen(debugHelper)
+//                }
+//            }
         }
     }
 

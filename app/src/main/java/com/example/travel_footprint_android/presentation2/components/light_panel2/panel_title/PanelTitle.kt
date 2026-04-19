@@ -1,0 +1,109 @@
+package com.example.travel_footprint_android.presentation2.components.light_panel2.panel_title
+
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2State
+
+@Composable
+fun PanelTitle(
+    lightPanel2State: LightPanel2State,
+    lightCityList: MutableList<String>,
+    setLightPanel2State: (LightPanel2State) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 200,
+                    easing = FastOutSlowInEasing
+                )
+            )
+    ) {
+        if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY ||
+            lightPanel2State == LightPanel2State.ALL_DISPLAY) {
+            CityTitle(lightPanel2State, lightCityList, setLightPanel2State)
+        }
+        if(lightPanel2State == LightPanel2State.EDIT) CityEditTitle(setLightPanel2State)
+    }
+}
+
+@Composable
+fun CityTitle(
+    lightPanel2State: LightPanel2State,
+    lightCityList: MutableList<String>,
+    setLightPanel2State: (LightPanel2State) -> Unit
+) {
+    Row {
+        Text("已点亮城市")
+        Spacer(modifier = Modifier.weight(1f))
+        if(lightCityList.size > 10) {
+            if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY) {
+                // 拓展按钮
+                Text(
+                    text = "拓展",
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                setLightPanel2State(LightPanel2State.ALL_DISPLAY)
+                            }
+                        )
+                )
+            }
+            if(lightPanel2State == LightPanel2State.ALL_DISPLAY) {
+                // 收缩按钮
+                Text(
+                    text = "收缩",
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+                                setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
+                            }
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CityEditTitle(
+    setLightPanel2State: (LightPanel2State) -> Unit
+) {
+    Column {
+        Row {
+            // 取消按钮
+            Text(
+                text = "取消",
+                modifier = Modifier
+                    .clickable(
+                        onClick = {
+                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
+                        }
+                    )
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            // 保存按钮
+            Text(
+                text = "保存",
+                modifier = Modifier
+                    .clickable(
+                        onClick = {
+                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
+                        }
+                    )
+            )
+        }
+        Text("修改城市")
+    }
+}

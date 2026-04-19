@@ -1,5 +1,6 @@
-package com.example.travel_footprint_android.presentation2.components
+package com.example.travel_footprint_android.presentation2.components.svg_map
 
+import android.graphics.Color
 import android.util.Log
 import android.view.ViewTreeObserver
 import android.webkit.JavascriptInterface
@@ -68,6 +69,8 @@ fun InteractiveChinaMap(
                     allowContentAccess = true
                     javaScriptCanOpenWindowsAutomatically = true
                     isVerticalScrollBarEnabled = false   // 禁用垂直滚动条
+                    isHorizontalFadingEdgeEnabled = false
+                    setBackgroundColor(Color.TRANSPARENT)
                 }
 
                 // 添加 JavaScript 接口 - 注意：这里使用 "Android" 作为接口名称
@@ -75,6 +78,7 @@ fun InteractiveChinaMap(
                     CityClickInterface(onCityClick),
                     "Android" // 与 SVG 中的接口名称匹配
                 )
+
 
                 setInitialScale(220)
 
@@ -87,7 +91,11 @@ fun InteractiveChinaMap(
                             method.isAccessible = true
                             val contentWidth = method.invoke(view) as Int
                             val scrollX = (contentWidth - view.width) / 2
-                            view.scrollTo(scrollX.coerceAtLeast(0), 0)
+                            if(scrollX != 0) {
+                                view.scrollTo(scrollX.coerceAtLeast(0), 0)
+                            } else {
+                                view.scrollTo(340, 0)
+                            }
                             Log.d("WebViewClient", "contentWidth = $contentWidth, view.width = ${view.width}, scrollX = $scrollX, scrollX.coerceAtLeast(0) = ${scrollX.coerceAtLeast(0)}")
                         }
                     }
