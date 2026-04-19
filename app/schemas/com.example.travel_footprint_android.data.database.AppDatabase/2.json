@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "4b6082083ed315362ebc30d68038b2d8",
+    "identityHash": "ee8513e8e35c23af7f3cdc1e568e66c9",
     "entities": [
       {
         "tableName": "journeys",
@@ -347,50 +347,24 @@
         ]
       },
       {
-        "tableName": "provinces",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`adcode` TEXT NOT NULL, `name` TEXT NOT NULL, `level` TEXT NOT NULL, PRIMARY KEY(`adcode`))",
+        "tableName": "lighted_cities",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `cityAdcode` TEXT NOT NULL, `cityName` TEXT NOT NULL, `provinceAdcode` TEXT NOT NULL, `provinceName` TEXT NOT NULL, `lightedTime` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `remark` TEXT NOT NULL)",
         "fields": [
           {
-            "fieldPath": "adcode",
-            "columnName": "adcode",
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cityAdcode",
+            "columnName": "cityAdcode",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "level",
-            "columnName": "level",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "adcode"
-          ]
-        },
-        "indices": [],
-        "foreignKeys": []
-      },
-      {
-        "tableName": "cities",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`adcode` TEXT NOT NULL, `name` TEXT NOT NULL, `provinceAdcode` TEXT NOT NULL, `level` TEXT NOT NULL, PRIMARY KEY(`adcode`), FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "adcode",
-            "columnName": "adcode",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
+            "fieldPath": "cityName",
+            "columnName": "cityName",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -401,48 +375,50 @@
             "notNull": true
           },
           {
-            "fieldPath": "level",
-            "columnName": "level",
+            "fieldPath": "provinceName",
+            "columnName": "provinceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lightedTime",
+            "columnName": "lightedTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remark",
+            "columnName": "remark",
             "affinity": "TEXT",
             "notNull": true
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
-            "adcode"
+            "id"
           ]
         },
-        "indices": [
-          {
-            "name": "index_cities_provinceAdcode",
-            "unique": false,
-            "columnNames": [
-              "provinceAdcode"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_cities_provinceAdcode` ON `${TABLE_NAME}` (`provinceAdcode`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "provinces",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "provinceAdcode"
-            ],
-            "referencedColumns": [
-              "adcode"
-            ]
-          }
-        ]
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4b6082083ed315362ebc30d68038b2d8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ee8513e8e35c23af7f3cdc1e568e66c9')"
     ]
   }
 }

@@ -6,9 +6,11 @@ import android.net.Uri
 import android.util.Log
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.MediaAttachment
 import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.data.repository.JourneyRepository
+import com.example.travel_footprint_android.data.repository.LightedCityRepository
 import com.example.travel_footprint_android.data.repository.MediaRepository
 import com.example.travel_footprint_android.domain.service.LocationService
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,6 +33,7 @@ class AppService @Inject constructor(
     private val footprintRepository: FootprintRepository,
     private val mediaRepository: MediaRepository,
     private val locationService: LocationService,
+    private val lightedCityRepository: LightedCityRepository,
     @ApplicationContext private val context: Context  // 添加这一行
 ) {
 
@@ -388,6 +391,42 @@ class AppService @Inject constructor(
                 ""
             }
         }
+    }
+
+    // ==================== 点亮城市相关 ====================
+
+    suspend fun lightCity(
+        cityAdcode: String,
+        cityName: String,
+        provinceAdcode: String,
+        provinceName: String,
+        latitude: Double,
+        longitude: Double,
+        remark: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            lightedCityRepository.lightCity(
+                cityAdcode, cityName, provinceAdcode, provinceName,
+                latitude, longitude, remark
+            )
+        }
+    }
+
+    suspend fun unlightCity(cityAdcode: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.unlightCity(cityAdcode)
+        }
+    }
+
+    fun getAllLightedCities(): Flow<List<LightedCity>> =
+        lightedCityRepository.getAllLightedCities()
+
+    suspend fun getLightedCityCount(): Int = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedCityCount()
+    }
+
+    suspend fun isCityLighted(cityAdcode: String): Boolean = withContext(Dispatchers.IO) {
+        lightedCityRepository.isCityLighted(cityAdcode)
     }
 
 }

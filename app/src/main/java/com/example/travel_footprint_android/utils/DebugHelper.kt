@@ -264,4 +264,150 @@ class DebugHelper @Inject constructor(
         testAddLocalImageToFootprint(imagePath)
     }
 
+
+
+    // ==================== 点亮城市测试 ====================
+
+    /**
+     * 测试点亮城市
+     */
+    suspend fun testLightCity(
+        cityAdcode: String = "110100",
+        cityName: String = "北京市",
+        provinceAdcode: String = "110000",
+        provinceName: String = "北京市",
+        latitude: Double = 39.9042,
+        longitude: Double = 116.4074
+    ) {
+        Log.d(tag, "========== 测试点亮城市 ==========")
+        Log.d(tag, "城市: $cityName ($cityAdcode)")
+        Log.d(tag, "省份: $provinceName ($provinceAdcode)")
+
+        val id = appService.lightCity(
+            cityAdcode = cityAdcode,
+            cityName = cityName,
+            provinceAdcode = provinceAdcode,
+            provinceName = provinceName,
+            latitude = latitude,
+            longitude = longitude
+        )
+
+        if (id > 0) {
+            Log.d(tag, "✅ 点亮成功，ID: $id")
+        } else if (id == -1L) {
+            Log.d(tag, "⚠️ 城市已点亮，无需重复点亮")
+        } else {
+            Log.d(tag, "❌ 点亮失败")
+        }
+    }
+
+    /**
+     * 测试取消点亮城市
+     */
+    suspend fun testUnlightCity(cityAdcode: String = "110100") {
+        Log.d(tag, "========== 测试取消点亮城市 ==========")
+        Log.d(tag, "城市代码: $cityAdcode")
+
+        appService.unlightCity(cityAdcode)
+        Log.d(tag, "✅ 取消点亮成功")
+    }
+
+    /**
+     * 测试获取所有点亮城市
+     */
+    suspend fun testGetAllLightedCities() {
+        Log.d(tag, "========== 测试获取所有点亮城市 ==========")
+
+        val cities = appService.getAllLightedCities().first()
+        Log.d(tag, "✅ 共有 ${cities.size} 个点亮城市:")
+        cities.forEach { city ->
+            Log.d(tag, "   [${city.cityAdcode}] ${city.cityName}")
+            Log.d(tag, "       省份: ${city.provinceName}")
+            Log.d(tag, "       点亮时间: ${city.getFormattedTime()}")
+        }
+    }
+
+    /**
+     * 测试获取点亮城市数量
+     */
+    suspend fun testGetLightedCityCount() {
+        Log.d(tag, "========== 测试获取点亮城市数量 ==========")
+
+        val count = appService.getLightedCityCount()
+        Log.d(tag, "✅ 当前点亮城市数量: $count")
+    }
+
+    /**
+     * 测试检查城市是否已点亮
+     */
+    suspend fun testIsCityLighted(cityAdcode: String = "110100") {
+        Log.d(tag, "========== 测试检查城市是否已点亮 ==========")
+        Log.d(tag, "城市代码: $cityAdcode")
+
+        val isLighted = appService.isCityLighted(cityAdcode)
+        Log.d(tag, "✅ 点亮状态: ${if (isLighted) "已点亮" else "未点亮"}")
+    }
+
+    /**
+     * 测试批量点亮多个城市
+     */
+    suspend fun testBatchLightCities() {
+        Log.d(tag, "========== 测试批量点亮城市 ==========")
+
+        val cities = listOf(
+            Triple("110100", "北京市", "110000") to Pair(39.9042, 116.4074),
+            Triple("310100", "上海市", "310000") to Pair(31.2304, 121.4737),
+            Triple("440100", "广州市", "440000") to Pair(23.1291, 113.2644),
+            Triple("440300", "深圳市", "440000") to Pair(22.5431, 114.0579),
+            Triple("510100", "成都市", "510000") to Pair(30.5728, 104.0668)
+        )
+
+        cities.forEach { (info, latLng) ->
+            val (adcode, name, parentAdcode) = info
+            val (lat, lng) = latLng
+            testLightCity(adcode, name, parentAdcode, name, lat, lng)
+        }
+
+        Log.d(tag, "========== 批量点亮完成 ==========")
+    }
+
+    /**
+     * 完整测试点亮城市流程
+     */
+    suspend fun testLightCityFull() {
+        Log.d(tag, "🎯 ========== 开始点亮城市完整测试 ==========")
+
+        // 1. 查看当前点亮城市数量
+        testGetLightedCityCount()
+
+        // 2. 点亮北京市
+        testLightCity("110100", "北京市", "110000", "北京市", 39.9042, 116.4074)
+
+        // 3. 检查北京市是否已点亮
+        testIsCityLighted("110100")
+
+        // 4. 再次尝试点亮北京市（应该提示已点亮）
+        testLightCity("110100", "北京市", "110000", "北京市", 39.9042, 116.4074)
+
+        // 5. 批量点亮更多城市
+        testBatchLightCities()
+
+        // 6. 获取所有点亮城市
+        testGetAllLightedCities()
+
+        // 7. 再次获取点亮城市数量
+        testGetLightedCityCount()
+
+        // 8. 取消点亮北京市
+        testUnlightCity("110100")
+
+        // 9. 再次获取所有点亮城市（验证北京已移除）
+        testGetAllLightedCities()
+
+        // 10. 最终统计
+        testGetLightedCityCount()
+
+        Log.d(tag, "🎯 ========== 点亮城市测试完成 ==========")
+    }
+
 }
