@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.example.travel_footprint_android.presentation.navigation.MainNavigation
+//import com.example.travel_footprint_android.presentation.navigation.MainNavigation
 import com.example.travel_footprint_android.ui.theme.TravelFootprintTheme
 import com.example.travel_footprint_android.utils.DebugHelper
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
         Box(modifier = Modifier.fillMaxSize()) {
             // 正常的主界面
-            MainNavigation()
+//            MainNavigation()
 
             // 调试面板
             if (showDebugPanel) {

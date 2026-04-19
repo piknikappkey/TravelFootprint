@@ -13,7 +13,6 @@ ui = "1.10.6"
 playServicesMaps = "20.0.0"
 animation = "1.10.6"
 material3 = "1.4.0"
-material3 = "1.4.0"
 remoteCreationCore = "1.0.0-alpha07"
 
 [libraries]
@@ -35,7 +34,6 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
-androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-compose-remote-creation-core = { group = "androidx.compose.remote", name = "remote-creation-core", version.ref = "remoteCreationCore" }
 
