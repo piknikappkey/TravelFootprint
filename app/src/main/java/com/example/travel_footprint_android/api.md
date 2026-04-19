@@ -368,8 +368,72 @@
 | provinceName | String | 省份名称 |
 | lightedTime | Date | 点亮时间 |
 
+## 八、点亮省份管理
 
-## 八、完整使用示例
+### 34. getLightedProvinces - 获取所有点亮省份
+
+| 项目 | 内容 |
+|:---|:---|
+| 参数 | 无 |
+| 作用 | 获取所有已点亮省份列表（基于点亮城市去重） |
+| 输出 | `List<LightedProvince>` - 包含省份名称和代码 |
+| 示例 | `val provinces = appService.getLightedProvinces()` |
+
+### 35. getLightedProvinceCount - 获取点亮省份数量
+
+| 项目 | 内容 |
+|:---|:---|
+| 参数 | 无 |
+| 作用 | 获取一共点亮了多少个省份 |
+| 输出 | `Int` |
+| 示例 | `val count = appService.getLightedProvinceCount()` |
+
+### 36. isProvinceLighted - 检查省份是否已点亮
+
+| 项目 | 内容 |
+|:---|:---|
+| 参数 | `provinceAdcode: String`（省份代码） |
+| 作用 | 判断某个省份是否已被点亮（该省份下是否有城市被点亮） |
+| 输出 | `Boolean` - true已点亮，false未点亮 |
+| 示例 | `val isLighted = appService.isProvinceLighted("110000")` |
+
+### 37. getLightedCitiesByProvince - 获取省份下的点亮城市
+
+| 项目 | 内容 |
+|:---|:---|
+| 参数 | `provinceAdcode: String`（省份代码） |
+| 作用 | 获取某个省份下所有被点亮的城市 |
+| 输出 | `Flow<List<LightedCity>>` |
+| 示例 | `appService.getLightedCitiesByProvince("110000").collect { cities -> }` |
+
+### 38. getLightedCitiesCountByProvince - 按省份统计点亮城市
+
+| 项目 | 内容 |
+|:---|:---|
+| 参数 | 无 |
+| 作用 | 按省份分组，统计每个省份点亮的城市数量 |
+| 输出 | `List<ProvinceCityCount>` - 包含省份名称、代码、城市数量 |
+| 示例 | `val stats = appService.getLightedCitiesCountByProvince()` |
+
+
+## 九、数据类型说明
+
+### LightedProvince（点亮省份）
+
+| 字段 | 类型 | 说明 |
+|:---|:---|:---|
+| provinceName | String | 省份名称 |
+| provinceAdcode | String | 省份行政区划代码 |
+
+### ProvinceCityCount（省份城市统计）
+
+| 字段 | 类型 | 说明 |
+|:---|:---|:---|
+| provinceName | String | 省份名称 |
+| provinceAdcode | String | 省份行政区划代码 |
+| cityCount | Int | 该省份下点亮的城市数量 |
+
+## 十、完整使用示例
 
 ```kotlin
 @HiltViewModel

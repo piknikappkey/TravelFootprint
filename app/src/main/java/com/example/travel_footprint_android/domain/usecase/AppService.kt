@@ -4,6 +4,8 @@ package com.example.travel_footprint_android.domain.usecase
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.dao.ProvinceCityCount
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.entity.LightedCity
@@ -427,6 +429,42 @@ class AppService @Inject constructor(
 
     suspend fun isCityLighted(cityAdcode: String): Boolean = withContext(Dispatchers.IO) {
         lightedCityRepository.isCityLighted(cityAdcode)
+    }
+
+    // ==================== 点亮省份相关 ====================
+
+    /**
+     * 获取所有已点亮的省份
+     */
+    suspend fun getLightedProvinces(): List<LightedProvince> = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedProvinces()
+    }
+
+    /**
+     * 获取已点亮省份的数量
+     */
+    suspend fun getLightedProvinceCount(): Int = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedProvinceCount()
+    }
+
+    /**
+     * 检查省份是否已点亮
+     */
+    suspend fun isProvinceLighted(provinceAdcode: String): Boolean = withContext(Dispatchers.IO) {
+        lightedCityRepository.isProvinceLighted(provinceAdcode)
+    }
+
+    /**
+     * 获取省份下所有点亮的城市
+     */
+    fun getLightedCitiesByProvince(provinceAdcode: String): Flow<List<LightedCity>> =
+        lightedCityRepository.getLightedCitiesByProvince(provinceAdcode)
+
+    /**
+     * 按省份统计点亮城市数量
+     */
+    suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedCitiesCountByProvince()
     }
 
 }

@@ -3,6 +3,8 @@ package com.example.travel_footprint_android.data.repository
 
 import android.util.Log
 import com.example.travel_footprint_android.data.dao.LightedCityDao
+import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.dao.ProvinceCityCount
 import com.example.travel_footprint_android.data.entity.LightedCity
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
@@ -69,13 +71,37 @@ class LightedCityRepository @Inject constructor(
         lightedCityDao.isCityLighted(cityAdcode)
 
     /**
-     * 根据省份获取点亮城市
+     * 清空所有点亮城市
+     */
+    suspend fun clearAllLightedCities() = lightedCityDao.clearAllLightedCities()
+
+    /**
+     * 获取所有已点亮的省份
+     */
+    suspend fun getLightedProvinces(): List<LightedProvince> =
+        lightedCityDao.getDistinctProvinces()
+
+    /**
+     * 获取已点亮省份的数量
+     */
+    suspend fun getLightedProvinceCount(): Int =
+        lightedCityDao.getLightedProvinceCount()
+
+    /**
+     * 检查省份是否已点亮
+     */
+    suspend fun isProvinceLighted(provinceAdcode: String): Boolean =
+        lightedCityDao.isProvinceLighted(provinceAdcode)
+
+    /**
+     * 获取省份下所有点亮的城市
      */
     fun getLightedCitiesByProvince(provinceAdcode: String): Flow<List<LightedCity>> =
         lightedCityDao.getLightedCitiesByProvince(provinceAdcode)
 
     /**
-     * 清空所有点亮城市
+     * 按省份统计点亮城市数量
      */
-    suspend fun clearAllLightedCities() = lightedCityDao.clearAllLightedCities()
+    suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> =
+        lightedCityDao.getLightedCitiesCountByProvince()
 }
