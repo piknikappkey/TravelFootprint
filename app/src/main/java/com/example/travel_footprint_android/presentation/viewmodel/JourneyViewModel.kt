@@ -4,140 +4,104 @@ package com.example.travel_footprint_android.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.data.repository.JourneyRepository
-import com.example.travel_footprint_android.domain.service.HandDrawStyle
+import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
-    private val journeyRepository: JourneyRepository
+    private val appService: AppService
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JourneyListState())
-    val uiState: StateFlow<JourneyListState> = _uiState.asStateFlow()
+    // UI 状态
+    data class JourneyUiState(
+        val isLoading: Boolean = false,
+        val journeys: List<Journey> = emptyList(),
+        val footprintCounts: Map<Long, Int> = emptyMap(),
+        val showAddDialog: Boolean = false,
+        val error: String? = null
+    )
 
-    private val _showAddDialog = MutableStateFlow(false)
-    val showAddDialog: StateFlow<Boolean> = _showAddDialog.asStateFlow()
-
-    private val _footprintCounts = MutableStateFlow<Map<Long, Int>>(emptyMap())
-    val footprintCounts: StateFlow<Map<Long, Int>> = _footprintCounts.asStateFlow()
+    private val _uiState = MutableStateFlow(JourneyUiState())
+    val uiState: StateFlow<JourneyUiState> = _uiState.asStateFlow()
 
     init {
-        loadJourneys()
+        loadData()
     }
 
-    fun loadJourneys() {
-        // 在 IO 线程执行数据库操作
-        viewModelScope.launch(Dispatchers.IO) {
-            android.util.Log.d("JourneyVM", "开始加载旅程")
-
+    fun loadData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                // 获取旅程列表（在 IO 线程）
-                val journeys = journeyRepository.getAllJourneys().first()
-                android.util.Log.d("JourneyVM", "获取到 ${journeys.size} 个旅程")
+                // 并行加载数据
+                val journeys = appService.getAllJourneys()
+                val counts = appService.getAllFootprintCounts()
 
-                // 获取足迹数量（在 IO 线程）
-                android.util.Log.d("JourneyVM", "开始加载足迹数量")
-                val counts = journeyRepository.getFootprintCounts()
-                android.util.Log.d("JourneyVM", "足迹数量: $counts")
-
-                // 切换到主线程更新 UI
-                withContext(Dispatchers.Main) {
+                journeys.collect { journeyList ->
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
-                            journeys = journeys,
+                            journeys = journeyList,
+                            footprintCounts = counts,
                             error = null
                         )
                     }
-                    _footprintCounts.value = counts
                 }
-
             } catch (e: Exception) {
-                android.util.Log.e("JourneyVM", "加载失败: ${e.message}", e)
-                withContext(Dispatchers.Main) {
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            error = e.message ?: "加载失败"
-                        )
-                    }
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        error = e.message ?: "加载失败"
+                    )
                 }
             }
         }
     }
 
     fun showAddDialog() {
-        _showAddDialog.update { true }
+        _uiState.update { it.copy(showAddDialog = true) }
     }
 
     fun hideAddDialog() {
-        _showAddDialog.update { false }
+        _uiState.update { it.copy(showAddDialog = false) }
     }
 
-    fun createNewJourney(title: String, description: String = "") {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun createJourney(title: String, description: String = "") {
+        viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-
             try {
-                journeyRepository.createJourney(
-                    title = title,
-                    style = HandDrawStyle.WATERCOLOR.name,
-                    description = description
-                )
+                appService.createJourney(title, "watercolor", description)
                 hideAddDialog()
-                withContext(Dispatchers.Main) {
-                    _uiState.update { it.copy(isLoading = false) }
-                }
+                _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = false,
-                            error = e.message ?: "创建失败"
-                        )
-                    }
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        error = e.message ?: "创建失败"
+                    )
                 }
             }
         }
     }
 
-    fun deleteJourney(journey: Journey) {
-        viewModelScope.launch(Dispatchers.IO) {
+    fun deleteJourney(journeyId: Long) {
+        viewModelScope.launch {
             try {
-                journeyRepository.deleteJourneyWithAllData(journey.id)
-                val counts = journeyRepository.getFootprintCounts()
-                withContext(Dispatchers.Main) {
-                    _footprintCounts.value = counts
-                }
+                appService.deleteJourney(journeyId)
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    _uiState.update { state ->
-                        state.copy(error = e.message ?: "删除失败")
-                    }
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "删除失败")
                 }
             }
         }
-    }
-
-    fun selectJourney(journey: Journey) {
-        _uiState.update { it.copy(selectedJourney = journey) }
     }
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
-    }
-
-    fun getFootprintCountForJourney(journeyId: Long): Int {
-        return _footprintCounts.value[journeyId] ?: 0
     }
 }

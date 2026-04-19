@@ -1,5 +1,4 @@
-// app/src/main/java/com/example/travel_footprint_android/presentation/viewmodel/JourneyListState.kt
-package com.example.travel_footprint_android.presentation.viewmodel
+package com.example.travel_footprint_android.presentation.state
 
 import com.example.travel_footprint_android.data.entity.Journey
 

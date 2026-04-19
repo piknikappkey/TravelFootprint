@@ -1,5 +1,5 @@
 // app/src/main/java/com/example/travel_footprint_android/presentation/viewmodel/MapState.kt
-package com.example.travel_footprint_android.presentation.viewmodel
+package com.example.travel_footprint_android.presentation.state
 
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey

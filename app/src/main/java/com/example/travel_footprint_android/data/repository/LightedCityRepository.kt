@@ -16,6 +16,8 @@ class LightedCityRepository @Inject constructor(
     private val lightedCityDao: LightedCityDao
 ) {
 
+
+
     /**
      * 点亮城市
      */
