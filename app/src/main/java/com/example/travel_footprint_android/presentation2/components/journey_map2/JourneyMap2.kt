@@ -60,7 +60,7 @@ fun JourneyMap2(
     }
 }
 
-// 初始化地图
+// 初始化地图//
 private fun InitAmap(view: MapView, locationClient: AMapLocationClient) : AMap {
     val aMap = view.map
 
