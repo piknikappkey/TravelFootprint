@@ -19,12 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2State
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 @Composable
 fun LightCityScreen(
     lightPanel2State: LightPanel2State,
-    lightCityList: MutableList<String>
+    lightCityList: List<LightedCity>,
+    lightedProvinces: List<LightedProvince>,
+    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
 ) {
     FlowRow(
         modifier = Modifier
@@ -40,17 +45,33 @@ fun LightCityScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)    // 垂直间距
     ) {
         if(lightPanel2State == LightPanel2State.EDIT) return@FlowRow
-        for ((index, city) in lightCityList.withIndex()) {
-            Box(
-                modifier = Modifier,
-                contentAlignment = Alignment.Center
-            ) {
-                Text(city)
+        if(lightenCityMode == LightenCityMode.CITY) {
+            for ((index, city) in lightCityList.withIndex()) {
+                // 粗略显示下只显示前10个
+                if(index > 9 && lightPanel2State == LightPanel2State.ROUGH_DISPLAY) break
+                if(index != 0) {
+                    Text("、")
+                }
+                Box(
+                    modifier = Modifier,
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(city.cityName)
+                }
             }
-            // 粗略显示下只显示前5个
-            if(index > 8 && lightPanel2State == LightPanel2State.ROUGH_DISPLAY) break
-            if(city != lightCityList.last()) {
-                Text("、")
+        } else if (lightenCityMode == LightenCityMode.PROVINCE) {
+            for ((index, city) in lightedProvinces.withIndex()) {
+                // 粗略显示下只显示前10个
+                if(index > 9 && lightPanel2State == LightPanel2State.ROUGH_DISPLAY) break
+                if(index != 0) {
+                    Text("、")
+                }
+                Box(
+                    modifier = Modifier,
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(city.provinceName)
+                }
             }
         }
     }

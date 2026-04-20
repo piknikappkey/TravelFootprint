@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.presentation2.viewmodel.NavController.CustomNavController
+import com.example.travel_footprint_android.presentation2.viewmodel.nav_controller.CustomNavController
 import com.example.travel_footprint_android.ui.theme.FontDark4
 import com.example.travel_footprint_android.ui.theme.Purple40
 import com.example.travel_footprint_android.ui.theme.Purple80

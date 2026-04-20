@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.light_city_edit_gettime
+package com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.light_province_edit_select
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,20 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LightCityEditGettime() {
-    var lightCityTime = 0
+fun LightProvinceEditSelect() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 20.dp, horizontal = 0.dp)
+            .padding(vertical = 50.dp, horizontal = 0.dp)
     ) {
         Text(
-            text = "时间选择模块",
-            modifier = Modifier
-                .align(Alignment.Center)
-        )
-        Text(
-            text = "时间选择模块",
+            text = "省份选择模块",
             modifier = Modifier
                 .align(Alignment.Center)
         )

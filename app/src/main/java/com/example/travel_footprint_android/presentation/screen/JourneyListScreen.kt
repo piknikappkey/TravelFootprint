@@ -28,74 +28,74 @@ fun JourneyListScreen(
     viewModel: JourneyViewModel = hiltViewModel(),
     onNavigateToMap: (Long) -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
-    val footprintCounts by viewModel.footprintCounts.collectAsStateWithLifecycle()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("我的旅程") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.showAddDialog() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "添加旅程")
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when {
-                uiState.isLoading -> {
-                    LoadingView()
-                }
-                uiState.error != null -> {
-                    ErrorView(
-                        error = uiState.error!!,
-                        onRetry = { viewModel.loadJourneys() }
-                    )
-                }
-                uiState.journeys.isEmpty() -> {
-                    EmptyStateView()
-                }
-                else -> {
-                    JourneyList(
-                        journeys = uiState.journeys,
-                        footprintCounts = footprintCounts,
-                        onJourneyClick = { journey ->
-                            viewModel.selectJourney(journey)
-                            onNavigateToMap(journey.id)
-                        },
-                        onDeleteClick = { journey ->
-                            viewModel.deleteJourney(journey)
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-    // 添加旅程对话框
-    if (showAddDialog) {
-        AddJourneyDialog(
-            onDismiss = { viewModel.hideAddDialog() },
-            onConfirm = { title, description ->
-                viewModel.createNewJourney(title, description)
-            }
-        )
-    }
+//    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+//    val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
+//    val footprintCounts by viewModel.footprintCounts.collectAsStateWithLifecycle()
+//
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = { Text("我的旅程") },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+//                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+//                )
+//            )
+//        },
+//        floatingActionButton = {
+//            FloatingActionButton(
+//                onClick = { viewModel.showAddDialog() },
+//                containerColor = MaterialTheme.colorScheme.primary,
+//                contentColor = MaterialTheme.colorScheme.onPrimary
+//            ) {
+//                Icon(Icons.Default.Add, contentDescription = "添加旅程")
+//            }
+//        }
+//    ) { paddingValues ->
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues)
+//        ) {
+//            when {
+//                uiState.isLoading -> {
+//                    LoadingView()
+//                }
+//                uiState.error != null -> {
+//                    ErrorView(
+//                        error = uiState.error!!,
+//                        onRetry = { viewModel.loadJourneys() }
+//                    )
+//                }
+//                uiState.journeys.isEmpty() -> {
+//                    EmptyStateView()
+//                }
+//                else -> {
+//                    JourneyList(
+//                        journeys = uiState.journeys,
+//                        footprintCounts = footprintCounts,
+//                        onJourneyClick = { journey ->
+//                            viewModel.selectJourney(journey)
+//                            onNavigateToMap(journey.id)
+//                        },
+//                        onDeleteClick = { journey ->
+//                            viewModel.deleteJourney(journey)
+//                        }
+//                    )
+//                }
+//            }
+//        }
+//    }
+//
+//    // 添加旅程对话框
+//    if (showAddDialog) {
+//        AddJourneyDialog(
+//            onDismiss = { viewModel.hideAddDialog() },
+//            onConfirm = { title, description ->
+//                viewModel.createNewJourney(title, description)
+//            }
+//        )
+//    }
 
 
 }

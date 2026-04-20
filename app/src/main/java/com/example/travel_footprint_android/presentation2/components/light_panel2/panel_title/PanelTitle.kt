@@ -13,12 +13,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2State
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 @Composable
 fun PanelTitle(
     lightPanel2State: LightPanel2State,
-    lightCityList: MutableList<String>,
-    setLightPanel2State: (LightPanel2State) -> Unit
+    lightCityList: Int,
+    lightedProvinceCount: Int,
+    setLightPanel2State: (LightPanel2State) -> Unit,
+    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
 ) {
     Box(
         modifier = Modifier
@@ -32,22 +35,27 @@ fun PanelTitle(
     ) {
         if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY ||
             lightPanel2State == LightPanel2State.ALL_DISPLAY) {
-            CityTitle(lightPanel2State, lightCityList, setLightPanel2State)
+            CityTitle(lightPanel2State, lightCityList, lightedProvinceCount, setLightPanel2State, lightenCityMode)
         }
-        if(lightPanel2State == LightPanel2State.EDIT) CityEditTitle(setLightPanel2State)
+        if(lightPanel2State == LightPanel2State.EDIT) CityEditTitle(setLightPanel2State, lightenCityMode)
     }
 }
 
 @Composable
 fun CityTitle(
     lightPanel2State: LightPanel2State,
-    lightCityList: MutableList<String>,
-    setLightPanel2State: (LightPanel2State) -> Unit
+    lightCityList: Int,
+    lightedProvinceCount: Int,
+    setLightPanel2State: (LightPanel2State) -> Unit,
+    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
 ) {
     Row {
-        Text("已点亮城市")
+        Text("已点亮${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
         Spacer(modifier = Modifier.weight(1f))
-        if(lightCityList.size > 10) {
+        if(
+            lightenCityMode == LightenCityMode.CITY && lightCityList > 10 ||
+            lightenCityMode == LightenCityMode.PROVINCE && lightedProvinceCount > 10
+            ) {
             if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY) {
                 // 拓展按钮
                 Text(
@@ -78,7 +86,8 @@ fun CityTitle(
 
 @Composable
 fun CityEditTitle(
-    setLightPanel2State: (LightPanel2State) -> Unit
+    setLightPanel2State: (LightPanel2State) -> Unit,
+    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
 ) {
     Column {
         Row {
@@ -104,6 +113,6 @@ fun CityEditTitle(
                     )
             )
         }
-        Text("修改城市")
+        Text("修改${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
     }
 }

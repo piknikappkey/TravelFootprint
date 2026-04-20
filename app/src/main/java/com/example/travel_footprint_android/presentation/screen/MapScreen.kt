@@ -56,53 +56,53 @@ fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 中国地图组件
-        ChinaMapViewSVG(
-            modifier = Modifier.fillMaxSize(),
-            onCityClick = { cityInfo ->
-                viewModel.showAddFootprintDialog(
-                    cityInfo.centerLat.toDouble(),
-                    cityInfo.centerLng.toDouble()
-                )
-            }
-        )
-
-        // 返回按钮
-        IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
-        }
-
-        // 添加足迹悬浮按钮
-        FloatingActionButton(
-            onClick = {
-                viewModel.showAddFootprintDialog(39.9042, 116.4074)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "添加足迹")
-        }
-    }
-
-    // 添加足迹对话框
-    if (showAddDialog) {
-        AddFootprintDialog(
-            viewModel = viewModel,
-            onDismiss = { viewModel.hideAddFootprintDialog() },
-            onConfirm = { title, notes, imagePath ->
-                viewModel.addFootprintWithImage(title, notes, imagePath)
-            }
-        )
-    }
+//    val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
+//
+//    Box(modifier = Modifier.fillMaxSize()) {
+//        // 中国地图组件
+//        ChinaMapViewSVG(
+//            modifier = Modifier.fillMaxSize(),
+//            onCityClick = { cityInfo ->
+//                viewModel.showAddFootprintDialog(
+//                    cityInfo.centerLat.toDouble(),
+//                    cityInfo.centerLng.toDouble()
+//                )
+//            }
+//        )
+//
+//        // 返回按钮
+//        IconButton(
+//            onClick = onNavigateBack,
+//            modifier = Modifier
+//                .align(Alignment.TopStart)
+//                .padding(16.dp)
+//        ) {
+//            Icon(Icons.Default.ArrowBack, contentDescription = "返回")
+//        }
+//
+//        // 添加足迹悬浮按钮
+//        FloatingActionButton(
+//            onClick = {
+//                viewModel.showAddFootprintDialog(39.9042, 116.4074)
+//            },
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(16.dp)
+//        ) {
+//            Icon(Icons.Default.Add, contentDescription = "添加足迹")
+//        }
+//    }
+//
+//    // 添加足迹对话框
+//    if (showAddDialog) {
+//        AddFootprintDialog(
+//            viewModel = viewModel,
+//            onDismiss = { viewModel.hideAddFootprintDialog() },
+//            onConfirm = { title, notes, imagePath ->
+//                viewModel.addFootprintWithImage(title, notes, imagePath)
+//            }
+//        )
+//    }
 }
 
 @Composable
@@ -111,128 +111,128 @@ fun AddFootprintDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String?) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    val selectedImagePath by viewModel.selectedImagePath.collectAsStateWithLifecycle()
-    val isImageLoading by viewModel.isImageLoading.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    // 图片选择器（从相册）
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        viewModel.onImageSelected(uri)
-    }
-
-    // 相机拍照
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        bitmap?.let {
-            val path = saveBitmapToFile(context, it)
-            val uri = Uri.fromFile(File(path))
-            viewModel.onImageSelected(uri)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("添加足迹") },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("标题（可选）") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("备注") },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // 图片选择区域
-                Column {
-                    Text("添加图片", style = MaterialTheme.typography.labelMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // 从相册选择
-                        OutlinedButton(
-                            onClick = { imagePickerLauncher.launch("image/*") },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("相册")
-                        }
-
-                        // 拍照
-                        OutlinedButton(
-                            onClick = {
-                                cameraLauncher.launch(null)
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.CameraAlt, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("相机")
-                        }
-                    }
-
-                    // 显示已选择的图片
-                    if (isImageLoading) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    } else if (!selectedImagePath.isNullOrEmpty()) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp)
-                        ) {
-                            AsyncImage(
-                                model = File(selectedImagePath),
-                                contentDescription = "选中的图片",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (notes.isNotBlank()) {
-                        onConfirm(title, notes, selectedImagePath)
-                    }
-                },
-                enabled = notes.isNotBlank()
-            ) {
-                Text("添加")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        }
-    )
+//    var title by remember { mutableStateOf("") }
+//    var notes by remember { mutableStateOf("") }
+//    val selectedImagePath by viewModel.selectedImagePath.collectAsStateWithLifecycle()
+//    val isImageLoading by viewModel.isImageLoading.collectAsStateWithLifecycle()
+//    val context = LocalContext.current
+//
+//    // 图片选择器（从相册）
+//    val imagePickerLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent()
+//    ) { uri: Uri? ->
+//        viewModel.onImageSelected(uri)
+//    }
+//
+//    // 相机拍照
+//    val cameraLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.TakePicturePreview()
+//    ) { bitmap: Bitmap? ->
+//        bitmap?.let {
+//            val path = saveBitmapToFile(context, it)
+//            val uri = Uri.fromFile(File(path))
+//            viewModel.onImageSelected(uri)
+//        }
+//    }
+//
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text("添加足迹") },
+//        text = {
+//            Column(
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
+//            ) {
+//                OutlinedTextField(
+//                    value = title,
+//                    onValueChange = { title = it },
+//                    label = { Text("标题（可选）") },
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//
+//                OutlinedTextField(
+//                    value = notes,
+//                    onValueChange = { notes = it },
+//                    label = { Text("备注") },
+//                    minLines = 3,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//
+//                // 图片选择区域
+//                Column {
+//                    Text("添加图片", style = MaterialTheme.typography.labelMedium)
+//                    Spacer(modifier = Modifier.height(8.dp))
+//
+//                    Row(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                    ) {
+//                        // 从相册选择
+//                        OutlinedButton(
+//                            onClick = { imagePickerLauncher.launch("image/*") },
+//                            modifier = Modifier.weight(1f)
+//                        ) {
+//                            Icon(Icons.Default.Image, contentDescription = null)
+//                            Spacer(modifier = Modifier.width(4.dp))
+//                            Text("相册")
+//                        }
+//
+//                        // 拍照
+//                        OutlinedButton(
+//                            onClick = {
+//                                cameraLauncher.launch(null)
+//                            },
+//                            modifier = Modifier.weight(1f)
+//                        ) {
+//                            Icon(Icons.Default.CameraAlt, contentDescription = null)
+//                            Spacer(modifier = Modifier.width(4.dp))
+//                            Text("相机")
+//                        }
+//                    }
+//
+//                    // 显示已选择的图片
+//                    if (isImageLoading) {
+//                        Box(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(100.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            CircularProgressIndicator()
+//                        }
+//                    } else if (!selectedImagePath.isNullOrEmpty()) {
+//                        Card(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .height(150.dp)
+//                        ) {
+//                            AsyncImage(
+//                                model = File(selectedImagePath),
+//                                contentDescription = "选中的图片",
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentScale = ContentScale.Crop
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        },
+//        confirmButton = {
+//            TextButton(
+//                onClick = {
+//                    if (notes.isNotBlank()) {
+//                        onConfirm(title, notes, selectedImagePath)
+//                    }
+//                },
+//                enabled = notes.isNotBlank()
+//            ) {
+//                Text("添加")
+//            }
+//        },
+//        dismissButton = {
+//            TextButton(onClick = onDismiss) {
+//                Text("取消")
+//            }
+//        }
+//    )
 }
 
 /**

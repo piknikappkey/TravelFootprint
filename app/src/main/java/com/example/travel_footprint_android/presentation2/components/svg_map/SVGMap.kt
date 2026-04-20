@@ -12,14 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import org.json.JSONObject
 
 @Composable
 fun SVGMap(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    setLightenCityMode: (LightenCityMode) -> Unit
 ) {
     // 存储选中的城市
     var selectedCity by remember { mutableStateOf<String?>(null) }
@@ -28,7 +31,7 @@ fun SVGMap(
     Log.d("SVGMap", "进入 SVGMap")
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     ) {
         // 交互式地图
         InteractiveChinaMap(
@@ -100,21 +103,6 @@ fun InteractiveChinaMap(
                         }
                     }
                 }
-
-//                webViewClient = object : WebViewClient() {
-//                    override fun onPageFinished(view: WebView?, url: String?) {
-//                        super.onPageFinished(view, url)
-//                        view?.evaluateJavascript(
-//                            "document.documentElement.scrollWidth"
-//                        ) { result ->
-//                            val contentWidth = result.toDoubleOrNull()?.toInt() ?: 0
-//                            view.post {
-//                                val scrollX = (contentWidth - view.width) / 2
-//                                view.scrollTo(scrollX.coerceAtLeast(0), 0)
-//                            }
-//                        }
-//                    }
-//                }
 
                 // 加载 assets 中的 SVG 文件
                 loadUrl("file:///android_asset/maps/china_map_province_pencil.svg")

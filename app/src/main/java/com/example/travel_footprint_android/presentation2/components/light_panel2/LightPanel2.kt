@@ -1,8 +1,5 @@
 package com.example.travel_footprint_android.presentation2.components.light_panel2
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,36 +13,43 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city.LightCityScreen
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.LightCityEditScreen
 import com.example.travel_footprint_android.presentation2.components.light_panel2.panel_title.PanelTitle
-import com.example.travel_footprint_android.ui.theme.BGLight1
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import com.example.travel_footprint_android.ui.theme.BGLight2
-import com.example.travel_footprint_android.ui.theme.BGLight4
-import kotlin.collections.mutableListOf
 
 @Composable
 fun LightPanel2(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
+    lightenViewModel: LightenViewModel = hiltViewModel(), // 自动注入
 ) {
+    val uiState by lightenViewModel.uiState.collectAsState()
+    // 点亮城市
+    val lightCityList = uiState.lightedCities
+    val lightedCityCount = uiState.lightedCityCount
+    // 点亮省份
+    val lightedProvinces = uiState.lightedProvinces
+    val lightedProvinceCount = uiState.lightedProvinceCount
+
     /**
      * 面板状态：粗略显示/全部显示/编辑
      */
     var lightPanel2State by remember { mutableStateOf(LightPanel2State.ROUGH_DISPLAY) }
 
-    val lightCityList = remember { mutableListOf<String>("北京市", "山西省", "广西壮族自治区", "湖北省", "江苏省", "天津市", "重庆市", "河北省", "山东省", "四川省", "福建省", "广东省", "湖南省", "河南省", "内蒙古自治区", "台湾省") }
-    
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -78,22 +82,22 @@ fun LightPanel2(
                     12.dp,
                     if(lightPanel2State != LightPanel2State.EDIT) 30.dp else 8.dp)
         ) {
-            
+
             /**
              * 复合标题（显示、编辑状态标题）
              * 附带各类功能按钮（展开收起、保存取消）
              */
-            PanelTitle(lightPanel2State, lightCityList, { lightPanel2State = it })
+            PanelTitle(lightPanel2State, lightedCityCount, lightedProvinceCount, { lightPanel2State = it }, lightenCityMode)
 
             /**
              * 点亮城市内容
              */
-            LightCityScreen(lightPanel2State, lightCityList)
+            LightCityScreen(lightPanel2State, lightCityList, lightedProvinces, lightenCityMode)
 
             /**
              * 城市编辑模块
              */
-            LightCityEditScreen(lightPanel2State)
+            LightCityEditScreen(lightPanel2State, lightenCityMode)
         }
 
         /**
@@ -107,7 +111,7 @@ fun LightPanel2(
                     lightPanel2State = LightPanel2State.EDIT
                 }
             ) {
-                Text("点亮城市")
+                Text("点亮${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
             }
         }
     }
