@@ -6,14 +6,17 @@ import android.net.Uri
 import android.util.Log
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.MediaAttachment
+import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.data.repository.JourneyRepository
 import com.example.travel_footprint_android.data.repository.LightedCityRepository
 import com.example.travel_footprint_android.data.repository.MediaRepository
+import com.example.travel_footprint_android.data.repository.RegionRepository
 import com.example.travel_footprint_android.domain.service.LocationService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +39,7 @@ class AppService @Inject constructor(
     private val mediaRepository: MediaRepository,
     private val locationService: LocationService,
     private val lightedCityRepository: LightedCityRepository,
+    private val regionRepository: RegionRepository,
     @ApplicationContext private val context: Context  // 添加这一行
 ) {
 
@@ -466,5 +470,46 @@ class AppService @Inject constructor(
     suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> = withContext(Dispatchers.IO) {
         lightedCityRepository.getLightedCitiesCountByProvince()
     }
+
+
+    /**
+     * 点亮省份（独立点亮）
+     */
+    suspend fun lightProvince(
+        provinceAdcode: String,
+        provinceName: String,
+        remark: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            lightedCityRepository.lightProvince(provinceAdcode, provinceName, remark)
+        }
+    }
+
+    /**
+     * 取消点亮省份
+     */
+    suspend fun unlightProvince(provinceAdcode: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.unlightProvince(provinceAdcode)
+        }
+    }
+
+    // ==================== 地区数据相关 ====================
+
+    fun getAllProvinces(): Flow<List<Province>> = regionRepository.getAllProvinces()
+
+    suspend fun getProvinceByAdcode(adcode: String): Province? =
+        regionRepository.getProvinceByAdcode(adcode)
+
+    fun getAllCities(): Flow<List<City>> = regionRepository.getAllCities()
+
+    fun getCitiesByProvince(provinceAdcode: String): Flow<List<City>> =
+        regionRepository.getCitiesByProvince(provinceAdcode)
+
+    suspend fun getCityByAdcode(adcode: String): City? =
+        regionRepository.getCityByAdcode(adcode)
+
+    suspend fun searchCities(keyword: String): List<City> =
+        regionRepository.searchCities(keyword)
 
 }

@@ -1,19 +1,15 @@
 // app/src/main/java/com/example/travel_footprint_android/data/database/AppDatabase.kt
 package com.example.travel_footprint_android.data.database
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import android.content.Context
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.travel_footprint_android.data.entity.*
 import com.example.travel_footprint_android.data.dao.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.util.Date
+import com.example.travel_footprint_android.data.entity.*
 
 @Database(
     entities = [
@@ -23,9 +19,11 @@ import java.util.Date
         MediaAttachment::class,
         Tag::class,
         FootprintTagCrossRef::class,
-        LightedCity::class
+        LightedCity::class,
+        Province::class,
+        City::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -36,30 +34,55 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun locationDao(): LocationDao
     abstract fun mediaDao(): MediaDao
     abstract fun tagDao(): TagDao
-
     abstract fun lightedCityDao(): LightedCityDao
+    abstract fun provinceDao(): ProvinceDao
+    abstract fun cityDao(): CityDao
 
     companion object {
-        // 数据库迁移：添加 lighted_cities 表
-        val MIGRATION_1_2 = object : Migration(1, 2) {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        // 版本 2 到 3 的迁移
+        val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
+                // 创建省份表
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `lighted_cities` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `cityAdcode` TEXT NOT NULL,
-                        `cityName` TEXT NOT NULL,
+                    CREATE TABLE IF NOT EXISTS `provinces` (
+                        `adcode` TEXT NOT NULL PRIMARY KEY,
+                        `name` TEXT NOT NULL,
+                        `centerLat` REAL NOT NULL,
+                        `centerLng` REAL NOT NULL,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0
+                    )
+                """)
+                // 创建城市表
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `cities` (
+                        `adcode` TEXT NOT NULL PRIMARY KEY,
+                        `name` TEXT NOT NULL,
                         `provinceAdcode` TEXT NOT NULL,
-                        `provinceName` TEXT NOT NULL,
-                        `lightedTime` INTEGER NOT NULL,
-                        `latitude` REAL NOT NULL,
-                        `longitude` REAL NOT NULL,
-                        `remark` TEXT NOT NULL DEFAULT ''
+                        `centerLat` REAL NOT NULL,
+                        `centerLng` REAL NOT NULL,
+                        `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON DELETE CASCADE
                     )
                 """)
                 // 创建索引
-                database.execSQL("CREATE INDEX index_lighted_cities_cityAdcode ON lighted_cities(cityAdcode)")
-                database.execSQL("CREATE INDEX index_lighted_cities_provinceAdcode ON lighted_cities(provinceAdcode)")
-                database.execSQL("CREATE INDEX index_lighted_cities_lightedTime ON lighted_cities(lightedTime)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_cities_provinceAdcode ON cities(provinceAdcode)")
+            }
+        }
+
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "travel_journal.db"
+                )
+                    .addMigrations(MIGRATION_2_3)
+                    .build()
+                INSTANCE = instance
+                instance
             }
         }
     }

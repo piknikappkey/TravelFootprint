@@ -7,6 +7,7 @@ import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
 import com.example.travel_footprint_android.data.entity.LightedCity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -106,4 +107,45 @@ class LightedCityRepository @Inject constructor(
      */
     suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> =
         lightedCityDao.getLightedCitiesCountByProvince()
+
+
+    /**
+     * 点亮省份（独立点亮省份，不需要关联城市）
+     */
+    suspend fun lightProvince(
+        provinceAdcode: String,
+        provinceName: String,
+        remark: String = ""
+    ): Long {
+        // 检查是否已点亮
+        if (lightedCityDao.isProvinceLighted(provinceAdcode)) {
+            Log.d("LightedCityRepo", "省份已点亮: $provinceName")
+            return -1
+        }
+
+        // 创建一个虚拟城市记录来表示省份点亮（设置特殊标记或使用空值）
+        // 方案：插入一条特殊的城市记录，cityAdcode 使用 provinceAdcode，cityName 使用 provinceName
+        val provinceAsCity = LightedCity(
+            cityAdcode = provinceAdcode,  // 使用省份代码作为城市代码
+            cityName = provinceName,       // 使用省份名称
+            provinceAdcode = provinceAdcode,
+            provinceName = provinceName,
+            lightedTime = java.util.Date(),
+            latitude = 0.0,
+            longitude = 0.0,
+            remark = "省份点亮（独立点亮）"
+        )
+        return lightedCityDao.insertLightedCity(provinceAsCity)
+    }
+
+    /**
+     * 取消点亮省份（删除该省份下所有点亮记录）
+     */
+    suspend fun unlightProvince(provinceAdcode: String) {
+        // 删除该省份下所有点亮记录
+        val cities = lightedCityDao.getLightedCitiesByProvince(provinceAdcode).firstOrNull() ?: emptyList()
+        cities.forEach { city ->
+            lightedCityDao.deleteLightedCityByAdcode(city.cityAdcode)
+        }
+    }
 }

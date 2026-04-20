@@ -27,7 +27,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "travel_journal.db"
         )
-            .addMigrations(MIGRATION_1_2)  // 添加迁移
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)  // 添加两个迁移
             .build()
     }
 
@@ -61,11 +61,23 @@ object DatabaseModule {
         return database.tagDao()
     }
 
-    // 添加 LightedCityDao 的提供方法
     @Provides
     @Singleton
     fun provideLightedCityDao(database: AppDatabase): LightedCityDao {
         return database.lightedCityDao()
+    }
+
+    // ========== 新增：省份和城市 DAO ==========
+    @Provides
+    @Singleton
+    fun provideProvinceDao(database: AppDatabase): ProvinceDao {
+        return database.provinceDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCityDao(database: AppDatabase): CityDao {
+        return database.cityDao()
     }
 
     // 数据库迁移：从版本1到版本2（添加 lighted_cities 表）
@@ -88,6 +100,36 @@ object DatabaseModule {
             database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_cityAdcode ON lighted_cities(cityAdcode)")
             database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_provinceAdcode ON lighted_cities(provinceAdcode)")
             database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_lightedTime ON lighted_cities(lightedTime)")
+        }
+    }
+
+    // 数据库迁移：从版本2到版本3（添加 provinces 和 cities 表）
+    private val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // 创建省份表
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `provinces` (
+                    `adcode` TEXT NOT NULL PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `centerLat` REAL NOT NULL,
+                    `centerLng` REAL NOT NULL,
+                    `sortOrder` INTEGER NOT NULL DEFAULT 0
+                )
+            """)
+            // 创建城市表
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `cities` (
+                    `adcode` TEXT NOT NULL PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `provinceAdcode` TEXT NOT NULL,
+                    `centerLat` REAL NOT NULL,
+                    `centerLng` REAL NOT NULL,
+                    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON DELETE CASCADE
+                )
+            """)
+            // 创建索引
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cities_provinceAdcode ON cities(provinceAdcode)")
         }
     }
 }

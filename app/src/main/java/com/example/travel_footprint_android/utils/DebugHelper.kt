@@ -410,4 +410,104 @@ class DebugHelper @Inject constructor(
         Log.d(tag, "🎯 ========== 点亮城市测试完成 ==========")
     }
 
+
+
+    /**
+     * 测试独立点亮省份（不依赖城市）
+     */
+    suspend fun testLightProvinceOnly(
+        provinceAdcode: String = "440000",
+        provinceName: String = "广东省"
+    ) {
+        Log.d(tag, "========== 测试独立点亮省份 ==========")
+        Log.d(tag, "省份: $provinceName ($provinceAdcode)")
+
+        val id = appService.lightProvince(
+            provinceAdcode = provinceAdcode,
+            provinceName = provinceName
+        )
+
+        if (id > 0) {
+            Log.d(tag, "✅ 点亮省份成功，ID: $id")
+        } else if (id == -1L) {
+            Log.d(tag, "⚠️ 省份已点亮，无需重复点亮")
+        } else {
+            Log.d(tag, "❌ 点亮省份失败")
+        }
+    }
+
+    /**
+     * 测试取消点亮省份
+     */
+    suspend fun testUnlightProvinceOnly(provinceAdcode: String = "440000") {
+        Log.d(tag, "========== 测试取消点亮省份 ==========")
+        Log.d(tag, "省份代码: $provinceAdcode")
+
+        appService.unlightProvince(provinceAdcode)
+        Log.d(tag, "✅ 取消点亮省份成功")
+    }
+
+    /**
+     * 测试批量独立点亮省份
+     */
+    suspend fun testBatchLightProvincesOnly() {
+        Log.d(tag, "========== 测试批量独立点亮省份 ==========")
+
+        val provinces = listOf(
+            Pair("110000", "北京市"),
+            Pair("310000", "上海市"),
+            Pair("440000", "广东省"),
+            Pair("510000", "四川省"),
+            Pair("320000", "江苏省")
+        )
+
+        provinces.forEach { (adcode, name) ->
+            testLightProvinceOnly(adcode, name)
+        }
+
+        Log.d(tag, "========== 批量独立点亮省份完成 ==========")
+    }
+
+
+    /**
+     * 测试获取所有省份
+     */
+    suspend fun testGetAllProvinces() {
+        Log.d(tag, "========== 测试获取所有省份 ==========")
+
+        val provinces = appService.getAllProvinces().first()
+        Log.d(tag, "✅ 共有 ${provinces.size} 个省份:")
+        provinces.forEach { province ->
+            Log.d(tag, "   [${province.adcode}] ${province.name}")
+        }
+    }
+
+    /**
+     * 测试获取省份下的所有城市
+     */
+    suspend fun testGetCitiesByProvince(provinceAdcode: String = "110000") {
+        Log.d(tag, "========== 测试获取省份下的城市 ==========")
+        Log.d(tag, "省份代码: $provinceAdcode")
+
+        val cities = appService.getCitiesByProvince(provinceAdcode).first()
+        Log.d(tag, "✅ 共有 ${cities.size} 个城市:")
+        cities.forEach { city ->
+            Log.d(tag, "   [${city.adcode}] ${city.name}")
+        }
+    }
+
+    /**
+     * 测试搜索城市
+     */
+    suspend fun testSearchCities(keyword: String = "北京") {
+        Log.d(tag, "========== 测试搜索城市 ==========")
+        Log.d(tag, "关键词: $keyword")
+
+        val cities = appService.searchCities(keyword)
+        Log.d(tag, "✅ 找到 ${cities.size} 个匹配城市:")
+        cities.forEach { city ->
+            Log.d(tag, "   [${city.adcode}] ${city.name}")
+        }
+    }
+
 }
