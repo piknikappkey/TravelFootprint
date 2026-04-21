@@ -16,10 +16,6 @@ fun LightCityEidtSelect() {
             .fillMaxWidth()
             .padding(vertical = 50.dp, horizontal = 0.dp)
     ) {
-        Text(
-            text = "城市选择模块",
-            modifier = Modifier
-                .align(Alignment.Center)
-        )
+
     }
 }

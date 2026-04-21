@@ -6,10 +6,17 @@ import com.example.travel_footprint_android.presentation2.navigation.NavPath2
 import com.example.travel_footprint_android.presentation2.navigation.NavPathObj2
 
 object CustomNavController {
-    private val _currentDestination = mutableStateOf<NavPath2>(NavPathObj2.lighten)
-    val currentDestination: MutableState<NavPath2> = _currentDestination
+    private val _currentDestination = mutableStateOf(NavPathObj2.lighten)
+    val currentDestination = _currentDestination
+
+    private var lastNavigateTime = 0L
+    private val minInterval = 200L // 最小间隔（毫秒）
 
     fun navigate(destination: NavPath2) {
-        _currentDestination.value = destination
+        val now = System.currentTimeMillis()
+        if (now - lastNavigateTime > minInterval) {
+            lastNavigateTime = now
+            _currentDestination.value = destination
+        }
     }
 }
