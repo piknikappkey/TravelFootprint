@@ -1,3 +1,4 @@
+// LightCityScreen.kt
 package com.example.travel_footprint_android.presentation2.components.light_panel2.light_city
 
 import androidx.compose.animation.animateContentSize
@@ -5,19 +6,17 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
@@ -29,49 +28,144 @@ fun LightCityScreen(
     lightPanel2State: LightPanel2State,
     lightCityList: List<LightedCity>,
     lightedProvinces: List<LightedProvince>,
-    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
+    lightenCityMode: LightenCityMode,
+    isDeleteMode: Boolean = false,
+    onDeleteProvince: (String) -> Unit = {},
+    onDeleteCity: (String) -> Unit = {}
 ) {
-    FlowRow(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal =  30.dp, vertical = 15.dp)
             .animateContentSize(
                 animationSpec = tween(
                     durationMillis = 200,
                     easing = FastOutSlowInEasing
                 )
-            ),
-        horizontalArrangement = Arrangement.spacedBy(2.dp), // 水平间距
-        verticalArrangement = Arrangement.spacedBy(8.dp)    // 垂直间距
+            )
     ) {
-        if(lightPanel2State == LightPanel2State.EDIT) return@FlowRow
-        if(lightenCityMode == LightenCityMode.CITY) {
-            for ((index, city) in lightCityList.withIndex()) {
-                // 粗略显示下只显示前10个
-                if(index > 9 && lightPanel2State == LightPanel2State.ROUGH_DISPLAY) break
-                if(index != 0) {
-                    Text("、")
-                }
-                Box(
-                    modifier = Modifier,
-                    contentAlignment = Alignment.Center
+        if (lightPanel2State == LightPanel2State.EDIT) return@Column
+
+        if (lightenCityMode == LightenCityMode.CITY) {
+            // 城市模式：显示已点亮城市
+            if (lightCityList.isEmpty()) {
+                Text(
+                    text = "暂无已点亮城市",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)
+                )
+            } else {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 30.dp, vertical = 15.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(city.cityName)
+                    items(lightCityList, key = { it.cityAdcode }) { city ->
+                        LightedCityChip(
+                            name = city.cityName,
+                            isDeleteMode = isDeleteMode,
+                            onDelete = { onDeleteCity(city.cityAdcode) }
+                        )
+                    }
                 }
             }
-        } else if (lightenCityMode == LightenCityMode.PROVINCE) {
-            for ((index, city) in lightedProvinces.withIndex()) {
-                // 粗略显示下只显示前10个
-                if(index > 9 && lightPanel2State == LightPanel2State.ROUGH_DISPLAY) break
-                if(index != 0) {
-                    Text("、")
-                }
-                Box(
-                    modifier = Modifier,
-                    contentAlignment = Alignment.Center
+        } else {
+            // 省份模式：显示已点亮省份
+            if (lightedProvinces.isEmpty()) {
+                Text(
+                    text = "暂无已点亮省份",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)
+                )
+            } else {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 30.dp, vertical = 15.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(city.provinceName)
+                    items(lightedProvinces, key = { it.provinceAdcode }) { province ->
+                        LightedProvinceChip(
+                            name = province.provinceName,
+                            isDeleteMode = isDeleteMode,
+                            onDelete = { onDeleteProvince(province.provinceAdcode) }
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun LightedProvinceChip(
+    name: String,
+    isDeleteMode: Boolean,
+    onDelete: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            if (isDeleteMode) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "取消点亮",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onDelete() },
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LightedCityChip(
+    name: String,
+    isDeleteMode: Boolean,
+    onDelete: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            if (isDeleteMode) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "取消点亮",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { onDelete() },
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

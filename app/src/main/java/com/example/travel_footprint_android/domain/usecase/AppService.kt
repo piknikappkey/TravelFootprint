@@ -502,7 +502,7 @@ class AppService @Inject constructor(
         regionRepository.getProvinceByAdcode(adcode)
 
     fun getAllCities(): Flow<List<City>> = regionRepository.getAllCities()
-
+       
     fun getCitiesByProvince(provinceAdcode: String): Flow<List<City>> =
         regionRepository.getCitiesByProvince(provinceAdcode)
 

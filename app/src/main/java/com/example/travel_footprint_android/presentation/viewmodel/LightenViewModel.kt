@@ -1,13 +1,16 @@
 // app/src/main/java/com/example/travel_footprint_android/presentation/viewmodel/LightenViewModel.kt
 package com.example.travel_footprint_android.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
 import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,15 +53,35 @@ class LightenViewModel @Inject constructor(
         val selectedCities: Set<String> = emptySet(),
         val lightedTime: String = "",
         val panelState: PanelState = PanelState.COLLAPSED,
-        val error: String? = null
+        val error: String? = null,
+        // 获取所有省份（从数据库）
+
     )
+
+
+    // 获取所有省份（从数据库）
+    val allProvinces: Flow<List<Province>> = appService.getAllProvinces()
+
+    // 已点亮城市代码集合
+    private val _lightedCityCodes = MutableStateFlow<Set<String>>(emptySet())
+    val lightedCityCodes: StateFlow<Set<String>> = _lightedCityCodes.asStateFlow()
+
+    // 已点亮省份代码集合
+    private val _lightedProvinceCodes = MutableStateFlow<Set<String>>(emptySet())
+    val lightedProvinceCodes: StateFlow<Set<String>> = _lightedProvinceCodes.asStateFlow()
+
 
     private val _uiState = MutableStateFlow(LightenUiState())
     val uiState: StateFlow<LightenUiState> = _uiState.asStateFlow()
 
+
+    //初始化加载数据
     init {
         loadAllData()
+        loadLightedCityCodes()      // 添加这行
+        loadLightedProvinceCodes()  // 添加这行
     }
+
 
     // ==================== 数据加载 ====================
 
@@ -82,6 +105,23 @@ class LightenViewModel @Inject constructor(
         }
     }
 
+    // 加载已点亮城市代码
+    private fun loadLightedCityCodes() {
+        viewModelScope.launch {
+            appService.getAllLightedCities().collect { cities ->
+                _lightedCityCodes.value = cities.map { it.cityAdcode }.toSet()
+            }
+        }
+    }
+
+    // 加载已点亮省份代码
+    private fun loadLightedProvinceCodes() {
+        viewModelScope.launch {
+            val provinces = appService.getLightedProvinces()
+            _lightedProvinceCodes.value = provinces.map { it.provinceAdcode }.toSet()
+        }
+    }
+
     private suspend fun loadLightedCities() {
         appService.getAllLightedCities().collect { cities ->
             _uiState.update { state ->
@@ -96,6 +136,7 @@ class LightenViewModel @Inject constructor(
 
     private suspend fun loadLightedProvinces() {
         val provinces = appService.getLightedProvinces()
+        Log.d("LightenViewModel", "省份数量: ${provinces.size}")
         val provinceCount = appService.getLightedProvinceCount()
         _uiState.update { state ->
             state.copy(
@@ -135,6 +176,9 @@ class LightenViewModel @Inject constructor(
                     remark = remark
                 )
                 // 数据会自动通过 Flow 更新，不需要手动刷新
+                //重新加载已经点亮省份以及城市代码
+                loadLightedCityCodes()
+                loadLightedProvinceCodes()
             } catch (e: Exception) {
                 _uiState.update { state ->
                     state.copy(error = e.message ?: "点亮失败")
@@ -147,6 +191,7 @@ class LightenViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 appService.unlightCity(cityAdcode)
+                refreshAllData()
             } catch (e: Exception) {
                 _uiState.update { state ->
                     state.copy(error = e.message ?: "取消点亮失败")
@@ -154,6 +199,118 @@ class LightenViewModel @Inject constructor(
             }
         }
     }
+
+    // 点亮省份
+    fun lightProvince(province: Province) {
+        viewModelScope.launch {
+            try {
+                val result = appService.lightProvince(
+                    provinceAdcode = province.adcode,
+                    provinceName = province.name
+                )
+                if (result > 0) {
+                    loadLightedProvinceCodes()
+                    loadLightedProvinces()
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "点亮省份失败")
+                }
+            }
+        }
+    }
+
+    fun unlightProvince(provinceAdcode: String) {
+        viewModelScope.launch {
+            try {
+                appService.unlightProvince(provinceAdcode)
+                // 刷新数据
+                refreshAllData()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "取消点亮失败")
+                }
+            }
+        }
+    }
+
+    // ==================== 批量保存变更 ====================
+
+    /**
+     * 应用点亮变更（保存时调用）
+     * @param selectedCityCodes 新增点亮的城市代码
+     * @param unselectedCityCodes 取消点亮的城市代码
+     * @param selectedProvinceCodes 新增点亮的省份代码
+     * @param unselectedProvinceCodes 取消点亮的省份代码
+     */
+    fun applyLightingChanges(
+        selectedCityCodes: Set<String>,
+        unselectedCityCodes: Set<String>,
+        selectedProvinceCodes: Set<String>,
+        unselectedProvinceCodes: Set<String>
+    ) {
+        viewModelScope.launch {
+            try {
+                // 1. 新增点亮城市
+                selectedCityCodes.forEach { cityCode ->
+                    val city = appService.getCityByAdcode(cityCode)
+                    city?.let {
+                        appService.lightCity(
+                            cityAdcode = it.adcode,
+                            cityName = it.name,
+                            provinceAdcode = it.provinceAdcode,
+                            provinceName = "",
+                            latitude = it.centerLat,
+                            longitude = it.centerLng
+                        )
+                    }
+                }
+
+                // 2. 取消点亮城市
+                unselectedCityCodes.forEach { cityCode ->
+                    appService.unlightCity(cityCode)
+                }
+
+                // 3. 新增点亮省份
+                selectedProvinceCodes.forEach { provinceCode ->
+                    val province = appService.getProvinceByAdcode(provinceCode)
+                    province?.let {
+                        appService.lightProvince(
+                            provinceAdcode = it.adcode,
+                            provinceName = it.name
+                        )
+                    }
+                }
+
+                // 4. 取消点亮省份
+                unselectedProvinceCodes.forEach { provinceCode ->
+                    appService.unlightProvince(provinceCode)
+                }
+
+                // 5. 刷新所有数据
+                refreshAllData()
+
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "保存失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 刷新所有数据
+     */
+    fun refreshAllData() {
+        viewModelScope.launch {
+            loadLightedCityCodes()
+            loadLightedProvinceCodes()
+            loadLightedCities()
+            loadLightedProvinces()
+            loadProvinceCityCount()
+        }
+    }
+
 
     // ==================== 查询方法 ====================
 
@@ -171,9 +328,15 @@ class LightenViewModel @Inject constructor(
             ?.cityCount ?: 0
     }
 
-    fun getCitiesByProvince(provinceAdcode: String): List<LightedCity> {
-        return _uiState.value.lightedCities.filter { it.provinceAdcode == provinceAdcode }
+    fun getCitiesByProvince(provinceAdcode: String): Flow<List<com.example.travel_footprint_android.data.entity.City>> {
+        return if (provinceAdcode.isBlank()) {
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        } else {
+            appService.getCitiesByProvince(provinceAdcode)
+        }
     }
+
+
 
     // ==================== UI 状态控制 ====================
 
@@ -217,4 +380,6 @@ class LightenViewModel @Inject constructor(
     fun refresh() {
         loadAllData()
     }
+
+
 }
