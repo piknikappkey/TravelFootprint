@@ -10,10 +10,12 @@ import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -123,7 +125,8 @@ class LightenViewModel @Inject constructor(
     }
 
     private suspend fun loadLightedCities() {
-        appService.getAllLightedCities().collect { cities ->
+        try {
+            val cities = appService.getAllLightedCities().first()  // 改用 first()
             _uiState.update { state ->
                 state.copy(
                     isLoading = false,
@@ -131,6 +134,8 @@ class LightenViewModel @Inject constructor(
                     lightedCityCount = cities.size
                 )
             }
+        } catch (e: Exception) {
+            Log.e("LightenViewModel", "加载点亮城市失败", e)
         }
     }
 
@@ -303,6 +308,20 @@ class LightenViewModel @Inject constructor(
      */
     fun refreshAllData() {
         viewModelScope.launch {
+            // 先清空状态，强制触发重组
+            _uiState.update { state ->
+                state.copy(
+                    lightedCities = emptyList(),
+                    lightedProvinces = emptyList(),
+                    lightedCityCount = 0,
+                    lightedProvinceCount = 0
+                )
+            }
+
+            // 延迟一下，确保清空状态已生效
+            delay(50)
+
+            // 重新加载数据
             loadLightedCityCodes()
             loadLightedProvinceCodes()
             loadLightedCities()

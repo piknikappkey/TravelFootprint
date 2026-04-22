@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.runtime)
     // ❌ 删除这行: implementation(libs.androidx.compose.remote.creation.core)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")

@@ -1,7 +1,8 @@
 package com.example.travel_footprint_android.presentation2.components.light_panel2.panel_title
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,8 +29,8 @@ fun PanelTitle(
             .fillMaxWidth()
             .animateContentSize(
                 animationSpec = tween(
-                    durationMillis = 200,
-                    easing = FastOutSlowInEasing
+                    durationMillis = 350,  // 从200增加到350，让动画更平滑
+                    easing = CubicBezierEasing(0.2f, 0.9f, 0.4f, 1.0f)  // 自定义更平滑的曲线
                 )
             )
     ) {
@@ -91,28 +92,30 @@ fun CityEditTitle(
 ) {
     Column {
         Row {
-            // 取消按钮
-            Text(
-                text = "取消",
-                modifier = Modifier
-                    .clickable(
-                        onClick = {
-                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
-                        }
-                    )
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            // 保存按钮
-            Text(
-                text = "保存",
-                modifier = Modifier
-                    .clickable(
-                        onClick = {
-                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
-                        }
-                    )
-            )
+
+            //由于底部更新了取消按钮，暂时取消顶部按钮
+//            // 取消按钮
+//            Text(
+//                text = "取消",
+//                modifier = Modifier
+//                    .clickable(
+//                        onClick = {
+//                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
+//                        }
+//                    )
+//            )
+//            Spacer(modifier = Modifier.weight(1f))
+//            // 保存按钮
+//            Text(
+//                text = "保存",
+//                modifier = Modifier
+//                    .clickable(
+//                        onClick = {
+//                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
+//                        }
+//                    )
+//            )
         }
-        Text("修改${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
+//        Text("修改${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
     }
 }

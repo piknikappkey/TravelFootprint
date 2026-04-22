@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,11 +21,14 @@ import com.example.travel_footprint_android.presentation2.components.light_panel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.light_province_edit_select.LightProvinceEditSelect
 import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
+
 @Composable
 fun LightCityEditScreen(
     lightPanel2State: LightPanel2State,
     lightenCityMode: LightenCityMode,
     viewModel: LightenViewModel = hiltViewModel(),
+    initialSelectedCityCodes: Set<String> = emptySet(),
+    initialSelectedProvinceCodes: Set<String> = emptySet(),
     onSelectionChanged: (
         selectedCityCodes: Set<String>,
         unselectedCityCodes: Set<String>,
@@ -31,10 +36,29 @@ fun LightCityEditScreen(
         unselectedProvinceCodes: Set<String>
     ) -> Unit = { _, _, _, _ -> }
 ) {
-    var selectedCityCodes by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var selectedProvinceCodes by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var unselectedCityCodes by remember { mutableStateOf<Set<String>>(emptySet()) }
-    var unselectedProvinceCodes by remember { mutableStateOf<Set<String>>(emptySet()) }
+    // 只在进入编辑模式时初始化
+    var selectedCityCodes by remember(lightPanel2State) {
+        mutableStateOf(initialSelectedCityCodes)
+    }
+    var selectedProvinceCodes by remember(lightPanel2State) {
+        mutableStateOf(initialSelectedProvinceCodes)
+    }
+
+    // 自动计算未选中的（被取消点亮的）
+    val unselectedCityCodes by remember(selectedCityCodes, initialSelectedCityCodes) {
+        derivedStateOf { initialSelectedCityCodes subtract selectedCityCodes }
+    }
+    val unselectedProvinceCodes by remember(selectedProvinceCodes, initialSelectedProvinceCodes) {
+        derivedStateOf { initialSelectedProvinceCodes subtract selectedProvinceCodes }
+    }
+
+    // 当选中状态变化时，通知父组件
+    LaunchedEffect(selectedCityCodes, unselectedCityCodes, selectedProvinceCodes, unselectedProvinceCodes) {
+        onSelectionChanged(
+            selectedCityCodes, unselectedCityCodes,
+            selectedProvinceCodes, unselectedProvinceCodes
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -53,47 +77,29 @@ fun LightCityEditScreen(
                 selectedCityCodes = selectedCityCodes,
                 selectedProvinceCodes = selectedProvinceCodes,
                 onCitySelectionChange = { cityCode, isSelected ->
-                    if (isSelected) {
-                        selectedCityCodes = selectedCityCodes + cityCode
-                        unselectedCityCodes = unselectedCityCodes - cityCode
+                    selectedCityCodes = if (isSelected) {
+                        selectedCityCodes + cityCode
                     } else {
-                        selectedCityCodes = selectedCityCodes - cityCode
-                        unselectedCityCodes = unselectedCityCodes + cityCode
+                        selectedCityCodes - cityCode
                     }
-                    onSelectionChanged(
-                        selectedCityCodes, unselectedCityCodes,
-                        selectedProvinceCodes, unselectedProvinceCodes
-                    )
                 },
                 onProvinceSelectionChange = { provinceCode, isSelected ->
-                    if (isSelected) {
-                        selectedProvinceCodes = selectedProvinceCodes + provinceCode
-                        unselectedProvinceCodes = unselectedProvinceCodes - provinceCode
+                    selectedProvinceCodes = if (isSelected) {
+                        selectedProvinceCodes + provinceCode
                     } else {
-                        selectedProvinceCodes = selectedProvinceCodes - provinceCode
-                        unselectedProvinceCodes = unselectedProvinceCodes + provinceCode
+                        selectedProvinceCodes - provinceCode
                     }
-                    onSelectionChanged(
-                        selectedCityCodes, unselectedCityCodes,
-                        selectedProvinceCodes, unselectedProvinceCodes
-                    )
                 }
             )
         } else {
             LightProvinceEditSelect(
                 selectedProvinceCodes = selectedProvinceCodes,
                 onProvinceSelectionChange = { provinceCode, isSelected ->
-                    if (isSelected) {
-                        selectedProvinceCodes = selectedProvinceCodes + provinceCode
-                        unselectedProvinceCodes = unselectedProvinceCodes - provinceCode
+                    selectedProvinceCodes = if (isSelected) {
+                        selectedProvinceCodes + provinceCode
                     } else {
-                        selectedProvinceCodes = selectedProvinceCodes - provinceCode
-                        unselectedProvinceCodes = unselectedProvinceCodes + provinceCode
+                        selectedProvinceCodes - provinceCode
                     }
-                    onSelectionChanged(
-                        selectedCityCodes, unselectedCityCodes,
-                        selectedProvinceCodes, unselectedProvinceCodes
-                    )
                 }
             )
         }

@@ -121,6 +121,8 @@ fun LightPanel2(
             LightCityEditScreen(
                 lightPanel2State = lightPanel2State,
                 lightenCityMode = lightenCityMode,
+                initialSelectedCityCodes = selectedCityCodes,  // 传入当前已点亮的城市
+                initialSelectedProvinceCodes = selectedProvinceCodes,  // 传入当前已点亮的省份
                 onSelectionChanged = { selectedCities, unselectedCities, selectedProvinces, unselectedProvinces ->
                     selectedCityCodes = selectedCities
                     unselectedCityCodes = unselectedCities
