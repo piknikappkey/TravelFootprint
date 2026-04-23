@@ -28,16 +28,19 @@ class JourneyRepository @Inject constructor(
         title: String,
         style: String,
         description: String = "",
-        coverImagePath: String = ""
+        startDate: Date = Date(),
+        endDate: Date = Date(),
+        coverImagePath: String = "",
+        journeyImagePaths: List<String> = emptyList()
     ): Long {
         val journey = Journey(
             title = title,
             description = description,
-            startDate = Date(),
-            endDate = Date(),
+            startDate = startDate,
+            endDate = endDate,
             coverStyle = style,
             coverImagePath = coverImagePath,
-            journeyImagePaths = emptyList()
+            journeyImagePaths = journeyImagePaths
         )
         return journeyDao.insertJourney(journey)
     }

@@ -52,10 +52,22 @@ class AppService @Inject constructor(
     suspend fun createJourney(
         title: String,
         style: String = "watercolor",
-        description: String = ""
+        description: String = "",
+        startDate: Date = Date(),
+        endDate: Date = Date(),
+        coverImagePath: String = "",
+        journeyImagePaths: List<String> = emptyList()
     ): Long {
         return withContext(Dispatchers.IO) {
-            journeyRepository.createJourney(title, style, description)
+            journeyRepository.createJourney(
+                title = title,
+                style = style,
+                description = description,
+                startDate = startDate,
+                endDate = endDate,
+                coverImagePath = coverImagePath,
+                journeyImagePaths = journeyImagePaths
+            )
         }
     }
 
