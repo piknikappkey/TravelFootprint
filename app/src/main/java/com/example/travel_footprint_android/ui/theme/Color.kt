@@ -42,7 +42,7 @@ val BGLight6 = Color(0xFFF9F9F9)
   */
 // 用户位置图标颜色
 val LocationIconColor = color.argb(100, 255, 0, 0)
-// 用户位置可能范围填充颜色
-val LocationStrokeColor = color.argb(100, 255, 0, 0)
 // 用户位置可能范围边框颜色
-val LocationRadiusFillColor = color.argb(100, 255, 0, 0)
+val LocationStrokeColor = color.argb(100, 100, 200, 255)
+// 用户位置可能范围填充颜色
+val LocationRadiusFillColor = color.argb(100, 180, 200, 255)

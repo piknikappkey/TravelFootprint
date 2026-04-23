@@ -67,28 +67,28 @@ fun NavItem(
     // 文字透明度动画
     val animatedAlpha by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0.6f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "navItemAlpha"
     )
 
     // 文字大小动画
     val animatedFontSize by animateFloatAsState(
         targetValue = if (isSelected) .9f else 1f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "navItemFontSize"
     )
 
     // 图标大小动画
     val animateIconSize by animateFloatAsState(
         targetValue = if (isSelected) 1f else .8f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "navItemSize"
     )
 
     // 背景色动画：选中时渐变为带透明度的紫色，未选中时完全透明
     val backgroundAlpht by animateFloatAsState(
         targetValue = if (isSelected) .3f else 0f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "navItemAlpha"
     )
 

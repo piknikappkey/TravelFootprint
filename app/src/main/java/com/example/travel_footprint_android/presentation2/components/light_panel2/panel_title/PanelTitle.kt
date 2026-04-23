@@ -45,16 +45,16 @@ fun PanelTitle(
 @Composable
 fun CityTitle(
     lightPanel2State: LightPanel2State,
-    lightCityList: Int,
+    lightedCityCount: Int,
     lightedProvinceCount: Int,
     setLightPanel2State: (LightPanel2State) -> Unit,
     lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
 ) {
     Row {
-        Text("已点亮${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
+        Text("已点亮${if(lightenCityMode == LightenCityMode.CITY) lightedCityCount else lightedProvinceCount}个" + if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份")
         Spacer(modifier = Modifier.weight(1f))
         if(
-            lightenCityMode == LightenCityMode.CITY && lightCityList > 10 ||
+            lightenCityMode == LightenCityMode.CITY && lightedCityCount > 10 ||
             lightenCityMode == LightenCityMode.PROVINCE && lightedProvinceCount > 10
             ) {
             if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY) {

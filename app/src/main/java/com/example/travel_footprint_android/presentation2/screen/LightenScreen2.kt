@@ -36,7 +36,12 @@ fun LightenScreen2(
             .fillMaxSize()
             .clip(RoundedCornerShape(0.dp))
     ) {
-        SVGMap(Modifier.weight(1f), { lightenCityMode = it })
+        SVGMap(
+            Modifier.weight(1f),
+            { lightenCityMode = it },
+            lightedProvinces
+        )
+//        LightAMap(Modifier.weight(1f), { lightenCityMode = it })
         LightPanel2(Modifier, lightenCityMode)
     }
 }

@@ -60,9 +60,12 @@ fun JourneyMap2(
     }
 }
 
-// 初始化地图//
+// 初始化地图
 private fun InitAmap(view: MapView, locationClient: AMapLocationClient) : AMap {
     val aMap = view.map
+
+    // 隐藏缩放按钮（放大/缩小按钮）
+    aMap.uiSettings.isZoomControlsEnabled = false
 
     val locationOption = AMapLocationClientOption().apply {
         locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
@@ -95,8 +98,8 @@ private fun setLocationIcon(aMap: AMap, context: Context){
         .myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
         .showMyLocation(true)
         .myLocationIcon(coloredIcon)
-        .strokeColor(LocationStrokeColor)
-        .radiusFillColor(LocationRadiusFillColor)
+        .strokeColor(LocationStrokeColor) // 边框颜色
+        .radiusFillColor(LocationRadiusFillColor) // 填充颜色
     aMap.myLocationStyle = myLocationStyle
 
     aMap.isMyLocationEnabled = true

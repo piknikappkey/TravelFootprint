@@ -176,10 +176,13 @@ class GeoDataRepository(private val context: Context) {
      * @return Pair<省份列表, 按省份分组的城市列表>
      */
     suspend fun loadAllGeoData(): Pair<List<ProvinceInfo>, Map<String, List<CityItemInfo>>> {
-        Log.d(TAG, "开始加载所有地理数据...")
+        val startTime = System.currentTimeMillis()
+        Log.d("loadAllGeoData", "开始加载所有地理数据...")
         val provinces = loadProvinces()
         val citiesByProvince = loadCitiesByProvince()
-        Log.d(TAG, "地理数据加载完成: ${provinces.size} 省份, ${citiesByProvince.size} 省份有城市数据")
+        Log.d("loadAllGeoData", "地理数据加载完成: ${provinces.size} 省份, ${citiesByProvince.size} 省份有城市数据")
+        val overTime = System.currentTimeMillis()
+        Log.d("loadAllGeoData", "运行时间：${overTime - startTime}")
         return Pair(provinces, citiesByProvince)
     }
 

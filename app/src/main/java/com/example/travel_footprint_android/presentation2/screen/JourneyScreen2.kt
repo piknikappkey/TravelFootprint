@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.presentation2.components.journey_map2.JourneyMap2
+import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel2
 
 @Composable
@@ -17,7 +18,10 @@ fun JourneyScreen2() {
             .fillMaxSize()
             .clip(RoundedCornerShape(0.dp))
     ) {
-        JourneyMap2(Modifier.weight(1f))
+        JourneyMap3(
+            modifier = Modifier.weight(1f)
+        )
+//        JourneyMap2(Modifier.weight(1f))
         JourneyPanel2()
     }
 }
