@@ -1,9 +1,7 @@
 package com.example.travel_footprint_android.presentation2.navigation
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -34,9 +32,9 @@ fun CustomNavHost2(
     LaunchedEffect(currentDest) {
         if(currentDest != currentDestOld) {
             aniZIndex.snapTo(10f) // 调出白板用于遮挡页面
-            aniAlpha.animateTo(1f, animationSpec = tween(50)) // 调整透明度
+            aniAlpha.animateTo(1f, animationSpec = tween(10)) // 调整透明度
             currentDestOld = currentDest // 切换页面
-            aniAlpha.animateTo(0f, animationSpec = tween(50)) // 调回透明度
+            aniAlpha.animateTo(0f, animationSpec = tween(150)) // 调回透明度
             aniZIndex.snapTo(0f) // 移除白板
         }
     }
@@ -50,9 +48,7 @@ fun CustomNavHost2(
                 .fillMaxSize()
                 .zIndex(aniZIndex.value)
                 .alpha(aniAlpha.value)
-        ) {
-
-        }
+        ) {}
         when (currentDestOld) {
             NavPathObj2.lighten -> LightenScreen2()
             NavPathObj2.journey -> JourneyScreen2()

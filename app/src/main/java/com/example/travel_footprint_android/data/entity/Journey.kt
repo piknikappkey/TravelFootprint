@@ -12,7 +12,7 @@ data class Journey(
     val startDate: Date,                         // 开始日期
     val endDate: Date,                           // 结束日期
     val coverStyle: String,                      // 封面风格
-    val coverImagePath: String,                  // 封面图片路径
+    var coverImagePath: String,                  // 封面图片路径
     val journeyImagePaths: List<String>          // 旅程图片路径列表
 ) {
     fun getDuration(): Int {

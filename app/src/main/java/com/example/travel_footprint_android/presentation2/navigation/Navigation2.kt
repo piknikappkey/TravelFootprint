@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.presentation2.viewmodel.nav_controller.CustomNavController
+import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.FontDark4
 import com.example.travel_footprint_android.ui.theme.Purple40
 import com.example.travel_footprint_android.ui.theme.Purple80
@@ -39,7 +40,9 @@ fun Navigation2(
      * 自定义导航
      */
     Box(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color = BGLight0),
         contentAlignment = Alignment.Center // 水平据中
     ) {
         Row(
