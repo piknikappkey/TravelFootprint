@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,20 +21,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.image_square.add_icon.AddIcon
 import com.example.travel_footprint_android.presentation2.components.image_square.delete_icon.DeleteIcon
 import com.example.travel_footprint_android.presentation2.components.image_square.image1.Image1
 import java.io.File
 
 @Composable
-fun ImageSquare(
-    journey: Journey,
-    updateJourney: (Journey) -> Unit,
+fun ImageSquare2(
+    imgPath: String,
+    updateImgPath: (File) -> Unit,
+    deleteImgPath: (String) -> Unit,
     modifier: Modifier = Modifier,
-    aspectRatio: Float = 1f,
-    iconSize: Float = .3f,
+    aspectRatio: Float = 1f, // 宽高比
+    addIconSize: Float = .3f, // “+”图标大小（相较于整个页面）
+    elevation: Dp = 8.dp, // 阴影大小
+    shape: RoundedCornerShape = RoundedCornerShape(16.dp), // 圆角
+    delIconSize: Dp = 25.dp // “X”图标大小
 ) {
     val context = LocalContext.current
 
@@ -44,11 +47,11 @@ fun ImageSquare(
      */
     var savedImageFile by remember { mutableStateOf<File?>(null) }
 
-    // 初始化savedImageFile，如果该旅程有封面图，则直接使用
-    LaunchedEffect(journey) {
-        Log.d("ImageUpload", "journeyCoverPath: ${journey.coverImagePath}")
-        if (journey.coverImagePath.isNotEmpty()) {
-            val file = File(journey.coverImagePath)
+    // 当imgPath更改时，切换图片
+    LaunchedEffect(imgPath) {
+        Log.d("ImageUpload", "imgPath: $imgPath")
+        if (imgPath.isNotEmpty()) {
+            val file = File(imgPath)
             savedImageFile = if (file.exists()) file else null
         }
     }
@@ -63,13 +66,11 @@ fun ImageSquare(
         }
 
         // 复制到内部存储，并将路径存储到数据库，返回 File 对象
-        val file = copyToInternalStorage(context, uri)
+        val file = copyToInternalStorage2(context, uri)
         if (file != null) {
-            // 存储到数据库
-            journey.coverImagePath = file.absolutePath
-            updateJourney(journey)
-            // 显示到页面上
-            savedImageFile = file
+            // 存储到数据库，并根据需要，显示/不显示该图片
+            updateImgPath(file)
+//            savedImageFile = updateImgPath(file)
             Log.d("ImageUpload", "文件路径: ${file.absolutePath}")
         } else {
             Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()
@@ -82,15 +83,14 @@ fun ImageSquare(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp)
         ) {
             // 设置选中和未选中图片样式
             val modifierImg =  Modifier
                 .fillMaxWidth()                // 宽度占满父容器
                 .aspectRatio(aspectRatio)      // 宽高比
                 .shadow(
-                    elevation = 8.dp,                 // 阴影高度
-                    shape = RoundedCornerShape(16.dp), // 与圆角一致
+                    elevation = elevation,                 // 阴影高度
+                    shape = shape, // 圆角
                     clip = true                        // 同时按照该形状裁剪内容
                 )
             // 显示图片
@@ -100,19 +100,18 @@ fun ImageSquare(
                 // 删除图标
                 DeleteIcon(
                     Modifier.align(Alignment.TopEnd),
-                    iconSize = 25.dp,
+                    iconSize = delIconSize,
                     {
                         // 删除数据库路径
-                        journey.coverImagePath = ""
-                        updateJourney(journey)
-                        savedImageFile = null
+                        deleteImgPath(savedImageFile!!.absolutePath)
+//                        savedImageFile = null
                     }
                 )
             } else {
                 // 添加图标
                 AddIcon(
                     modifierImg,
-                    iconSize = iconSize,
+                    iconSize = addIconSize,
                     { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
             }
         }
@@ -122,7 +121,7 @@ fun ImageSquare(
 /**
  * 将图片 URI 复制到应用内部存储，返回保存的 File
  */
-fun copyToInternalStorage(context: Context, uri: Uri): File? {
+fun copyToInternalStorage2(context: Context, uri: Uri): File? {
     return try {
         val fileName = "IMG_${System.currentTimeMillis()}.jpg"
         val outputFile = File(context.filesDir, fileName)

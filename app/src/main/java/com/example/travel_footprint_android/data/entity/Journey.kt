@@ -13,7 +13,7 @@ data class Journey(
     val endDate: Date,                           // 结束日期
     val coverStyle: String,                      // 封面风格
     var coverImagePath: String,                  // 封面图片路径
-    val journeyImagePaths: List<String>          // 旅程图片路径列表
+    var journeyImagePaths: List<String>          // 旅程图片路径列表
 ) {
     fun getDuration(): Int {
         return ((endDate.time - startDate.time) / (1000 * 60 * 60 * 24)).toInt()
