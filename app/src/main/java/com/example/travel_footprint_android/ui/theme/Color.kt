@@ -12,6 +12,18 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
+// 主色调
+val MainColor1 = Color(0xFFD0BCFF)
+val MainColor2 = Color(0xFF9F79FA)
+val MainColor3 = Color(0xFF7F4EF1)
+val MainColor4 = Color(0xFF4B00FF)
+
+// 副色调
+val SecondColor1 = Color(0xFFFFE9BC)
+val SecondColor2 = Color(0xFFFDD583)
+val SecondColor3 = Color(0xFFF1B742)
+val SecondColor4 = Color(0xFFFFAB00)
+
 /**
  * 字体样式
  */
@@ -27,15 +39,27 @@ val FontDark4 = Color(0xFF444444)
 val FontDark2 = Color(0xFF222222)
 val FontDark0 = Color(0xFF000000)
 
+// 主色调字体颜色-浅<-->深
+val FontColor0 = Color(0xFFD0BCFF)
+val FontColor1 = Color(0xFFC3ABFD)
+val FontColor2 = Color(0xFFB698FD)
+val FontColor3 = Color(0xFFA782FD)
+val FontColor4 = Color(0xFF986DFC)
+val FontColor5 = Color(0xFF8958FC)
+val FontColor6 = Color(0xFF7B45FC)
+
+// 副色调字体颜色-浅<-->深
+
+
 /**
  * 背景样式
  */
 // 白板背景
 val BGLight0 = Color(0xFFFFFFFF)
-val BGLight1 = Color(0xFFFEFEFE)
-val BGLight2 = Color(0xFFFDFDFD)
-val BGLight4 = Color(0xFFFBFBFB)
-val BGLight6 = Color(0xFFF9F9F9)
+val BGLight1 = Color(0xFFFFFAFF)
+val BGLight2 = Color(0xFFFAF4FB)
+val BGLight4 = Color(0xFFF6E9F8)
+val BGLight6 = Color(0xFFF1DDF5)
 
 /**
  * 用户位置图标样式

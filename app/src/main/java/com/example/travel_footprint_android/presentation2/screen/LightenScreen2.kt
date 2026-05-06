@@ -1,5 +1,6 @@
 package com.example.travel_footprint_android.presentation2.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2
 import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
+import com.example.travel_footprint_android.ui.theme.BGLight0
 
 @Composable
 fun LightenScreen2(
@@ -34,6 +36,7 @@ fun LightenScreen2(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = BGLight0)
             .clip(RoundedCornerShape(0.dp))
     ) {
         SVGMap(
