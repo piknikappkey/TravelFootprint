@@ -11,20 +11,20 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_add.JourneyAdd
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.JourneyDetails
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.JourneyEdit
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list.JourneyList
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.location_button.LocationButton
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.JOURNEY_DETAILS
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.JOURNEY_EDIT
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.JOURNEY_LIST
 import com.example.travel_footprint_android.ui.theme.BGLight1
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -33,11 +33,15 @@ fun JourneyPanel2(
     modifier: Modifier = Modifier,
     journeyList: List<Journey>, // 旅程列表
     updateJourney: (Journey) -> Unit,
+    addJourney: (Journey) -> Unit,
+    deleteJourney: (Journey) -> Unit,
 ) {
     // 面板状态
-    var journeyPanel2State by remember { mutableStateOf(JourneyPanel2State.JOURNEY_LIST) }
+    val journeyPanel2State = JourneyNavController.journeyNavController.value
+
     // 当前选中的旅程
-    var journeySelected by remember { mutableStateOf<Journey?>(null) }
+    val journeySelected = JourneyNavController.journeyData.value
+
 
     Box(
         modifier = modifier
@@ -71,41 +75,35 @@ fun JourneyPanel2(
                     .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.6f)   // 限制面板最大高度，内容少时自适应
             ) {
                 when(journeyPanel2State) {
-                    JourneyPanel2State.JOURNEY_LIST -> {
+                    JOURNEY_LIST -> {
                         JourneyList(
                             journeyList = journeyList,
-                            selectJourney = { item -> journeySelected = item },
-                            setState = { state -> journeyPanel2State = state}
+                            navigate = { state, journey -> JourneyNavController.navigate(state, journey)}
                         )
                     }
-                    JourneyPanel2State.JOURNEY_DETAILS -> {
+                    JOURNEY_DETAILS -> {
                         journeySelected?.let {
                             JourneyDetails(
                                 modifier = Modifier.weight(1f),
                                 journeySelected = it,
                                 updateJourney = updateJourney,
-                                setState = { state -> journeyPanel2State = state }
+                                deleteJourney = deleteJourney,
+                                navigate = { state, journey -> JourneyNavController.navigate(state, journey)}
+
                             )
                         }
                     }
-                    JourneyPanel2State.JOURNEY_DETAILS_EDIT -> {
-
-                    }
-                    JourneyPanel2State.JOURNEY_ADD -> {
-                        JourneyAdd(
+                    JOURNEY_EDIT -> {
+                        JourneyEdit(
                             modifier = Modifier.weight(1f),
-                            setState = { state -> journeyPanel2State = state }
+                            journeySelected = journeySelected,
+                            navigate = { state, journey -> JourneyNavController.navigate(state, journey)},
+                            addJourney = addJourney,
+                            updateJourney = updateJourney,
                         )
                     }
                 }
             }
         }
     }
-}
-
-enum class JourneyPanel2State {
-    JOURNEY_LIST,
-    JOURNEY_DETAILS,
-    JOURNEY_DETAILS_EDIT,
-    JOURNEY_ADD,
 }

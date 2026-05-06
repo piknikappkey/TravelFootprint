@@ -22,6 +22,7 @@ import com.example.travel_footprint_android.presentation2.components.text.text_s
 import com.example.travel_footprint_android.ui.theme.BGLight3
 import com.example.travel_footprint_android.ui.theme.FontDark4
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -88,7 +89,7 @@ fun JourneyItem(
             val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val shortDateFormat = SimpleDateFormat("MM-dd", Locale.getDefault())
             
-            val currentYear = yearFormat.format(java.util.Date())
+            val currentYear = yearFormat.format(Date())
             if(journey != null) {
                 val startYear = yearFormat.format(journey.startDate)
 

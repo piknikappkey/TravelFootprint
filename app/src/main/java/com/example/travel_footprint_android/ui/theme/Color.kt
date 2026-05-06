@@ -56,11 +56,31 @@ val FontColor6 = Color(0xFF7B45FC)
  */
 // 白板背景
 val BGLight0 = Color(0xFFFFFFFF)
-val BGLight1 = Color(0xFFFFFAFF)
+val BGLight1 = Color(0xFFFFFCFF)
+//val BGLight1 = Color(0xFFFFFAFF)
 val BGLight2 = Color(0xFFFAF4FB)
 val BGLight3 = Color(0xFFFAF1FC)
 val BGLight4 = Color(0xFFF6E9F8)
 val BGLight6 = Color(0xFFF1DDF5)
+
+/**
+ * 功能按钮颜色
+ */
+val SaveColor = Color(0xFF97FD89)
+val CancelColor = Color(0xFFFFBF47)
+val DeleteColor = Color(0xFFFF7B6E)
+
+/**
+ * 按钮背景色
+ */
+val BtnBgColorMain0 = Color(0xFFEBD5FF)
+val BtnBgColorMain1 = Color(0xFFDDB9FD)
+val BtnBgColorMain2 = Color(0xFFCD99FC)
+val BtnBgColorSecond0 = Color(0xFFFFE9BC)
+val BtnBgColorSecond1 = Color(0xFFFDDD9A)
+val BtnBgColorSecond2 = Color(0xFFFDD37A)
+
+
 
 /**
  * 用户位置图标样式

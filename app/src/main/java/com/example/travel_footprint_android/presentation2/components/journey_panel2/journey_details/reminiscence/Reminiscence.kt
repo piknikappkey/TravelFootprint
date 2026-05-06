@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +21,8 @@ import com.example.travel_footprint_android.presentation2.components.image_squar
 @Composable
 fun Reminiscence(
     journey: Journey,
-    updateJourney: (Journey) -> Unit
+    updateJourney: (Journey) -> Unit,
+    showDelIcon: Boolean = false,
 ) {
     val imgSize = 80.dp
     val aspectRatio = 1f
@@ -33,6 +35,7 @@ fun Reminiscence(
     ) {
         FlowRow(
             modifier = Modifier
+                .widthIn(min = 360.dp)
                 .align(Alignment.Center)
                 .padding(horizontal = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(0.dp),  // 水平间距
@@ -56,7 +59,8 @@ fun Reminiscence(
                         addIconSize = iconSize,
                         elevation = elevation,
                         shape = shape,
-                        delIconSize = delIconSize
+                        delIconSize = delIconSize,
+                        showDelIcon = true,
                     )
                 }
             }

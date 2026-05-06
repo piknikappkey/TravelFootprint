@@ -38,7 +38,8 @@ fun ImageSquare2(
     addIconSize: Float = .3f, // “+”图标大小（相较于整个页面）
     elevation: Dp = 8.dp, // 阴影大小
     shape: RoundedCornerShape = RoundedCornerShape(16.dp), // 圆角
-    delIconSize: Dp = 25.dp // “X”图标大小
+    delIconSize: Dp = 25.dp, // “X”图标大小
+    showDelIcon: Boolean = false, // 显示删除图标
 ) {
     val context = LocalContext.current
 
@@ -100,15 +101,16 @@ fun ImageSquare2(
                 // 图片
                 Image1(modifierImg, savedImageFile!!)
                 // 删除图标
-                DeleteIcon(
-                    Modifier.align(Alignment.TopEnd),
-                    iconSize = delIconSize,
-                    {
-                        // 删除数据库路径
-                        deleteImgPath(savedImageFile!!.absolutePath)
-//                        savedImageFile = null
-                    }
-                )
+                if(showDelIcon) {
+                    DeleteIcon(
+                        Modifier.align(Alignment.TopEnd),
+                        iconSize = delIconSize,
+                        {
+                            // 删除数据库路径
+                            deleteImgPath(savedImageFile!!.absolutePath)
+                        }
+                    )
+                }
             } else {
                 // 添加图标
                 AddIcon(

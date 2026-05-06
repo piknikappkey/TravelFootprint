@@ -44,8 +44,10 @@ fun JourneyScreen2(
         JourneyPanel2(
             Modifier
                 .align(Alignment.BottomCenter),
-            journeys,
-            { journey -> journeyViewModel.updateJourney(journey)},
+            journeyList = journeys,
+            updateJourney = { journey -> journeyViewModel.updateJourney(journey)},
+            addJourney = { journey -> journeyViewModel.createJourney(journey)},
+            deleteJourney = { journey -> journeyViewModel.deleteJourney(journey)},
         )
     }
 }
