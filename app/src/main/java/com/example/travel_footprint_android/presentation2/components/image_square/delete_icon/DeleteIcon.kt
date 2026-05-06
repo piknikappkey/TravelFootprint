@@ -36,12 +36,12 @@ fun DeleteIcon(
                 clickable()
             },
     ) {
-        Image(
-            modifier = Modifier
-                .size(iconSize),
-            painter = painterResource(id = R.drawable.ic_delete3),
-            contentDescription = "删除图标",
-            colorFilter = ColorFilter.tint(SecondColor4),
-        )
+//        Image(
+//            modifier = Modifier
+//                .size(iconSize),
+//            painter = painterResource(id = R.drawable.ic_delete3),
+//            contentDescription = "删除图标",
+//            colorFilter = ColorFilter.tint(SecondColor4),
+//        )
     }
 }
