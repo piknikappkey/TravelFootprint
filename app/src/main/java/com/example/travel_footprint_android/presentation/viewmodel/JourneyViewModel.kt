@@ -360,6 +360,8 @@ class JourneyViewModel @Inject constructor(
         ) }
     }
 
+
+    //通过id删除旅程
     fun deleteJourney(journeyId: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -379,10 +381,34 @@ class JourneyViewModel @Inject constructor(
         }
     }
 
+    //
+
+//    fun deleteJourney(journey: Journey) {
+//        deleteJourney(journey.id)
+//    }
+
+
+    //通过对象删除旅程
     fun deleteJourney(journey: Journey) {
-        deleteJourney(journey.id)
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                appService.deleteJourney(journey)
+                hideDeleteConfirmDialog()
+                loadData()
+                _uiState.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        error = e.message ?: "删除失败"
+                    )
+                }
+            }
+        }
     }
 
+    //删除当前旅程
     fun deleteCurrentJourney() {
         _uiState.value.deletingJourney?.let { journey ->
             deleteJourney(journey.id)

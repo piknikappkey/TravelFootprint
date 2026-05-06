@@ -55,6 +55,11 @@ class JourneyRepository @Inject constructor(
         journeyDao.deleteJourneyById(journeyId)
     }
 
+    //删除旅程
+    suspend fun deleteJourney(journey: Journey){
+        journeyDao.deleteJourney(journey)
+    }
+
     suspend fun searchJourneys(keyword: String): List<Journey> {
         return journeyDao.searchJourneys(keyword)
     }

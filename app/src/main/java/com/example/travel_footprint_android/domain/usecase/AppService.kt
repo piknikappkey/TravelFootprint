@@ -92,6 +92,12 @@ class AppService @Inject constructor(
         }
     }
 
+    suspend fun deleteJourney(journey: Journey){
+        withContext(Dispatchers.IO){
+            journeyRepository.deleteJourney(journey)
+        }
+    }
+
     suspend fun searchJourneys(keyword: String): List<Journey> {
         return withContext(Dispatchers.IO) {
             journeyRepository.searchJourneys(keyword)
