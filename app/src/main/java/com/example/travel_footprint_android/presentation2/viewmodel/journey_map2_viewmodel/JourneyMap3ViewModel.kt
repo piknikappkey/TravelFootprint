@@ -34,8 +34,13 @@ class JourneyMap3ViewModel @Inject constructor(
     private val _aMap = MutableStateFlow<AMap?>(null)
     private val _locationClient = MutableStateFlow<AMapLocationClient?>(null)
     private val _isInitialized = MutableStateFlow(false)
+    private val _currentLocation = MutableStateFlow<LatLng?>(null)
+
+    val aMap: StateFlow<AMap?> = _aMap.asStateFlow()
 
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+
+    val currentLocation: StateFlow<LatLng?> = _currentLocation.asStateFlow()
 
     init {
         initializeMapIfNeeded(application)
@@ -65,6 +70,7 @@ class JourneyMap3ViewModel @Inject constructor(
     private fun setupMap(aMap: AMap, locationClient: AMapLocationClient) {
         // 隐藏缩放按钮
         aMap.uiSettings.isZoomControlsEnabled = false
+        aMap.uiSettings.isMyLocationButtonEnabled = false
 
         // 配置定位
         val locationOption = AMapLocationClientOption().apply {
@@ -114,6 +120,10 @@ class JourneyMap3ViewModel @Inject constructor(
         drawable?.draw(canvas)
 
         return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    fun setCurrentLocation(currentLocation: LatLng?) {
+        _currentLocation.value = currentLocation
     }
 
     fun startLocation() {

@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.headline
+package com.example.travel_footprint_android.presentation2.components.text.headline
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

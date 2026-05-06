@@ -32,7 +32,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             // 传入 debugHelper 即可显示调试按钮，不传则无调试按钮
-            MainScreen2(debugHelper = debugHelper)
+//            MainScreen2(debugHelper = debugHelper)
+            MainScreen2(debugHelper = null)
         }
     }
 }

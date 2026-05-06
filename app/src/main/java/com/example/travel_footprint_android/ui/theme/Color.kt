@@ -21,7 +21,7 @@ val MainColor4 = Color(0xFF4B00FF)
 // 副色调
 val SecondColor1 = Color(0xFFFFE9BC)
 val SecondColor2 = Color(0xFFFDD583)
-val SecondColor3 = Color(0xFFF1B742)
+val SecondColor3 = Color(0xFFFFBF47)
 val SecondColor4 = Color(0xFFFFAB00)
 
 /**
@@ -58,6 +58,7 @@ val FontColor6 = Color(0xFF7B45FC)
 val BGLight0 = Color(0xFFFFFFFF)
 val BGLight1 = Color(0xFFFFFAFF)
 val BGLight2 = Color(0xFFFAF4FB)
+val BGLight3 = Color(0xFFFAF1FC)
 val BGLight4 = Color(0xFFF6E9F8)
 val BGLight6 = Color(0xFFF1DDF5)
 

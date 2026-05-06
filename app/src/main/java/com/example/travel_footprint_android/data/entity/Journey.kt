@@ -7,7 +7,7 @@ import java.util.Date
 data class Journey(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,                          // 旅程编号
-    val title: String,                          // 标题
+    var title: String,                          // 标题
     val description: String,                     // 描述
     val startDate: Date,                         // 开始日期
     val endDate: Date,                           // 结束日期

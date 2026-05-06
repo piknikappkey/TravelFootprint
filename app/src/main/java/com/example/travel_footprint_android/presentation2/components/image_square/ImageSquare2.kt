@@ -53,7 +53,9 @@ fun ImageSquare2(
         if (imgPath.isNotEmpty()) {
             val file = File(imgPath)
             savedImageFile = if (file.exists()) file else null
+            return@LaunchedEffect
         }
+        savedImageFile = null
     }
 
     // 选择图片

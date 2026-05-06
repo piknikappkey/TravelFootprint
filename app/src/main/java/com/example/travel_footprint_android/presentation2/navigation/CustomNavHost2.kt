@@ -2,6 +2,7 @@ package com.example.travel_footprint_android.presentation2.navigation
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -17,6 +18,7 @@ import androidx.compose.ui.zIndex
 import com.example.travel_footprint_android.presentation2.screen.JourneyScreen2
 import com.example.travel_footprint_android.presentation2.screen.LightenScreen2
 import com.example.travel_footprint_android.presentation2.viewmodel.nav_controller.CustomNavController
+import com.example.travel_footprint_android.ui.theme.BGLight0
 
 @Composable
 fun CustomNavHost2(
@@ -42,6 +44,7 @@ fun CustomNavHost2(
 
     Box(
         modifier = modifier
+            .background(BGLight0)
     ) {
         Surface(
             modifier = Modifier

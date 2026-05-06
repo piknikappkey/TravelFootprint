@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.reminiscence
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
