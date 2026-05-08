@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,9 +38,10 @@ fun ImageSquare2(
     modifier: Modifier = Modifier,
     aspectRatio: Float = 1f, // 宽高比
     addIconSize: Float = .3f, // “+”图标大小（相较于整个页面）
-    elevation: Dp = 8.dp, // 阴影大小
+    elevation: Dp = 2.dp, // 阴影高度
     shape: RoundedCornerShape = RoundedCornerShape(16.dp), // 圆角
-    delIconSize: Dp = 25.dp // “X”图标大小
+    delIconSize: Dp = 25.dp, // “X”图标大小
+    showDelIcon: Boolean = false, // 显示删除图标
 ) {
     val context = LocalContext.current
 
@@ -95,20 +98,24 @@ fun ImageSquare2(
                     shape = shape, // 圆角
                     clip = true                        // 同时按照该形状裁剪内容
                 )
+                .background(
+                    color = Color(0xffffffff),
+                )
             // 显示图片
             if (savedImageFile != null) {
                 // 图片
                 Image1(modifierImg, savedImageFile!!)
                 // 删除图标
-                DeleteIcon(
-                    Modifier.align(Alignment.TopEnd),
-                    iconSize = delIconSize,
-                    {
-                        // 删除数据库路径
-                        deleteImgPath(savedImageFile!!.absolutePath)
-//                        savedImageFile = null
-                    }
-                )
+                if(showDelIcon) {
+                    DeleteIcon(
+                        Modifier.align(Alignment.TopEnd),
+                        iconSize = delIconSize,
+                        {
+                            // 删除数据库路径
+                            deleteImgPath(savedImageFile!!.absolutePath)
+                        }
+                    )
+                }
             } else {
                 // 添加图标
                 AddIcon(

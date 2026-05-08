@@ -1,15 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_map3
-
-/**
- * JourneyMap3 - 地图展示组件
- *
- * 功能：集成高德地图，支持定位功能
- * 实现方法：
- *  - 使用 AndroidView 在 Compose 中嵌入 MapView
- *  - 通过 DisposableEffect 管理 MapView 生命周期（onCreate/onResume/onPause）
- *  - 使用 DisposableEffect + LaunchedEffect 触发定位
- *  - 通过 AMapLocationListener 获取当前位置并更新 ViewModel
- */
+package com.example.travel_footprint_android.presentation2.components.journey_map3_copy
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +16,7 @@ import com.amap.api.maps.model.LatLng
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 
 @Composable
-fun JourneyMap3(
+fun JourneyMap3Copy(
     modifier: Modifier = Modifier,
     journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(),
 ) {

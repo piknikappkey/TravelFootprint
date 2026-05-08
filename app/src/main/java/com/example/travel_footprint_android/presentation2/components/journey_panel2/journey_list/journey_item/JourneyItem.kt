@@ -19,9 +19,10 @@ import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.icon.icon_add.IconAdd
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
-import com.example.travel_footprint_android.ui.theme.BGLight3
+import com.example.travel_footprint_android.ui.theme.BGLight2
 import com.example.travel_footprint_android.ui.theme.FontDark4
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -40,7 +41,7 @@ fun JourneyItem(
                 clip = false
             )
             .background(
-                color = BGLight3,
+                color = BGLight2,
                 shape = RoundedCornerShape(5.dp, 5.dp, 5.dp, 5.dp)
             )
             .clickable(onClick = { if(journey != null) journeyClick(journey) else journeyAdd() })
@@ -88,7 +89,7 @@ fun JourneyItem(
             val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val shortDateFormat = SimpleDateFormat("MM-dd", Locale.getDefault())
             
-            val currentYear = yearFormat.format(java.util.Date())
+            val currentYear = yearFormat.format(Date())
             if(journey != null) {
                 val startYear = yearFormat.format(journey.startDate)
 

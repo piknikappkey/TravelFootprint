@@ -149,6 +149,7 @@ dependencies {
 
     // 高德地图 SDK
     implementation("com.amap.api:3dmap:10.0.600")
+    implementation("com.amap.api:search:9.7.0")
 //    // 3D地图
 //    implementation("com.amap.api:3dmap:9.7.0"){
 //        // 排除 location 相关重复类

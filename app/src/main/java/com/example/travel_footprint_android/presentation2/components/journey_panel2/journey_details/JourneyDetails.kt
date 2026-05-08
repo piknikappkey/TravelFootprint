@@ -2,27 +2,38 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
+import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
+import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
+import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation2.components.image_square.ImageSquare2
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel2State
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.FootprintPanel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence.Reminiscence
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.ui.theme.SecondColor1
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
 @Composable
@@ -30,9 +41,20 @@ fun JourneyDetails(
     modifier: Modifier = Modifier,
     journeySelected: Journey, // 当前选中的旅程
     updateJourney: (Journey) -> Unit,
-    setState: (JourneyPanel2State) -> Unit
+    deleteJourney: (Journey) -> Unit,
+    navigate: (JourneyPanel2State, Journey?) -> Unit
 ) {
     Row(
+        modifier = Modifier
+            .drawBehind {
+                // 在绘制区域底部画一条线
+                drawLine(
+                    color = SecondColor1,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx()
+                )
+            },
         verticalAlignment = Alignment.CenterVertically
     ){
         // 返回按钮
@@ -41,7 +63,7 @@ fun JourneyDetails(
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    setState(JourneyPanel2State.JOURNEY_LIST)
+                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
                 }),
             painter = painterResource(id = R.drawable.ic_left2),
             contentDescription = "返回图标",
@@ -50,51 +72,108 @@ fun JourneyDetails(
 
         // 标题
         Headline(
-            text = journeySelected.title,
+            text = "旅程详情",
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .padding(vertical = 5.dp, horizontal = 3.dp)
         )
+
+        IconEdit() {
+            navigate(JourneyPanel2State.JOURNEY_EDIT, journeySelected)
+        }
+
+        Spacer(Modifier.width(10.dp))
     }
     // 可滚动内容
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.padding(5.dp))
-        // 封面图片
-        ImageSquare2(
-            imgPath = journeySelected.coverImagePath,
-            updateImgPath = { file ->
-                journeySelected.coverImagePath = file.absolutePath
-                updateJourney(journeySelected)
-            },
-            deleteImgPath = { imgPath ->
-                journeySelected.coverImagePath = ""
-                updateJourney(journeySelected)
-            },
-            modifier = Modifier.padding(horizontal = 20.dp),
-            aspectRatio = 1.2f,
-            addIconSize = .3f
-        )
+        Spacer(Modifier.padding(2.dp))
+
+        BGColumn(
+            modifier = Modifier
+                .padding(horizontal = 10.dp)
+        ) {
+            // 旅程标题
+            Spacer(Modifier.padding(2.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Headline(
+                    text = journeySelected.title,
+                )
+            }
+            Spacer(Modifier.padding(3.dp))
+
+            // 封面图片
+            ImageSquare2(
+                imgPath = journeySelected.coverImagePath,
+                updateImgPath = { file ->
+                    journeySelected.coverImagePath = file.absolutePath
+                    updateJourney(journeySelected)
+                },
+                deleteImgPath = { imgPath ->
+                    journeySelected.coverImagePath = ""
+                    updateJourney(journeySelected)
+                },
+                modifier = Modifier.padding(horizontal = 40.dp),
+                aspectRatio = 1.2f,
+                addIconSize = .3f
+            )
+            LineBetween(paddingUp = 12.dp)
+
+            // 描述内容
+            TextMedium(
+                text = "旅程描述：",
+                firstLine = 0,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
+            Spacer(Modifier.padding(2.dp))
+            TextMedium(
+                text = journeySelected.description,
+                firstLine = 2,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
+            LineBetween()
+
+            // 回忆
+            TextMedium(
+                text = "旅程回忆",
+                firstLine = 0,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
+            Spacer(Modifier.padding(5.dp))
+            Reminiscence(
+                journey = journeySelected,
+                updateJourney = updateJourney
+            )
+            LineBetween()
+
+            // 足迹面板
+            FootprintPanel(
+                journeySelected = journeySelected,
+            )
+            LineBetween()
+
+            // 功能按钮
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(Modifier.width(20.dp))
+                ButtonDelete {
+                    deleteJourney(journeySelected)
+                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                }
+                Spacer(Modifier.weight(1f))
+                ButtonMain(title = "旅程足迹") {
+
+                }
+                Spacer(Modifier.width(10.dp))
+            }
+            Spacer(Modifier.padding(5.dp))
+        }
         Spacer(Modifier.padding(10.dp))
-        // 描述内容
-        TextMedium(
-            text = journeySelected.description,
-            firstLine = 2,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
-        Spacer(Modifier.padding(10.dp))
-        // 回忆
-        TextMedium(
-            text = "旅程回忆",
-            firstLine = 0,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
-        Spacer(Modifier.padding(5.dp))
-        Reminiscence(
-            journey = journeySelected,
-            updateJourney = updateJourney
-        )
     }
 }

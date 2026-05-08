@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,9 +21,10 @@ import com.example.travel_footprint_android.presentation2.components.image_squar
 @Composable
 fun Reminiscence(
     journey: Journey,
-    updateJourney: (Journey) -> Unit
+    updateJourney: (Journey) -> Unit,
+    showDelIcon: Boolean = false,
 ) {
-    val imgSize = 80.dp
+    val imgSize = 70.dp
     val aspectRatio = 1f
     val iconSize = .4f
     val elevation = 2.dp
@@ -33,9 +35,10 @@ fun Reminiscence(
     ) {
         FlowRow(
             modifier = Modifier
+                .widthIn(min = 295.dp)
                 .align(Alignment.Center)
                 .padding(horizontal = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),  // 水平间距
+            horizontalArrangement = Arrangement.spacedBy(5.dp),  // 水平间距
             verticalArrangement = Arrangement.spacedBy(4.dp)     // 垂直行间距
         ) {
             journey.journeyImagePaths.forEach { imgPath ->
@@ -51,12 +54,12 @@ fun Reminiscence(
                             journey.journeyImagePaths -= imgPath
                             updateJourney(journey)
                         },
-                        modifier = Modifier.padding(horizontal = 5.dp),
                         aspectRatio = aspectRatio,
                         addIconSize = iconSize,
                         elevation = elevation,
                         shape = shape,
-                        delIconSize = delIconSize
+                        delIconSize = delIconSize,
+                        showDelIcon = showDelIcon,
                     )
                 }
             }
@@ -72,7 +75,6 @@ fun Reminiscence(
                         updateJourney(journey)
                     },
                     deleteImgPath = { imgPath -> },
-                    modifier = Modifier.padding(horizontal = 5.dp),
                     aspectRatio = aspectRatio,
                     addIconSize = iconSize,
                     elevation = elevation,

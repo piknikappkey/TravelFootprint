@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import com.example.travel_footprint_android.R
 import android.os.Bundle
-import android.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -110,7 +109,7 @@ private fun getColoredLocationIcon(
     context: Context,
     targetColor: Int // 颜色int值
 ): BitmapDescriptor? {
-    val drawable = ContextCompat.getDrawable(context, R.drawable.location_icon)?.mutate()
+    val drawable = ContextCompat.getDrawable(context, R.drawable.ic_user_location)?.mutate()
     drawable?.setTint(targetColor)
 
     val width = drawable?.intrinsicWidth ?: 1
