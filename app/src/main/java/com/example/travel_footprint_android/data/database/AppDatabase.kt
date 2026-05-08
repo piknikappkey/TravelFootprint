@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/travel_footprint_android/data/database/AppDatabase.kt
 package com.example.travel_footprint_android.data.database
 
 import android.content.Context
@@ -23,7 +22,7 @@ import com.example.travel_footprint_android.data.entity.*
         Province::class,
         City::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -45,7 +44,6 @@ abstract class AppDatabase : RoomDatabase() {
         // 版本 2 到 3 的迁移
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // 创建省份表
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `provinces` (
                         `adcode` TEXT NOT NULL PRIMARY KEY,
@@ -55,7 +53,6 @@ abstract class AppDatabase : RoomDatabase() {
                         `sortOrder` INTEGER NOT NULL DEFAULT 0
                     )
                 """)
-                // 创建城市表
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `cities` (
                         `adcode` TEXT NOT NULL PRIMARY KEY,
@@ -67,8 +64,21 @@ abstract class AppDatabase : RoomDatabase() {
                         FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON DELETE CASCADE
                     )
                 """)
-                // 创建索引
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_cities_provinceAdcode ON cities(provinceAdcode)")
+            }
+        }
+
+        // 🆕 版本 3 到 4 的迁移：添加旅程地址和经纬度字段
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 添加 address 列
+                database.execSQL("ALTER TABLE `journeys` ADD COLUMN `address` TEXT NOT NULL DEFAULT ''")
+                // 添加 longitude 列
+                database.execSQL("ALTER TABLE `journeys` ADD COLUMN `longitude` REAL NOT NULL DEFAULT 0.0")
+                // 添加 latitude 列
+                database.execSQL("ALTER TABLE `journeys` ADD COLUMN `latitude` REAL NOT NULL DEFAULT 0.0")
+                // 创建索引以提升按经纬度查询的性能
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_journeys_coordinates ON journeys(latitude, longitude)")
             }
         }
 
@@ -79,7 +89,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "travel_journal.db"
                 )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
