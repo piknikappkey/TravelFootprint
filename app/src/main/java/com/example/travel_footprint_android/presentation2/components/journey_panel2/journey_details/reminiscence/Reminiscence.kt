@@ -24,7 +24,7 @@ fun Reminiscence(
     updateJourney: (Journey) -> Unit,
     showDelIcon: Boolean = false,
 ) {
-    val imgSize = 80.dp
+    val imgSize = 70.dp
     val aspectRatio = 1f
     val iconSize = .4f
     val elevation = 2.dp
@@ -35,10 +35,10 @@ fun Reminiscence(
     ) {
         FlowRow(
             modifier = Modifier
-                .widthIn(min = 360.dp)
+                .widthIn(min = 295.dp)
                 .align(Alignment.Center)
                 .padding(horizontal = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),  // 水平间距
+            horizontalArrangement = Arrangement.spacedBy(5.dp),  // 水平间距
             verticalArrangement = Arrangement.spacedBy(4.dp)     // 垂直行间距
         ) {
             journey.journeyImagePaths.forEach { imgPath ->
@@ -54,13 +54,12 @@ fun Reminiscence(
                             journey.journeyImagePaths -= imgPath
                             updateJourney(journey)
                         },
-                        modifier = Modifier.padding(horizontal = 5.dp),
                         aspectRatio = aspectRatio,
                         addIconSize = iconSize,
                         elevation = elevation,
                         shape = shape,
                         delIconSize = delIconSize,
-                        showDelIcon = true,
+                        showDelIcon = showDelIcon,
                     )
                 }
             }
@@ -76,7 +75,6 @@ fun Reminiscence(
                         updateJourney(journey)
                     },
                     deleteImgPath = { imgPath -> },
-                    modifier = Modifier.padding(horizontal = 5.dp),
                     aspectRatio = aspectRatio,
                     addIconSize = iconSize,
                     elevation = elevation,

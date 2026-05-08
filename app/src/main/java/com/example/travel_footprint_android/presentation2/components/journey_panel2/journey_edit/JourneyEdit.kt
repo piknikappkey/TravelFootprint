@@ -22,13 +22,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
-import com.example.travel_footprint_android.presentation2.components.image_square.ImageSquare2
-import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence.Reminiscence
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.images.JourneyEditImages
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.location.JourneyEditLocation
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.title.JourneyEditTitle
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
-import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.util.Date
 
@@ -53,6 +56,8 @@ fun JourneyEdit(
             )
         )
     }
+
+
 
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -96,78 +101,61 @@ fun JourneyEdit(
         modifier = modifier
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(Modifier.padding(5.dp))
-
-        // 旅程标题编辑
-        TextMedium(
-            text = "旅程标题：",
-            firstLine = 0,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
         Spacer(Modifier.padding(2.dp))
-        InputText3(
-            value = journey.title,
-            onValueChange = { text -> journey = journey.copy(title = text) },
-            tipText = "请填写旅程标题"
-        )
 
+        BGColumn(
+            modifier = Modifier
+                .padding(horizontal = 10.dp)
+        ) {
+            Spacer(Modifier.padding(3.dp))
+            // 旅程标题编辑----------------------------------------
+            JourneyEditTitle(
+                journey = journey,
+                onValueChange = { text -> journey = journey.copy(title = text) }
+            )
+            LineBetween()
+
+            // 封面图片编辑----------------------------------------
+            JourneyEditCover(
+                journey = journey,
+                updateImgPath = { file ->
+                    journey = journey.copy(coverImagePath = file.absolutePath)
+                },
+                deleteImgPath = { imgPath ->
+                    journey = journey.copy(coverImagePath = "")
+                }
+            )
+            LineBetween()
+
+            // 旅程描述编辑----------------------------------------
+            JourneyEditDescription(
+                journey = journey,
+                onValueChange = { text -> journey = journey.copy(description = text) }
+            )
+            LineBetween()
+
+            // 旅程地址----------------------------------------
+            JourneyEditLocation(
+                journey = journey,
+                setJourney = { j ->
+                    journey = j
+                }
+            )
+            LineBetween()
+
+            // 回忆编辑----------------------------------------
+            JourneyEditImages(
+                journey = journey,
+                updateJourney = { j ->
+                    // 触发ui更新
+                    val newList = List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i]})
+                    journey = j.copy(journeyImagePaths = List(0, { i -> "" }))
+                    journey = j.copy(journeyImagePaths = newList)
+                }
+            )
+            Spacer(Modifier.padding(10.dp))
+        }
         Spacer(Modifier.padding(10.dp))
-
-        // 封面图片编辑
-        TextMedium(
-            text = "封面：",
-            firstLine = 0,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
-        Spacer(Modifier.padding(2.dp))
-        ImageSquare2(
-            imgPath = journey.coverImagePath,
-            updateImgPath = { file ->
-                journey = journey.copy(coverImagePath = file.absolutePath)
-            },
-            deleteImgPath = { imgPath ->
-                journey = journey.copy(coverImagePath = "")
-            },
-            modifier = Modifier.padding(horizontal = 60.dp),
-            aspectRatio = 1.2f,
-            addIconSize = .3f,
-            showDelIcon = true,
-        )
-        Spacer(Modifier.padding(10.dp))
-
-        // 旅程描述编辑
-        TextMedium(
-            text = "旅程描述：",
-            firstLine = 0,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
-        Spacer(Modifier.padding(2.dp))
-        InputText3(
-            value = journey.description,
-            onValueChange = { text -> journey = journey.copy(description = text) },
-            tipText = "请填写旅程描述"
-        )
-
-        Spacer(Modifier.padding(10.dp))
-
-        // 回忆编辑
-        TextMedium(
-            text = "旅程回忆：",
-            firstLine = 0,
-            modifier = Modifier.padding(horizontal = 15.dp)
-        )
-        Spacer(Modifier.padding(2.dp))
-        Reminiscence(
-            journey = journey,
-            updateJourney = { j ->
-                // 触发ui更新
-                val newList = List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i]})
-                journey = j.copy(journeyImagePaths = List(0, { i -> "" }))
-                journey = j.copy(journeyImagePaths = newList)
-            },
-            showDelIcon = true,
-        )
-
         // 开始时间
 //        TextMedium(
 //            text = "旅程开始时间：",

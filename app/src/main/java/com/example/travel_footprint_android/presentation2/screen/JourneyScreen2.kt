@@ -15,18 +15,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel2
+import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 
 @Composable
 fun JourneyScreen2(
-    journeyViewModel: JourneyViewModel = hiltViewModel(), // 自动注入
+    journeyViewModel: JourneyViewModel = hiltViewModel(),
+    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel()
 ) {
-    // 获取数据库数据
     val journeyUiState by journeyViewModel.uiState.collectAsState()
-
-    // 读取旅程数据
     val journeys = journeyUiState.journeys
-
-    // 读取足迹数据
     val footprintCounts = journeyUiState.footprintCounts
 
     Log.d("JourneyScreen2", "JourneyScreen2 start")
@@ -39,6 +36,7 @@ fun JourneyScreen2(
         JourneyMap3(
             modifier = Modifier
                 .fillMaxSize(),
+            journeyMap3ViewModel = journeyMap3ViewModel
         )
 
         JourneyPanel2(
