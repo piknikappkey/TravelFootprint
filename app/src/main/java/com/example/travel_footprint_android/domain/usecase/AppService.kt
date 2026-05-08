@@ -56,7 +56,10 @@ class AppService @Inject constructor(
         startDate: Date = Date(),
         endDate: Date = Date(),
         coverImagePath: String = "",
-        journeyImagePaths: List<String> = emptyList()
+        journeyImagePaths: List<String> = emptyList(),
+        address: String = "",
+        longitude: Double = 0.0,
+        latitude: Double = 0.0
     ): Long {
         return withContext(Dispatchers.IO) {
             journeyRepository.createJourney(
@@ -66,9 +69,28 @@ class AppService @Inject constructor(
                 startDate = startDate,
                 endDate = endDate,
                 coverImagePath = coverImagePath,
-                journeyImagePaths = journeyImagePaths
+                journeyImagePaths = journeyImagePaths,
+                address = address,
+                longitude = longitude,
+                latitude = latitude
             )
         }
+    }
+
+    // 🆕 附近旅程查询
+    suspend fun getNearbyJourneys(
+        centerLat: Double,
+        centerLng: Double,
+        radiusKm: Double = 50.0
+    ): List<Journey> {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.getNearbyJourneys(centerLat, centerLng, radiusKm)
+        }
+    }
+
+    // 🆕 获取所有有坐标的旅程（用于地图）
+    fun getAllJourneysWithCoordinates(): Flow<List<Journey>> {
+        return journeyRepository.getAllJourneysWithCoordinates()
     }
 
     /**

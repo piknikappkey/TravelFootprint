@@ -31,7 +31,10 @@ class JourneyRepository @Inject constructor(
         startDate: Date = Date(),
         endDate: Date = Date(),
         coverImagePath: String = "",
-        journeyImagePaths: List<String> = emptyList()
+        journeyImagePaths: List<String> = emptyList(),
+        address: String = "",
+        longitude: Double = 0.0,
+        latitude: Double = 0.0
     ): Long {
         val journey = Journey(
             title = title,
@@ -40,7 +43,11 @@ class JourneyRepository @Inject constructor(
             endDate = endDate,
             coverStyle = style,
             coverImagePath = coverImagePath,
-            journeyImagePaths = journeyImagePaths
+            journeyImagePaths = journeyImagePaths,
+            address = address,
+            longitude = longitude,
+            latitude = latitude
+
         )
         return journeyDao.insertJourney(journey)
     }
@@ -82,4 +89,48 @@ class JourneyRepository @Inject constructor(
     suspend fun updateJourney(journey: Journey) {
         journeyDao.updateJourney(journey)
     }
+
+    // ==================== 🆕 地址和经纬度查询方法 ====================
+
+    suspend fun getJourneysByAddress(address: String): List<Journey> {
+        return journeyDao.getJourneysByAddress(address)
+    }
+
+    fun getAllJourneysWithAddress(): Flow<List<Journey>> {
+        return journeyDao.getAllJourneysWithAddress()
+    }
+
+    suspend fun getJourneysInBounds(
+        minLat: Double, maxLat: Double,
+        minLng: Double, maxLng: Double
+    ): List<Journey> {
+        return journeyDao.getJourneysInBounds(minLat, maxLat, minLng, maxLng)
+    }
+
+    //附近旅程查询
+    suspend fun getNearbyJourneys(
+        centerLat: Double,
+        centerLng: Double,
+        radiusKm: Double = 50.0,
+        limit: Int = 20
+    ): List<Journey> {
+        // 1度 ≈ 111km，计算经纬度范围
+        val delta = radiusKm / 111.0
+        val minLat = centerLat - delta
+        val maxLat = centerLat + delta
+        val minLng = centerLng - delta
+        val maxLng = centerLng + delta
+
+        return journeyDao.getNearbyJourneys(
+            centerLat, centerLng,
+            minLat, maxLat, minLng, maxLng,
+            limit
+        )
+    }
+
+    //获取所有有坐标的旅程（用于地图）
+    fun getAllJourneysWithCoordinates(): Flow<List<Journey>> {
+        return journeyDao.getAllJourneysWithCoordinates()
+    }
+
 }

@@ -44,7 +44,10 @@ fun JourneyAdd(
             endDate = Date(),
             coverStyle = "",
             coverImagePath = "",
-            journeyImagePaths = List(0, { i -> "" })
+            journeyImagePaths = List(0, { i -> "" }),
+            address = "",
+            latitude = 0.0,
+            longitude = 0.0,
             )
         )
     }

@@ -73,11 +73,6 @@
 				stroke: #D2691E;
 				stroke-width: 0.2;
 			}
-			.province-label {
-    	font-size: 0.6px;
-    	pointer-events: none;      /* 🆕 让文字不响应点击 */
-    user-select: none;          /* 🆕 防止文字被选中 */
-}
 		</style>
 	</head>
 	<body onclick="resetClickStyle()">
@@ -198,7 +193,6 @@
 				})
 				return verifyReturn;
 			}
-
 
 		</script>
 		
@@ -1823,22 +1817,8 @@
 					}
 
 					function updateTransform() {
-    svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-
-    // ========== 根据缩放比例控制文字显隐 ==========
-    const labels = document.querySelectorAll('.province-label');
-    const showThreshold = 3.6;  // 缩放比例大于2.0时显示文字
-
-    if (scale >= showThreshold) {
-        labels.forEach(label => {
-            label.style.opacity = '0';
-        });
-    } else {
-        labels.forEach(label => {
-            label.style.opacity = '1';
-        });
-    }
-}
+						svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+					}
 
 					function handlePointerDown(e) {
 						e.preventDefault();
@@ -1981,69 +1961,6 @@
 
 				}
 			})();
-
-
-			//在中心添加省份名称
-			// 在文件末尾的 script 标签中添加
-(function addProvinceLabels() {
-    const svg = document.querySelector('.province-svg');
-    if (!svg) return;
-
-    // 坐标需要手动调整，这是示例数据
-    const labelPositions = {
-        "110000": { x: 116, y: 15.5, name: "北京" },
-        "120000": { x: 117, y: 16.5, name: "天津" },
-        "130000": { x: 115, y: 17, name: "河北" },
-        "140000": { x: 111.5, y: 18.3, name: "山西" },
-        "150000": { x: 110.5, y: 14, name: "内蒙古" },
-        "210000": { x: 122.5, y: 14.5, name: "辽宁" },
-        "220000": { x: 126.5, y: 13, name: "吉林" },
-        "230000": { x: 127.5, y: 9, name: "黑龙江" },
-        "310000": { x: 121.2, y: 24.1, name: "上海" },
-        "320000": { x: 119.4, y: 22.5, name: "江苏" },
-        "330000": { x: 119.6, y: 26.3, name: "浙江" },
-        "340000": { x: 116.8, y: 24, name: "安徽" },
-        "350000": { x: 117.5, y: 29.8, name: "福建" },
-        "360000": { x: 115, y: 27.7, name: "江西" },
-        "370000": { x: 118.0, y: 19.2, name: "山东" },
-        "410000": { x: 113.1, y: 21.8, name: "河南" },
-        "420000": { x: 112.5, y: 24.5, name: "湖北" },
-        "430000": { x: 111.0, y: 28., name: "湖南" },
-        "440000": { x: 113.5, y: 32.0, name: "广东" },
-        "450000": { x: 108.5, y: 32, name: "广西" },
-        "460000": { x: 109.2, y: 36.5, name: "海南" },
-        "500000": { x: 107.2, y: 25.8, name: "重庆" },
-        "510000": { x: 102.5, y: 25.2, name: "四川" },
-        "520000": { x: 106.5, y: 29, name: "贵州" },
-        "530000": { x: 101, y: 31, name: "云南" },
-        "540000": { x: 87.5, y: 25, name: "西藏" },
-        "610000": { x: 108.2, y: 21.5, name: "陕西" },
-        "620000": { x: 104, y: 20.7, name: "甘肃" },
-        "630000": { x: 96., y: 20, name: "青海" },
-        "640000": { x: 105.5, y: 18.4, name: "宁夏" },
-        "650000": { x: 85.2, y: 14.5, name: "新疆" },
-        "710000": { x: 120.2, y: 32.1, name: "台湾" },
-        "810000": { x: 114.2, y: 33.5, name: "香港" },
-        "820000": { x: 113, y: 33.6, name: "澳门" }
-    };
-
-    const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    labelGroup.setAttribute("id", "province-labels");
-
-    for (const [adcode, pos] of Object.entries(labelPositions)) {
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        text.setAttribute("x", pos.x);
-        text.setAttribute("y", pos.y);
-        text.setAttribute("class", "province-label");
-        text.setAttribute("data-adcode", adcode);
-        text.textContent = pos.name;
-         // 添加样式防止点击
-        text.setAttribute("style", "pointer-events: none; user-select: none;");
-        labelGroup.appendChild(text);
-    }
-
-    svg.appendChild(labelGroup);
-})();
 		</script>
 	</body>
 </html>

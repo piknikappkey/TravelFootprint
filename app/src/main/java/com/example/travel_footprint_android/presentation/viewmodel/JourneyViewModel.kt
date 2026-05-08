@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import okhttp3.Address
 import java.util.Date
 import javax.inject.Inject
 
@@ -186,6 +187,9 @@ class JourneyViewModel @Inject constructor(
      * @param coverStyle 新封面风格
      * @param coverImagePath 新封面图片路径
      * @param journeyImagePaths 新旅程图片列表
+     * @param address  旅程地址
+     * @param longitude 旅程经度
+     * @param latitude  旅程维度
      */
     fun updateJourney(
         journeyId: Long,
@@ -195,7 +199,10 @@ class JourneyViewModel @Inject constructor(
         endDate: Date,
         coverStyle: String,
         coverImagePath: String,
-        journeyImagePaths: List<String>
+        journeyImagePaths: List<String>,
+        address: String,
+        longitude: Double,
+        latitude: Double
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -208,7 +215,10 @@ class JourneyViewModel @Inject constructor(
                     endDate = endDate,
                     coverStyle = coverStyle,
                     coverImagePath = coverImagePath,
-                    journeyImagePaths = journeyImagePaths
+                    journeyImagePaths = journeyImagePaths,
+                    address = address,
+                    longitude=longitude,
+                    latitude=latitude
                 )
                 appService.updateJourney(updatedJourney)
                 hideEditDialog()
