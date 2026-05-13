@@ -11,15 +11,19 @@ package com.example.travel_footprint_android.presentation2.components.journey_ma
  *  - 使用 LazyColumn 展示搜索建议列表
  */
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,14 +34,19 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.amap.api.services.help.Tip
+import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.BGLight2
@@ -55,6 +64,7 @@ fun LocationSearch(
     val suggestions by locationSearchViewModel.searchSuggestions.collectAsState()
     val showSuggestions by locationSearchViewModel.showSuggestions.collectAsState()
     val selectedLocation by locationSearchViewModel.selectedLocation.collectAsState()
+    var selectedLocaltionOld by remember { mutableStateOf(selectedLocation) }
     val isSearching by locationSearchViewModel.isSearching.collectAsState()
 
     Column(modifier = modifier) {
@@ -115,11 +125,15 @@ fun LocationSearch(
 
         // 已选择的位置信息
         selectedLocation?.let { location ->
-            SelectedLocationInfo(
-                location = location,
-                onClear = { locationSearchViewModel.clearSelection() },
-                onConfirm = { onLocationSelected(location) }
-            )
+//            SelectedLocationInfo(
+//                location = location,
+//                onClear = { locationSearchViewModel.clearSelection() },
+//                onConfirm = { onLocationSelected(location) }
+//            )
+            if(selectedLocaltionOld != selectedLocation) {
+                onLocationSelected(location)
+                selectedLocaltionOld = selectedLocation
+            }
         }
     }
 }
@@ -164,6 +178,12 @@ fun SelectedLocationInfo(
     onClear: () -> Unit,
     onConfirm: () -> Unit
 ) {
+    var showButton by remember { mutableStateOf(true) }
+
+    LaunchedEffect(location) {
+        showButton = true
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -221,5 +241,28 @@ fun SelectedLocationInfo(
             style = TextStyle(fontSize = 14.sp),
             modifier = Modifier.padding(bottom = 12.dp)
         )
+        if(showButton) {
+            Row {
+                Spacer(
+                    modifier = Modifier
+                        .weight(1f),
+                )
+                ButtonMain(
+                    title = "取消"
+                ) {
+                    onClear()
+                }
+                Spacer(
+                    modifier = Modifier
+                        .width(10.dp),
+                )
+                ButtonMain(
+                    title = "确定"
+                ) {
+                    showButton = false
+                    onConfirm()
+                }
+            }
+        }
     }
 }

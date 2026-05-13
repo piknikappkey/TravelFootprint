@@ -138,7 +138,7 @@ fun JourneyEdit(
             JourneyEditLocation(
                 journey = journey,
                 setJourney = { j ->
-                    journey = j
+                    journey = j.copy()
                 }
             )
             LineBetween()

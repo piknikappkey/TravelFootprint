@@ -73,12 +73,14 @@ val DeleteColor = Color(0xFFFF7B6E)
 /**
  * 按钮背景色
  */
-val BtnBgColorMain0 = Color(0xFFEBD5FF)
-val BtnBgColorMain1 = Color(0xFFDDB9FD)
-val BtnBgColorMain2 = Color(0xFFCD99FC)
-val BtnBgColorSecond0 = Color(0xFFFFE9BC)
-val BtnBgColorSecond1 = Color(0xFFFDDD9A)
-val BtnBgColorSecond2 = Color(0xFFFDD37A)
+val BtnBgColorMain0 = Color(0xFFF2E6FD)
+val BtnBgColorMain1 = Color(0xFFEBD5FF)
+val BtnBgColorMain2 = Color(0xFFDDB9FD)
+val BtnBgColorMain3 = Color(0xFFCD99FC)
+val BtnBgColorSecond0 = Color(0xFFFDF2DB)
+val BtnBgColorSecond1 = Color(0xFFFFE9BC)
+val BtnBgColorSecond2 = Color(0xFFFDDD9A)
+val BtnBgColorSecond3 = Color(0xFFFDD37A)
 
 
 

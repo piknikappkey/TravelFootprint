@@ -151,6 +151,18 @@ fun JourneyDetails(
             )
             LineBetween()
 
+            // 旅程地点
+            Row {
+                Spacer(Modifier.weight(1f))
+                TextMedium(
+                    text = journeySelected.address,
+                    firstLine = 0,
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                )
+            }
+            LineBetween()
+
+
             // 足迹面板
             FootprintPanel(
                 journeySelected = journeySelected,
