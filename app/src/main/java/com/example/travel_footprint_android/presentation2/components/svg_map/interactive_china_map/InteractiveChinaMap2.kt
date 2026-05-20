@@ -22,10 +22,11 @@ import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.presentation2.components.svg_map.CityClickInterface
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.google.gson.Gson
+import kotlin.math.log
 
 @Composable
 fun InteractiveChinaMap2(
-    onCityClick: (String, String) -> Unit,
+    onCityClick: (String, String, String) -> Unit,
     cityClickState: (Boolean) -> Unit,
     lightedProvinces: List<LightedProvince>
 ) {
@@ -60,6 +61,7 @@ fun InteractiveChinaMap2(
                 private val maxScale = 3.0f
 
                 override fun onScaleChanged(view: WebView, oldScale: Float, newScale: Float) {
+                    Log.d( "onScaleChanged","onScaleChanged ")
                     super.onScaleChanged(view, oldScale, newScale)
                     // 当缩放超出范围时，强制调整回边界值
                     when {
@@ -102,7 +104,9 @@ fun InteractiveChinaMap2(
             loadUrl("file:///android_asset/maps_html/china_map_province_pencil.html")
         }
     }
-    webView.setBackgroundColor(BGLight0.toArgb())
+
+//    设置背景是否透明
+//    webView.setBackgroundColor(BGLight0.toArgb())
 
     // 监听数据变化
     LaunchedEffect(lightedProvinces) {

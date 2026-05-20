@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +31,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city.LightCityScreen
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.LightCityEditScreen
@@ -79,11 +82,12 @@ fun LightPanel2(
             )
             .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.6f)
             .wrapContentHeight()
-            .verticalScroll(rememberScrollState())
+//            .verticalScroll(rememberScrollState())
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())  // ✅ 移动到这里
                 .padding(
                     start = 12.dp,
                     top = 8.dp,
@@ -99,7 +103,7 @@ fun LightPanel2(
                 lightenCityMode
             )
 
-            LightCityScreen(
+            LightCityScreenWithState(
                 lightPanel2State = lightPanel2State,
                 lightCityList = lightCityList,
                 lightedProvinces = lightedProvinces,
@@ -117,19 +121,22 @@ fun LightPanel2(
                 }
             )
 
-            // 编辑模式下的选择器
-            LightCityEditScreen(
-                lightPanel2State = lightPanel2State,
-                lightenCityMode = lightenCityMode,
-                initialSelectedCityCodes = selectedCityCodes,  // 传入当前已点亮的城市
-                initialSelectedProvinceCodes = selectedProvinceCodes,  // 传入当前已点亮的省份
-                onSelectionChanged = { selectedCities, unselectedCities, selectedProvinces, unselectedProvinces ->
-                    selectedCityCodes = selectedCities
-                    unselectedCityCodes = unselectedCities
-                    selectedProvinceCodes = selectedProvinces
-                    unselectedProvinceCodes = unselectedProvinces
-                }
-            )
+            // 编辑模式选择器
+            if (lightPanel2State == LightPanel2State.EDIT) {
+                // 编辑模式下的选择器
+                LightCityEditScreen(
+                    lightPanel2State = lightPanel2State,
+                    lightenCityMode = lightenCityMode,
+                    initialSelectedCityCodes = selectedCityCodes,  // 传入当前已点亮的城市
+                    initialSelectedProvinceCodes = selectedProvinceCodes,  // 传入当前已点亮的省份
+                    onSelectionChanged = { selectedCities, unselectedCities, selectedProvinces, unselectedProvinces ->
+                        selectedCityCodes = selectedCities
+                        unselectedCityCodes = unselectedCities
+                        selectedProvinceCodes = selectedProvinces
+                        unselectedProvinceCodes = unselectedProvinces
+                    }
+                )
+            }
         }
 
         // 底部按钮区域
@@ -214,5 +221,30 @@ fun LightPanel2(
                 }
             }
         }
+    }
+}
+
+// ✅ 单独提取，使用 key 独立重组
+@Composable
+fun LightCityScreenWithState(
+    lightPanel2State: LightPanel2State,
+    lightCityList: List<LightedCity>,
+    lightedProvinces: List<LightedProvince>,
+    lightenCityMode: LightenCityMode,
+    isDeleteMode: Boolean,
+    onDeleteProvince: (String) -> Unit,
+    onDeleteCity: (String) -> Unit
+) {
+    // ✅ 使用 key 让每个状态的内容独立
+    key(lightPanel2State) {
+        LightCityScreen(
+            lightPanel2State = lightPanel2State,
+            lightCityList = lightCityList,
+            lightedProvinces = lightedProvinces,
+            lightenCityMode = lightenCityMode,
+            isDeleteMode = isDeleteMode,
+            onDeleteProvince = onDeleteProvince,
+            onDeleteCity = onDeleteCity
+        )
     }
 }
