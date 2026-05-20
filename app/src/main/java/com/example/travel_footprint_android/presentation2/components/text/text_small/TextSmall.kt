@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import com.example.travel_footprint_android.ui.theme.FontDark6
 
 @Composable
@@ -34,7 +35,7 @@ fun TextSmall(
         maxLines = maxLines,
         style = TextStyle(
             textIndent = TextIndent(
-                firstLine = (firstLine * 16).sp, // 首行缩进2个字符的宽度
+                firstLine = firstLine * fontSize, // 首行缩进2个字符的宽度
                 restLine = 0.sp    // 其余行不缩进
             )
         )

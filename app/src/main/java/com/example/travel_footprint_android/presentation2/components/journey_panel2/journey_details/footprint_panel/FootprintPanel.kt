@@ -1,10 +1,13 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
@@ -30,21 +33,28 @@ fun FootprintPanel(
     // 面板状态
     val footprintPanel2State = FootprintNavController.footprintNavController.value
 
+    val footprintData = FootprintNavController.footprintData.value
+
     // 初始化足迹数据
     LaunchedEffect(journeySelected) {
         footprintViewModel.loadJourneyFootprints(journeySelected.id)
     }
 
-    Box {
+    Box(
+        modifier = Modifier
+            .animateContentSize(
+                animationSpec = tween(durationMillis = 300)
+            )
+    ) {
         when(footprintPanel2State) {
             FOOTPRINT_LIST -> {
-                FootprintList(footprints)
+                FootprintList(footprints, journeySelected)
             }
             FOOTPRINT_DETAILS -> {
                 FootprintDetails()
             }
             FOOTPRINT_EDIT -> {
-                FootprintEdit()
+                FootprintEdit(footprintData, journeySelected, { footprint -> }, { footprint -> })
             }
         }
     }

@@ -2,11 +2,13 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -26,13 +27,12 @@ import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.util.Date
 
 @Composable
-fun FootprintEdit(
+fun FootprintEdit2(
     footprintSelect: Footprint?,
     journeySelect: Journey,
     addFootprint: (Footprint) -> Unit,
@@ -41,24 +41,18 @@ fun FootprintEdit(
     var footprint by remember { mutableStateOf(
         footprintSelect?.copy()
             ?: Footprint(
-                journeyId = journeySelect.id,
-                title = journeySelect.title + "的足迹",
-                description = "这是一个新的足迹",
-                createTime = Date(),
-                address = "",
-                rating = 1
-            )
+            journeyId = journeySelect.id,
+            title = journeySelect.title + "的足迹",
+            description = "这是一个新的足迹",
+            createTime = Date(),
+            address = "",
+            rating = 0
+        )
     ) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    Column {
         Spacer(Modifier.height(10.dp))
-        // 顶部导航栏
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row {
             // 返回按钮
             Image(
                 modifier = Modifier
@@ -71,7 +65,7 @@ fun FootprintEdit(
                 contentDescription = "返回图标",
                 colorFilter = ColorFilter.tint(SecondColor3),
             )
-            Spacer(Modifier.width(5.dp))
+            Spacer(Modifier.width(10.dp))
             TextMedium(
                 text = if(footprintSelect == null) "新增足迹" else "编辑足迹"
             )
@@ -88,68 +82,12 @@ fun FootprintEdit(
             )
             Spacer(Modifier.width(10.dp))
         }
-
-        Spacer(Modifier.height(10.dp))
-
-        // 编辑内容区域
-        Spacer(Modifier.padding(3.dp))
-
-        // 足迹标题编辑
-        FootprintEditCover(footprint, { text -> footprint = footprint.copy(title = text) })
-
-        LineBetween()
-
-        // 足迹描述编辑
-        FootprintDescription(footprint, { text -> footprint = footprint.copy(description = text) })
-
-        LineBetween()
-
-        // 足迹地址编辑
-//        TextMedium(
-//            text = "足迹地址：",
-//            firstLine = 0,
-//            modifier = Modifier.padding(horizontal = 15.dp)
-//        )
-//        Spacer(Modifier.padding(2.dp))
-//        InputText3(
-//            value = footprint.address,
-//            onValueChange = { text -> footprint = footprint.copy(address = text) },
-//            tipText = "请填写足迹地址"
-//        )
-        FootprintEditLocation(
-            footprint,
-            setFootprint = { footprint -> },
-        )
-
-        LineBetween()
-
-        // 个人评分编辑
-        FootprintRating(footprint, { rating -> footprint = footprint.copy(rating = rating) })
-
-        LineBetween()
-
-//        // 创建时间编辑
-//        TextMedium(
-//            text = "创建时间：",
-//            firstLine = 0,
-//            modifier = Modifier.padding(horizontal = 15.dp)
-//        )
-//        Spacer(Modifier.padding(2.dp))
-//        InputText3(
-//            value = footprint.getFormattedTime(),
-//            onValueChange = { text ->
-//                try {
-//                    val date = SimpleDateFormat("yyyy-MM-dd HH:mm").parse(text)
-//                    if (date != null) {
-//                        footprint = footprint.copy(createTime = date)
-//                    }
-//                } catch (e: Exception) {
-//                }
-//            },
-//            tipText = "请填写创建时间，格式：yyyy-MM-dd HH:mm"
-//        )
-
-        Spacer(Modifier.padding(10.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .heightIn(200.dp)
+        ) {
+            // 这里需要用户输入内容，编辑footprint
+        }
     }
 }
-

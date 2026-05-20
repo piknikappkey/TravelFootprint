@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
@@ -33,6 +34,7 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.SecondColor1
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
@@ -65,7 +67,7 @@ fun JourneyDetails(
                 .clickable(onClick = {
                     navigate(JourneyPanel2State.JOURNEY_LIST, null)
                 }),
-            painter = painterResource(id = R.drawable.ic_left2),
+            painter = painterResource(id = R.drawable.ic_left_long),
             contentDescription = "返回图标",
             colorFilter = ColorFilter.tint(SecondColor3),
         )
@@ -84,7 +86,7 @@ fun JourneyDetails(
 
         Spacer(Modifier.width(10.dp))
     }
-    // 可滚动内容
+    // 旅程内容
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -136,6 +138,26 @@ fun JourneyDetails(
                 firstLine = 2,
                 modifier = Modifier.padding(horizontal = 15.dp)
             )
+            Spacer(Modifier.padding(2.dp))
+            // 旅程地点
+            Row {
+                Spacer(Modifier.weight(1f))
+                val region = journeySelected.address.split("\n")[0]
+                val location = journeySelected.address.split("\n").last()
+                Column {
+                    TextSmall(
+                        text = location,
+                        firstLine = 0,
+                        modifier = Modifier.padding(horizontal = 15.dp)
+                    )
+                    TextSmall(
+                        text = region,
+                        firstLine = 2,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 15.dp),
+                    )
+                }
+            }
             LineBetween()
 
             // 回忆
@@ -148,24 +170,6 @@ fun JourneyDetails(
             Reminiscence(
                 journey = journeySelected,
                 updateJourney = updateJourney
-            )
-            LineBetween()
-
-            // 旅程地点
-            Row {
-                Spacer(Modifier.weight(1f))
-                TextMedium(
-                    text = journeySelected.address,
-                    firstLine = 0,
-                    modifier = Modifier.padding(horizontal = 15.dp)
-                )
-            }
-            LineBetween()
-
-
-            // 足迹面板
-            FootprintPanel(
-                journeySelected = journeySelected,
             )
             LineBetween()
 
@@ -187,5 +191,18 @@ fun JourneyDetails(
             Spacer(Modifier.padding(5.dp))
         }
         Spacer(Modifier.padding(10.dp))
+
+
+        // 足迹内容
+        BGColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp)
+        ) {
+            // 足迹面板
+            FootprintPanel(
+                journeySelected = journeySelected,
+            )
+        }
     }
 }

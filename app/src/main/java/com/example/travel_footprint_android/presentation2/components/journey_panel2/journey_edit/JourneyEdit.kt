@@ -70,7 +70,7 @@ fun JourneyEdit(
                 .clickable(onClick = {
                     navigate(JourneyPanel2State.JOURNEY_LIST, null)
                 }),
-            painter = painterResource(id = R.drawable.ic_left2),
+            painter = painterResource(id = R.drawable.ic_left_long),
             contentDescription = "返回图标",
             colorFilter = ColorFilter.tint(SecondColor3),
         )
