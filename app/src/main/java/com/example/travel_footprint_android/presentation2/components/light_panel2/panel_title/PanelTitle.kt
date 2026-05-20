@@ -27,12 +27,6 @@ fun PanelTitle(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = tween(
-                    durationMillis = 350,  // 从200增加到350，让动画更平滑
-                    easing = CubicBezierEasing(0.2f, 0.9f, 0.4f, 1.0f)  // 自定义更平滑的曲线
-                )
-            )
     ) {
         if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY ||
             lightPanel2State == LightPanel2State.ALL_DISPLAY) {

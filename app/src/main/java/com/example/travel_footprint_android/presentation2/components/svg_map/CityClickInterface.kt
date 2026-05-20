@@ -6,7 +6,7 @@ import org.json.JSONObject
 
 // JavaScript 接口类
 class CityClickInterface(
-    private val onCityClick: (String, String) -> Unit,
+    private val onCityClick: (cityName: String, adcode: String, parentAdcode: String) -> Unit,  // 修改：传递 3 个参数
     private val cityClickState: (Boolean) -> Unit,
 ) {
     @JavascriptInterface
@@ -16,7 +16,11 @@ class CityClickInterface(
             // 解析 JSON 数据
             val jsonObject = JSONObject(cityInfoJson)
             val cityName = jsonObject.getString("name")
-            onCityClick(cityName, cityInfoJson)
+            val adcode = jsonObject.optString("adcode", "")
+            val parentAdcode = jsonObject.optString("parent_adcode", "")
+
+            // 传递三个参数：城市名、adcode、父级adcode
+            onCityClick(cityName, adcode, parentAdcode)
             cityClickState(true)
         } catch (e: Exception) {
             Log.e("CityClickInterface", "Error handling city click", e)

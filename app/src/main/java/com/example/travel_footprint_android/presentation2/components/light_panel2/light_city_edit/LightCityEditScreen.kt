@@ -63,14 +63,9 @@ fun LightCityEditScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = tween(
-                    durationMillis = 200,
-                    easing = FastOutSlowInEasing
-                )
-            )
+
     ) {
-        if (lightPanel2State != LightPanel2State.EDIT) return
+        if (lightPanel2State != LightPanel2State.EDIT) return@Column
 
         if (lightenCityMode == LightenCityMode.CITY) {
             LightCityEidtSelect(

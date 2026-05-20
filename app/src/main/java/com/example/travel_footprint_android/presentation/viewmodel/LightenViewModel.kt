@@ -225,6 +225,27 @@ class LightenViewModel @Inject constructor(
         }
     }
 
+    // 点亮省份 - 简化版，直接使用 adcode 和 name
+    fun lightProvince(provinceAdcode: String, provinceName: String, remark: String = "") {
+        viewModelScope.launch {
+            try {
+                val result = appService.lightProvince(
+                    provinceAdcode = provinceAdcode,
+                    provinceName = provinceName,
+                    remark = remark
+                )
+                if (result > 0) {
+                    loadLightedProvinceCodes()
+                    loadLightedProvinces()
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "点亮省份失败")
+                }
+            }
+        }
+    }
+
     fun unlightProvince(provinceAdcode: String) {
         viewModelScope.launch {
             try {
