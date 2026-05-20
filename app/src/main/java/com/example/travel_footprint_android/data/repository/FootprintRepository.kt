@@ -6,6 +6,7 @@ import com.example.travel_footprint_android.data.dao.*
 import com.example.travel_footprint_android.data.entity.*
 import com.example.travel_footprint_android.domain.service.LocationService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -70,6 +71,116 @@ class FootprintRepository @Inject constructor(
         return footprintId //返回足迹ID
     }
 
+    suspend fun addFootprint(
+        footprint: Footprint
+    ): Long {
+        // 1. 获取地址
+        val address = footprint.address
+
+        // 2. 插入足迹
+        val footprint = Footprint(
+            journeyId = footprint.journeyId,
+            title =footprint.title,
+            description = footprint.description,
+            createTime = Date(),
+            address = address,
+            rating = footprint.rating
+        )
+        val footprintId = footprintDao.insertFootprint(footprint)
+
+//        // 3. 插入位置
+//        val location = Location(
+//            footprintId = footprintId,
+//            latitude = lat,
+//            longitude = lng,
+//            orderIndex = 0
+//        )
+//        locationDao.insertLocation(location)
+
+//        // 4. 插入照片
+//        photos?.forEachIndexed { index, photoPath ->
+//            val media = MediaAttachment(
+//                footprintId = footprintId,
+//                type = "photo",
+//                localPath = photoPath,
+//                thumbnailPath = "",  // 稍后生成
+//                createTime = Date(),
+//                caption = "照片 ${index + 1}"
+//            )
+//            mediaDao.insertMedia(media)
+//        }
+
+        return footprintId //返回足迹ID
+    }
+
+
+    /**
+     * 更新足迹
+     */
+    /**
+     * 更新足迹（完整更新）
+     */
+    suspend fun updateFootprint(
+        footprintId: Long,
+        lat: Double,
+        lng: Double,
+        photos: List<String>?,
+        notes: String,
+        title: String,
+        rating: Int
+    ) {
+        // 1. 先查询原足迹（获取 journeyId 和 createTime）
+        val originalFootprint = footprintDao.getFootprintWithLocation(footprintId).first()
+            ?: throw IllegalArgumentException("足迹不存在")
+
+        // 2. 获取地址（根据新经纬度）
+        val address = locationService.reverseGeocode(lat, lng)
+
+        // 3. 更新足迹基本信息（保留原有的 journeyId 和 createTime）
+        val updatedFootprint = Footprint(
+            id = footprintId,
+            journeyId = originalFootprint.footprint.journeyId,
+            title = title,
+            description = notes,
+            createTime = originalFootprint.footprint.createTime,  // 保留原创建时间
+            address = address,
+            rating = rating
+        )
+        footprintDao.updateFootprint(updatedFootprint)
+
+        // 4. 更新位置
+        val locations = locationDao.getLocationsByFootprint(footprintId)
+        if (locations.isNotEmpty()) {
+            val updatedLocation = locations[0].copy(
+                latitude = lat,
+                longitude = lng
+            )
+            locationDao.updateLocation(updatedLocation)
+        }
+
+        // 5. 更新照片（先删后增）
+        val existingMedia = mediaDao.getMediaByFootprint(footprintId)
+        existingMedia.forEach { mediaDao.deleteMedia(it) }
+
+        photos?.forEachIndexed { index, photoPath ->
+            val media = MediaAttachment(
+                footprintId = footprintId,
+                type = "photo",
+                localPath = photoPath,
+                thumbnailPath = "",
+                createTime = Date(),
+                caption = "照片 ${index + 1}"
+            )
+            mediaDao.insertMedia(media)
+        }
+    }
+
+    /**
+     * 获取单个足迹（用于编辑）
+     */
+    suspend fun getFootprintForEdit(footprintId: Long): FootprintWithLocation? {
+        return footprintDao.getFootprintWithLocation(footprintId).first()
+    }
 
 
     suspend fun updateFootprintLocation(id: Long, lat: Double, lng: Double) {
