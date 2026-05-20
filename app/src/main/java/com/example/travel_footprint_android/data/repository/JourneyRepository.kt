@@ -25,11 +25,23 @@ class JourneyRepository @Inject constructor(
     fun getJourneyWithFootprints(journeyId: Long) = journeyDao.getJourneyWithFootprints(journeyId)
 
     suspend fun createJourney(
+        //
+//        var title: String,                          // 标题
+//        val description: String,                    // 描述
+//        val startDate: Date,                        // 开始日期
+//        val endDate: Date,                          // 结束日期
+//        val coverStyle: String,                     // 封面风格
+//        var coverImagePath: String,                 // 封面图片路径
+//        var journeyImagePaths: List<String>,        // 旅程图片路径列表
+//        var address: String = "",                   // 旅程地址（如：北京市、苏州市）
+//        var longitude: Double=0.0,                      //旅程经度
+//        var latitude: Double=0.0,                       //纬度
+        //
         title: String,
-        style: String,
         description: String = "",
         startDate: Date = Date(),
         endDate: Date = Date(),
+        coverStyle: String,
         coverImagePath: String = "",
         journeyImagePaths: List<String> = emptyList(),
         address: String = "",
@@ -41,7 +53,7 @@ class JourneyRepository @Inject constructor(
             description = description,
             startDate = startDate,
             endDate = endDate,
-            coverStyle = style,
+            coverStyle = coverStyle,
             coverImagePath = coverImagePath,
             journeyImagePaths = journeyImagePaths,
             address = address,

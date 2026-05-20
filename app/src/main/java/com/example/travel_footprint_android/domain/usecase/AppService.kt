@@ -51,20 +51,20 @@ class AppService @Inject constructor(
 
     suspend fun createJourney(
         title: String,
-        style: String = "watercolor",
-        description: String = "",
+        coverStyle: String = "BlackAndWhite",
+        description: String = "这是一个旅程",
         startDate: Date = Date(),
         endDate: Date = Date(),
-        coverImagePath: String = "",
+        coverImagePath: String = "这里需要图片地址",
         journeyImagePaths: List<String> = emptyList(),
-        address: String = "",
+        address: String = "这里需要旅程地址",
         longitude: Double = 0.0,
         latitude: Double = 0.0
     ): Long {
         return withContext(Dispatchers.IO) {
             journeyRepository.createJourney(
                 title = title,
-                style = style,
+                coverStyle = coverStyle,
                 description = description,
                 startDate = startDate,
                 endDate = endDate,
@@ -76,6 +76,7 @@ class AppService @Inject constructor(
             )
         }
     }
+
 
     // 🆕 附近旅程查询
     suspend fun getNearbyJourneys(
@@ -147,11 +148,13 @@ class AppService @Inject constructor(
         journeyId: Long,
         lat: Double,
         lng: Double,
-        notes: String,
-        photos: List<String>? = null
+        notes: String,//旅程描述
+        title:String,
+        photos: List<String>? = null,
+        rating:Int=0
     ): Long {
         return withContext(Dispatchers.IO) {
-            footprintRepository.addFootprint(journeyId, lat, lng, photos, notes)
+            footprintRepository.addFootprint(journeyId, lat, lng, photos, notes,title, rating)
         }
     }
 
