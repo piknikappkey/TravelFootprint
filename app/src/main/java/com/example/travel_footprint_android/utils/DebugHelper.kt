@@ -164,7 +164,10 @@ class DebugHelper @Inject constructor(
         Log.d(tag, "✅ 创建旅程成功，ID: $journeyId")
 
         // 2. 添加足迹
-        val footprintId = appService.addFootprint(journeyId, 39.9042, 116.4074, "天安门广场")
+        val footprintId = appService.addFootprint(
+            journeyId, 39.9042, 116.4074, "天安门广场",
+            title = "标题"
+        )
         Log.d(tag, "✅ 添加足迹成功，ID: $footprintId")
 
         // 3. 为足迹添加图片（直接调用带参数的内部方法）

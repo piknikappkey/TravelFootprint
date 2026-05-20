@@ -86,7 +86,7 @@ class MapViewModel @Inject constructor(
         _uiState.update { it.copy(selectedImagePath = imagePath) }
     }
 
-    fun addFootprint(notes: String, imagePath: String? = null) {
+    fun addFootprint(notes: String, imagePath: String? = null, title: String) {
         val journeyId = currentJourneyId ?: return
         val state = _uiState.value
 
@@ -99,7 +99,8 @@ class MapViewModel @Inject constructor(
                     lat = state.selectedLat,
                     lng = state.selectedLng,
                     notes = notes,
-                    photos = photos
+                    photos = photos,
+                    title = title
                 )
                 _uiState.update { it.copy(isLoading = false) }
                 hideAddFootprintDialog()

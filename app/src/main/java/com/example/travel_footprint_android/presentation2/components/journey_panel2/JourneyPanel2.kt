@@ -35,6 +35,7 @@ fun JourneyPanel2(
     updateJourney: (Journey) -> Unit,
     addJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
+    aniTime: Int,
 ) {
     // 面板状态
     val journeyPanel2State = JourneyNavController.journeyNavController.value
@@ -65,7 +66,7 @@ fun JourneyPanel2(
                     shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
                 )
                 .animateContentSize(  // 关键修饰符
-                    animationSpec = tween(durationMillis = 300)
+                    animationSpec = tween(durationMillis = aniTime)
                 )
         ) {
             // 内部用 Column 分隔固定标题和可滚动区域
