@@ -4,6 +4,8 @@ package com.example.travel_footprint_android.presentation.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.travel_footprint_android.data.dao.FootprintDao
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.domain.usecase.AppService
@@ -21,7 +23,8 @@ import kotlin.String
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
     private val appService: AppService,
-    private val FootprintRepository: FootprintRepository
+    private val FootprintRepository: FootprintRepository,
+    private val FootprintDao: FootprintDao
 ) : ViewModel() {
 
     // UI 状态
@@ -243,6 +246,53 @@ class JourneyViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * 添加足迹 - 使用 Journey 和 Footprint 对象
+     * Footprint只能包含数据库存在的字段！！！
+     */
+    fun addFootprintsForJourney(
+        journey: Journey,
+        footprint: Footprint
+    ) {
+        viewModelScope.launch {
+            // 验证旅程ID
+            if (journey.id <= 0) {
+                _uiState.update { it.copy(error = "无效的旅程") }
+                return@launch
+            }
+
+            // 验证足迹对象
+            if (footprint.title.isBlank()) {
+                _uiState.update { it.copy(error = "足迹标题不能为空") }
+                return@launch
+            }
+
+
+            try {
+                // 通过 Repository 添加足迹（需要先扩展 Repository 方法）
+                val footprintId = FootprintRepository.addFootprint(
+                   footprint
+                )
+
+                // 刷新足迹数量
+                val newCounts = appService.getAllFootprintCounts()
+                _uiState.update { state ->
+                    state.copy(
+                        footprintCounts = newCounts,
+                        error = null
+                    )
+                }
+
+
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "添加足迹失败")
+                }
+            }
+        }
+        // 不能写 return footprintId
     }
 
 
