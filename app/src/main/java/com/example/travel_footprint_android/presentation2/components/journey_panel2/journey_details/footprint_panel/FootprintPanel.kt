@@ -51,7 +51,7 @@ fun FootprintPanel(
                 FootprintList(footprints, journeySelected)
             }
             FOOTPRINT_DETAILS -> {
-                FootprintDetails()
+                footprintData?.let { FootprintDetails(it, journeySelected,) }
             }
             FOOTPRINT_EDIT -> {
                 FootprintEdit(footprintData, journeySelected, { footprint -> }, { footprint -> })

@@ -11,12 +11,10 @@ package com.example.travel_footprint_android.presentation2.components.journey_ma
  *  - 使用 LazyColumn 展示搜索建议列表
  */
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,12 +71,12 @@ fun LocationSearch(
             value = searchText,
             onValueChange = { locationSearchViewModel.updateSearchText(it) },
             tipText = "搜索地点",
-            padding = PaddingValues(horizontal = 16.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-            textStyle = TextStyle(fontSize = 16.sp, color = FontDark2),
-            primaryColor = MainColor3,
-            onSurfaceColor = FontDark2,
-            containerColor = BGLight2,
+//            padding = PaddingValues(horizontal = 16.dp),
+//            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+//            textStyle = TextStyle(fontSize = 16.sp, color = FontDark2),
+//            primaryColor = MainColor3,
+//            onSurfaceColor = FontDark2,
+//            containerColor = BGLight2,
             imageVector = Icons.Default.Search
         )
 

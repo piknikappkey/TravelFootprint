@@ -32,7 +32,7 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.util.Date
 
 @Composable
-fun FootprintEdit2(
+fun FootprintEditCopy(
     footprintSelect: Footprint?,
     journeySelect: Journey,
     addFootprint: (Footprint) -> Unit,

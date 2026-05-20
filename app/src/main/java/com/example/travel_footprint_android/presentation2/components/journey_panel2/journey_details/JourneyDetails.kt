@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,8 @@ import com.example.travel_footprint_android.presentation2.components.text.text_m
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.SecondColor1
 import com.example.travel_footprint_android.ui.theme.SecondColor3
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun JourneyDetails(
@@ -139,8 +142,20 @@ fun JourneyDetails(
                 modifier = Modifier.padding(horizontal = 15.dp)
             )
             Spacer(Modifier.padding(2.dp))
-            // 旅程地点
-            Row {
+            // 旅程地点以及时间
+            Row(
+                verticalAlignment = Alignment.Bottom
+            ) {
+                // 开始日期
+                val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val dateStr = fullDateFormat.format(journeySelected.startDate)
+                // 显示地址与日期
+                Spacer(Modifier.width(10.dp))
+                TextSmall(
+                    text = dateStr,
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(0.dp).offset(y = 5.dp)
+                )
                 Spacer(Modifier.weight(1f))
                 val region = journeySelected.address.split("\n")[0]
                 val location = journeySelected.address.split("\n").last()
