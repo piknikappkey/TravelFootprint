@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +16,12 @@ import kotlinx.coroutines.launch
 import okhttp3.Address
 import java.util.Date
 import javax.inject.Inject
+import kotlin.String
 
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
-    private val appService: AppService
+    private val appService: AppService,
+    private val FootprintRepository: FootprintRepository
 ) : ViewModel() {
 
     // UI 状态
@@ -87,34 +90,43 @@ class JourneyViewModel @Inject constructor(
 
     /**
      * 创建旅程（使用独立参数）
-     * @param title 旅程标题
-     * @param description 旅程描述
-     * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @param coverStyle 封面风格
-     * @param coverImagePath 封面图片路径
-     * @param journeyImagePaths 旅程图片路径列表
+     * title: String,
+     *     coverStyle: String = "BlackAndWhite",
+     *     description: String = "这是一个旅程",
+     *     startDate: Date = Date(),
+     *     endDate: Date = Date(),
+     *     coverImagePath: String = "这里需要图片地址",
+     *     journeyImagePaths: List<String> = emptyList(),
+     *     address: String = "这里需要旅程地址",
+     *     longitude: Double = 0.0,
+     *     latitude: Double = 0.0
      */
     fun createJourney(
         title: String,
         description: String,
         startDate: Date,
         endDate: Date,
-        coverStyle: String = "watercolor",
+        coverStyle: String,
         coverImagePath: String = "",
-        journeyImagePaths: List<String> = emptyList()
+        journeyImagePaths: List<String> = emptyList(),
+        address:String,
+        longitude: Double,
+        latitude: Double
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 appService.createJourney(
                     title = title,
-                    style = coverStyle,
+                    coverStyle = coverStyle,
                     description = description,
                     startDate = startDate,
                     endDate = endDate,
                     coverImagePath = coverImagePath,
-                    journeyImagePaths = journeyImagePaths
+                    journeyImagePaths = journeyImagePaths,
+                    address=address,
+                    longitude=longitude,
+                    latitude=latitude
                 )
                 hideAddDialog()
                 loadData()
@@ -133,6 +145,16 @@ class JourneyViewModel @Inject constructor(
     /**
      * 创建旅程（使用 Journey 对象）
      * @param journey Journey 实体对象
+     * title: String,
+     *     coverStyle: String = "BlackAndWhite",
+     *     description: String = "这是一个旅程",
+     *     startDate: Date = Date(),
+     *     endDate: Date = Date(),
+     *     coverImagePath: String = "这里需要图片地址",
+     *     journeyImagePaths: List<String> = emptyList(),
+     *     address: String = "这里需要旅程地址",
+     *     longitude: Double = 0.0,
+     *     latitude: Double = 0.0
      */
     fun createJourney(journey: Journey) {
         viewModelScope.launch {
@@ -140,12 +162,15 @@ class JourneyViewModel @Inject constructor(
             try {
                 appService.createJourney(
                     title = journey.title,
-                    style = journey.coverStyle,
+                    coverStyle = journey.coverStyle,
                     description = journey.description,
                     startDate = journey.startDate,
                     endDate = journey.endDate,
                     coverImagePath = journey.coverImagePath,
-                    journeyImagePaths = journey.journeyImagePaths
+                    journeyImagePaths = journey.journeyImagePaths,
+                    address=journey.address,
+                    longitude=journey.longitude,
+                    latitude=journey.latitude
                 )
                 hideAddDialog()
                 loadData()
@@ -160,6 +185,66 @@ class JourneyViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * 给旅程添加足迹
+     *  lat: Double,
+     *  lng: Double,
+     *  photos: List<String>?,
+     *  notes: String,//旅程描述
+     *  title:String, //旅程标题
+     *  rating:Int //评分
+     */
+    fun addFootprintsForJourney(
+        journey: Journey,
+        lat: Double,
+        lng: Double,
+        photos: List<String>?,
+        notes: String,
+        title: String,
+        rating: Int
+    ) {
+        viewModelScope.launch {
+            // 验证旅程ID
+            if (journey.id <= 0) {
+                _uiState.update { it.copy(error = "无效的旅程") }
+                return@launch
+            }
+
+            try {
+                // 直接添加，不改变全局 loading 状态
+                val footprintId = FootprintRepository.addFootprint(
+                    journeyId = journey.id,
+                    lat = lat,
+                    lng = lng,
+                    photos = photos,
+                    notes = notes,
+                    title = title,
+                    rating = rating
+                )
+
+                // 只刷新足迹数量，不重新加载整个列表
+                val newCounts = appService.getAllFootprintCounts()
+                _uiState.update { state ->
+                    state.copy(
+                        footprintCounts = newCounts,
+                        error = null
+                    )
+                }
+
+                // 可选：发送成功事件
+                // _addFootprintSuccessEvent.emit(footprintId)
+
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        error = e.message ?: "添加足迹失败"
+                    )
+                }
+            }
+        }
+    }
+
 
     // ==================== 编辑旅程 ====================
 

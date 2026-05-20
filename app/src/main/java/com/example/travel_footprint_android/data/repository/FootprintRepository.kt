@@ -27,7 +27,9 @@ class FootprintRepository @Inject constructor(
         lat: Double,
         lng: Double,
         photos: List<String>?,
-        notes: String
+        notes: String,//旅程描述
+        title:String, //旅程标题
+        rating:Int //评分
     ): Long {
         // 1. 获取地址
         val address = locationService.reverseGeocode(lat, lng)
@@ -35,11 +37,11 @@ class FootprintRepository @Inject constructor(
         // 2. 插入足迹
         val footprint = Footprint(
             journeyId = journeyId,
-            title = notes.take(20),  // 取前20字作为标题
+            title =title,
             description = notes,
             createTime = Date(),
             address = address,
-            rating = 0
+            rating = rating
         )
         val footprintId = footprintDao.insertFootprint(footprint)
 
@@ -65,8 +67,10 @@ class FootprintRepository @Inject constructor(
             mediaDao.insertMedia(media)
         }
 
-        return footprintId
+        return footprintId //返回足迹ID
     }
+
+
 
     suspend fun updateFootprintLocation(id: Long, lat: Double, lng: Double) {
         val locations = locationDao.getLocationsByFootprint(id)
