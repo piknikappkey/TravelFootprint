@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_details.FootprintDetails
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_edit.FootprintEdit
@@ -21,11 +22,12 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 
 @Composable
 fun FootprintPanel(
-    footprintViewModel: MapViewModel = hiltViewModel(),
+    mapViewModel: MapViewModel = hiltViewModel(),
+    journeyViewModel: JourneyViewModel = hiltViewModel(),
     journeySelected: Journey,
 ) {
     // 足迹数据
-    val footprintUiState by footprintViewModel.uiState.collectAsState()
+    val footprintUiState by mapViewModel.uiState.collectAsState()
 
     // 读取足迹数据
     val footprints = footprintUiState.footprints
@@ -37,7 +39,7 @@ fun FootprintPanel(
 
     // 初始化足迹数据
     LaunchedEffect(journeySelected) {
-        footprintViewModel.loadJourneyFootprints(journeySelected.id)
+        mapViewModel.loadJourneyFootprints(journeySelected.id)
     }
 
     Box(
@@ -54,7 +56,7 @@ fun FootprintPanel(
                 footprintData?.let { FootprintDetails(it, journeySelected,) }
             }
             FOOTPRINT_EDIT -> {
-                FootprintEdit(footprintData, journeySelected, { footprint -> }, { footprint -> })
+                FootprintEdit(footprintData, journeySelected, { footprint -> journeyViewModel.addFootprintsForJourney(journeySelected, footprint)}, { footprint -> })
             }
         }
     }

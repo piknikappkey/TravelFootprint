@@ -45,7 +45,7 @@ fun FootprintEdit(
                 title = journeySelected.title + "的足迹",
                 description = "这是一个新的足迹",
                 createTime = Date(),
-                address = "",
+                address = journeySelected.address,
                 rating = 1
             )
     ) }
@@ -76,12 +76,13 @@ fun FootprintEdit(
                 text = if(footprintSelected == null) "新增足迹" else "编辑足迹"
             )
             Spacer(Modifier.weight(1f))
+            // 保存按钮
             ButtonSave(
                 onClick = {
                     if (footprintSelected == null) {
-                        addFootprint(footprint)
+                        addFootprint(footprint.copy())
                     } else {
-                        updateFootprint(footprint)
+                        updateFootprint(footprint.copy())
                     }
                     FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_LIST)
                 }
@@ -105,17 +106,6 @@ fun FootprintEdit(
         LineBetween()
 
         // 足迹地址编辑
-//        TextMedium(
-//            text = "足迹地址：",
-//            firstLine = 0,
-//            modifier = Modifier.padding(horizontal = 15.dp)
-//        )
-//        Spacer(Modifier.padding(2.dp))
-//        InputText3(
-//            value = footprint.address,
-//            onValueChange = { text -> footprint = footprint.copy(address = text) },
-//            tipText = "请填写足迹地址"
-//        )
         FootprintEditLocation(
             footprint,
             setFootprint = { footprint -> },
@@ -127,27 +117,6 @@ fun FootprintEdit(
         FootprintRating(footprint, { rating -> footprint = footprint.copy(rating = rating) })
 
         LineBetween()
-
-//        // 创建时间编辑
-//        TextMedium(
-//            text = "创建时间：",
-//            firstLine = 0,
-//            modifier = Modifier.padding(horizontal = 15.dp)
-//        )
-//        Spacer(Modifier.padding(2.dp))
-//        InputText3(
-//            value = footprint.getFormattedTime(),
-//            onValueChange = { text ->
-//                try {
-//                    val date = SimpleDateFormat("yyyy-MM-dd HH:mm").parse(text)
-//                    if (date != null) {
-//                        footprint = footprint.copy(createTime = date)
-//                    }
-//                } catch (e: Exception) {
-//                }
-//            },
-//            tipText = "请填写创建时间，格式：yyyy-MM-dd HH:mm"
-//        )
 
         Spacer(Modifier.padding(10.dp))
     }

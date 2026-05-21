@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
@@ -47,6 +49,42 @@ fun JourneyDetails(
     journeySelected: Journey, // 当前选中的旅程
     updateJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
+    navigate: (JourneyPanel2State, Journey?) -> Unit
+) {
+
+    BGImgBox(
+        listOf(R.drawable.bg_simple_ver_small)
+    ) {
+        Column {
+            // 标题
+            JourneyHead(
+                journeySelected,
+                navigate
+            )
+            // 旅程内容
+            Column(
+                modifier = modifier
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(Modifier.padding(2.dp))
+
+                JourneyContent(
+                    journeySelected,
+                    updateJourney,
+                    deleteJourney,
+                    navigate
+                )
+
+                // 足迹内容
+                FootprintContent(journeySelected)
+            }
+        }
+    }
+}
+
+@Composable
+fun JourneyHead(
+    journeySelected: Journey,
     navigate: (JourneyPanel2State, Journey?) -> Unit
 ) {
     Row(
@@ -89,130 +127,143 @@ fun JourneyDetails(
 
         Spacer(Modifier.width(10.dp))
     }
-    // 旅程内容
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
+}
+
+@Composable
+fun JourneyContent(
+    journeySelected: Journey,
+    updateJourney: (Journey) -> Unit,
+    deleteJourney: (Journey) -> Unit,
+    navigate: (JourneyPanel2State, Journey?) -> Unit
+) {
+    BGBox(
+        modifier = Modifier
+            .padding(horizontal = 10.dp, vertical = 10.dp)
     ) {
-        Spacer(Modifier.padding(2.dp))
-
-        BGColumn(
-            modifier = Modifier
-                .padding(horizontal = 10.dp)
+        BGImgBox(
+            imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
         ) {
-            // 旅程标题
-            Spacer(Modifier.padding(2.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Headline(
-                    text = journeySelected.title,
-                )
-            }
-            Spacer(Modifier.padding(3.dp))
-
-            // 封面图片
-            ImageSquare2(
-                imgPath = journeySelected.coverImagePath,
-                updateImgPath = { file ->
-                    journeySelected.coverImagePath = file.absolutePath
-                    updateJourney(journeySelected)
-                },
-                deleteImgPath = { imgPath ->
-                    journeySelected.coverImagePath = ""
-                    updateJourney(journeySelected)
-                },
-                modifier = Modifier.padding(horizontal = 40.dp),
-                aspectRatio = 1.2f,
-                addIconSize = .3f
-            )
-            LineBetween(paddingUp = 12.dp)
-
-            // 描述内容
-            TextMedium(
-                text = "旅程描述：",
-                firstLine = 0,
-                modifier = Modifier.padding(horizontal = 15.dp)
-            )
-            Spacer(Modifier.padding(2.dp))
-            TextMedium(
-                text = journeySelected.description,
-                firstLine = 2,
-                modifier = Modifier.padding(horizontal = 15.dp)
-            )
-            Spacer(Modifier.padding(2.dp))
-            // 旅程地点以及时间
-            Row(
-                verticalAlignment = Alignment.Bottom
-            ) {
-                // 开始日期
-                val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val dateStr = fullDateFormat.format(journeySelected.startDate)
-                // 显示地址与日期
-                Spacer(Modifier.width(10.dp))
-                TextSmall(
-                    text = dateStr,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(0.dp).offset(y = 5.dp)
-                )
-                Spacer(Modifier.weight(1f))
-                val region = journeySelected.address.split("\n")[0]
-                val location = journeySelected.address.split("\n").last()
-                Column {
-                    TextSmall(
-                        text = location,
-                        firstLine = 0,
-                        modifier = Modifier.padding(horizontal = 15.dp)
+            Column {
+                // 旅程标题
+                Spacer(Modifier.padding(2.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Headline(
+                        text = journeySelected.title,
                     )
+                }
+                Spacer(Modifier.padding(3.dp))
+
+                // 封面图片
+                ImageSquare2(
+                    imgPath = journeySelected.coverImagePath,
+                    updateImgPath = { file ->
+                        journeySelected.coverImagePath = file.absolutePath
+                        updateJourney(journeySelected)
+                    },
+                    deleteImgPath = { imgPath ->
+                        journeySelected.coverImagePath = ""
+                        updateJourney(journeySelected)
+                    },
+                    modifier = Modifier.padding(horizontal = 40.dp),
+                    aspectRatio = 1.2f,
+                    addIconSize = .3f
+                )
+                LineBetween(paddingUp = 12.dp)
+
+                // 描述内容
+                TextMedium(
+                    text = "旅程描述：",
+                    firstLine = 0,
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                )
+                Spacer(Modifier.padding(2.dp))
+                TextMedium(
+                    text = journeySelected.description,
+                    firstLine = 2,
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                )
+                Spacer(Modifier.padding(2.dp))
+                // 旅程地点以及时间
+                Row(
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    // 开始日期
+                    val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val dateStr = fullDateFormat.format(journeySelected.startDate)
+                    // 显示地址与日期
+                    Spacer(Modifier.width(10.dp))
                     TextSmall(
-                        text = region,
-                        firstLine = 2,
+                        text = dateStr,
                         fontSize = 11.sp,
-                        modifier = Modifier.padding(horizontal = 15.dp),
+                        modifier = Modifier.padding(0.dp).offset(y = 5.dp)
                     )
+                    Spacer(Modifier.weight(1f))
+                    val region = journeySelected.address.split("\n")[0]
+                    val location = journeySelected.address.split("\n").last()
+                    Column {
+                        TextSmall(
+                            text = location,
+                            firstLine = 0,
+                            modifier = Modifier.padding(horizontal = 15.dp)
+                        )
+                        TextSmall(
+                            text = region,
+                            firstLine = 2,
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(horizontal = 15.dp),
+                        )
+                    }
                 }
+                LineBetween()
+
+                // 回忆
+                TextMedium(
+                    text = "旅程回忆",
+                    firstLine = 0,
+                    modifier = Modifier.padding(horizontal = 15.dp)
+                )
+                Spacer(Modifier.padding(5.dp))
+                Reminiscence(
+                    journey = journeySelected,
+                    updateJourney = updateJourney
+                )
+                LineBetween()
+
+                // 功能按钮
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(Modifier.width(20.dp))
+                    ButtonDelete {
+                        deleteJourney(journeySelected)
+                        navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    ButtonMain(title = "旅程足迹") {
+
+                    }
+                    Spacer(Modifier.width(10.dp))
+                }
+                Spacer(Modifier.padding(5.dp))
             }
-            LineBetween()
-
-            // 回忆
-            TextMedium(
-                text = "旅程回忆",
-                firstLine = 0,
-                modifier = Modifier.padding(horizontal = 15.dp)
-            )
-            Spacer(Modifier.padding(5.dp))
-            Reminiscence(
-                journey = journeySelected,
-                updateJourney = updateJourney
-            )
-            LineBetween()
-
-            // 功能按钮
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(Modifier.width(20.dp))
-                ButtonDelete {
-                    deleteJourney(journeySelected)
-                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
-                }
-                Spacer(Modifier.weight(1f))
-                ButtonMain(title = "旅程足迹") {
-
-                }
-                Spacer(Modifier.width(10.dp))
-            }
-            Spacer(Modifier.padding(5.dp))
         }
-        Spacer(Modifier.padding(10.dp))
+    }
+}
 
-
-        // 足迹内容
-        BGColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 10.dp)
+@Composable
+fun FootprintContent(
+    journeySelected: Journey,
+) {
+    BGColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+    ) {
+        BGImgBox(
+            imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
         ) {
             // 足迹面板
             FootprintPanel(
