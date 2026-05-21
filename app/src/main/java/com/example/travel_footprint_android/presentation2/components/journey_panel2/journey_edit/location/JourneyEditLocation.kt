@@ -2,13 +2,13 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,14 +33,17 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.journey_map3.location_search.LocationSearch
 import com.example.travel_footprint_android.presentation2.components.journey_map3.location_search.LocationSearchViewModel
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
-import com.example.travel_footprint_android.ui.theme.BGLight2
 import com.example.travel_footprint_android.ui.theme.FontDark2
+import com.example.travel_footprint_android.ui.theme.FontDark5
 import com.example.travel_footprint_android.ui.theme.FontDark6
+import com.example.travel_footprint_android.ui.theme.FontDark8
 import com.example.travel_footprint_android.ui.theme.MainColor3
 
 @Composable
@@ -165,94 +168,102 @@ fun LocationPanel(
     cancel: () -> Unit,
     delete: () -> Unit,
 ) {
-    Column(
+
+    BGBox (
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-            .background(BGLight2, RoundedCornerShape(12.dp))
-            .padding(16.dp)
+            .padding(16.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Row {
-            Text(
-                text = "已选择位置",
-                color = FontDark6,
-                style = TextStyle(fontSize = 14.sp),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Spacer(Modifier.weight(1f))
-            Image(
+        BGImgBox(listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3)) {
+            Column(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable(onClick = delete),
-                painter = painterResource(R.drawable.ic_delete_trash),
-                contentDescription = "修改图标",
-                colorFilter = ColorFilter.tint(Color(0xFFFF0000)),
-            )
-            Spacer(Modifier.width(10.dp))
-        }
-
-        // 位置名称
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "位置图标",
-                tint = MainColor3,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = name,
-                color = FontDark2,
-                style = TextStyle(fontSize = 16.sp),
-                modifier = Modifier.padding(start = 28.dp)
-            )
-        }
-
-        // 详细地址
-        if (address.isNotEmpty()) {
-            Text(
-                text = address,
-                color = FontDark6,
-                style = TextStyle(fontSize = 14.sp),
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-
-        // 经纬度信息
-        Text(
-            text = "纬度: ${String.format("%.6f", latitude)}",
-            color = FontDark6,
-            style = TextStyle(fontSize = 14.sp),
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        Text(
-            text = "经度: ${String.format("%.6f", longitude)}",
-            color = FontDark6,
-            style = TextStyle(fontSize = 14.sp),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-        if(showButton) {
-            Row {
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f),
-                )
-                ButtonMain(
-                    title = "取消"
-                ) {
-                    cancel()
+                    .padding(16.dp)
+            ) {
+                Row {
+                    Text(
+                        text = "已选择位置",
+                        color = FontDark6,
+                        style = TextStyle(fontSize = 14.sp),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Image(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable(onClick = delete),
+                        painter = painterResource(R.drawable.ic_delete_trash),
+                        contentDescription = "修改图标",
+                        colorFilter = ColorFilter.tint(Color(0xFFFF0000)),
+                    )
+                    Spacer(Modifier.width(10.dp))
                 }
-                Spacer(
+
+                // 位置名称
+                Box(
                     modifier = Modifier
-                        .width(10.dp),
-                )
-                ButtonMain(
-                    title = "确定"
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 ) {
-                    submit()
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "位置图标",
+                        tint = MainColor3,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = name,
+                        color = FontDark2,
+                        style = TextStyle(fontSize = 16.sp),
+                        modifier = Modifier.padding(start = 28.dp)
+                    )
+                }
+
+                // 详细地址
+                if (address.isNotEmpty()) {
+                    Row {
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            text = address,
+                            color = FontDark5,
+                            style = TextStyle(fontSize = 15.sp),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // 经纬度信息
+                Row {
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
+                        color = FontDark8,
+                        style = TextStyle(fontSize = 12.sp),
+                    )
+                }
+
+                if(showButton) {
+                    Row {
+                        Spacer(
+                            modifier = Modifier
+                                .weight(1f),
+                        )
+                        ButtonMain(
+                            title = "取消"
+                        ) {
+                            cancel()
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .width(10.dp),
+                        )
+                        ButtonMain(
+                            title = "确定"
+                        ) {
+                            submit()
+                        }
+                    }
                 }
             }
         }

@@ -35,6 +35,9 @@ fun AniShade(
 
     LaunchedEffect(aniStart) {
         if(aniTime > (System.currentTimeMillis() - startTime)) {
+            Log.d("AniShade", "animation quickly!")
+            delay(aniTime)
+            aniOverFunc()
             return@LaunchedEffect
         }
         if(aniStart) {

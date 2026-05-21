@@ -22,7 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
@@ -58,7 +59,37 @@ fun JourneyEdit(
     }
 
 
+    BGImgBox(
+        listOf(R.drawable.bg_simple_ver_small)
+    ) {
+        Column {
+            // 顶部内容
+            JourneyHead(
+                journey,
+                journeySelected,
+                navigate,
+                addJourney,
+                updateJourney
+            )
+            // 可滚动内容
+            JourneyContent(
+                modifier,
+                journey,
+                { j -> journey = j.copy() },
+            )
+        }
+    }
+}
 
+
+@Composable
+fun JourneyHead(
+    journey: Journey,
+    journeySelected: Journey? = null,
+    navigate: (JourneyPanel2State, Journey?) -> Unit,
+    addJourney: (Journey) -> Unit,
+    updateJourney: (Journey) -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ){
@@ -96,72 +127,79 @@ fun JourneyEdit(
 
         Spacer(Modifier.width(10.dp))
     }
-    // 可滚动内容
+}
+
+@Composable
+fun JourneyContent(
+    modifier: Modifier = Modifier,
+    journey: Journey,
+    setJourney: (Journey) -> Unit,
+) {
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
     ) {
         Spacer(Modifier.padding(2.dp))
 
-        BGColumn(
+        BGBox(
             modifier = Modifier
                 .padding(horizontal = 10.dp)
         ) {
-            Spacer(Modifier.padding(3.dp))
-            // 旅程标题编辑----------------------------------------
-            JourneyEditTitle(
-                journey = journey,
-                onValueChange = { text -> journey = journey.copy(title = text) }
-            )
-            LineBetween()
+            BGImgBox(
+                imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
+            ) {
+                Column {
+                    Spacer(Modifier.padding(3.dp))
+                    // 旅程标题编辑----------------------------------------
+                    JourneyEditTitle(
+                        journey = journey,
+                        onValueChange = { text ->  setJourney(journey.copy(title = text)) }
+                    )
+                    LineBetween()
 
-            // 封面图片编辑----------------------------------------
-            JourneyEditCover(
-                journey = journey,
-                updateImgPath = { file ->
-                    journey = journey.copy(coverImagePath = file.absolutePath)
-                },
-                deleteImgPath = { imgPath ->
-                    journey = journey.copy(coverImagePath = "")
+                    // 封面图片编辑----------------------------------------
+                    JourneyEditCover(
+                        journey = journey,
+                        updateImgPath = { file ->
+                            setJourney(journey.copy(coverImagePath = file.absolutePath))
+                        },
+                        deleteImgPath = { imgPath ->
+                            setJourney(journey.copy(coverImagePath = ""))
+                        }
+                    )
+                    LineBetween()
+
+                    // 旅程描述编辑----------------------------------------
+                    JourneyEditDescription(
+                        journey = journey,
+                        onValueChange = { text -> setJourney(journey.copy(description = text)) }
+                    )
+                    LineBetween()
+
+                    // 旅程地址----------------------------------------
+                    JourneyEditLocation(
+                        journey = journey,
+                        setJourney = { j ->
+                            setJourney(j.copy())
+                        }
+                    )
+                    LineBetween()
+
+                    // 回忆编辑----------------------------------------
+                    JourneyEditImages(
+                        journey = journey,
+                        updateJourney = { j ->
+                            // 触发ui更新
+                            val newList =
+                                List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i] })
+                            setJourney(j.copy(journeyImagePaths = List(0, { i -> "" })))
+                            setJourney(j.copy(journeyImagePaths = newList))
+                        }
+                    )
+                    Spacer(Modifier.padding(10.dp))
                 }
-            )
-            LineBetween()
-
-            // 旅程描述编辑----------------------------------------
-            JourneyEditDescription(
-                journey = journey,
-                onValueChange = { text -> journey = journey.copy(description = text) }
-            )
-            LineBetween()
-
-            // 旅程地址----------------------------------------
-            JourneyEditLocation(
-                journey = journey,
-                setJourney = { j ->
-                    journey = j.copy()
-                }
-            )
-            LineBetween()
-
-            // 回忆编辑----------------------------------------
-            JourneyEditImages(
-                journey = journey,
-                updateJourney = { j ->
-                    // 触发ui更新
-                    val newList = List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i]})
-                    journey = j.copy(journeyImagePaths = List(0, { i -> "" }))
-                    journey = j.copy(journeyImagePaths = newList)
-                }
-            )
-            Spacer(Modifier.padding(10.dp))
+            }
         }
         Spacer(Modifier.padding(10.dp))
-        // 开始时间
-//        TextMedium(
-//            text = "旅程开始时间：",
-//            firstLine = 0,
-//            modifier = Modifier.padding(horizontal = 15.dp)
-//        )
-//        Spacer(Modifier.padding(2.dp))
     }
 }

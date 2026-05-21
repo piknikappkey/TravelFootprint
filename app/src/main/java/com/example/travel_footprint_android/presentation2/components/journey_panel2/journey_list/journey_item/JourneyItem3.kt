@@ -1,6 +1,5 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list.journey_item
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,11 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.image_square.ImageSquare2
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
-import com.example.travel_footprint_android.ui.theme.BGLight2
 import com.example.travel_footprint_android.ui.theme.FontDark5
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -38,28 +38,28 @@ fun JourneyItem3(
             .shadow(
                 elevation = 1.dp,
                 shape = RoundedCornerShape(3.dp),
-                clip = false
-            )
-            .background(
-                color = BGLight2,
-                shape = RoundedCornerShape(3.dp)
+                clip = true
             )
             .clickable(onClick = { journeyClick(journey) })
     ) {
-        Row(
-            modifier = Modifier
-                .padding(vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        BGImgBox(
+            listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3)
         ) {
-            Spacer(Modifier.width(3.dp))
-            ImageSquare2(
-                imgPath = journey.coverImagePath,
-                modifier = Modifier.width(100.dp).padding(horizontal = 5.dp),
-                aspectRatio = 1.2f,
-                addIconSize = .3f,
-                shape = RoundedCornerShape(5.dp)
-            )
-            RightContent(journey)
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(Modifier.width(3.dp))
+                ImageSquare2(
+                    imgPath = journey.coverImagePath,
+                    modifier = Modifier.width(100.dp).padding(horizontal = 5.dp),
+                    aspectRatio = 1.2f,
+                    addIconSize = .3f,
+                    shape = RoundedCornerShape(5.dp)
+                )
+                RightContent(journey)
+            }
         }
     }
 }

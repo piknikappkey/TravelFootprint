@@ -89,7 +89,7 @@ fun JourneyShade(
         aniOverFunc = {
             setSizeChange(false)
         },
-        aniTime = aniTime.toLong() + 200,
+        aniTime = aniTime.toLong() * 2,
         shadeShowTime = 0,
         shadeStopTime = aniTime.toLong(),
         shadeHideTime = 100

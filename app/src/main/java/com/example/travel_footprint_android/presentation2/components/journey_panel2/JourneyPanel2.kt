@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
@@ -46,6 +47,19 @@ fun JourneyPanel2(
 
     Box(
         modifier = modifier
+            .layout { measurable, constraints ->
+                // 测量原本的内容
+                val placeable = measurable.measure(constraints)
+                val offsetPx = 30.dp.roundToPx()
+
+                // 布局高度 = 原高度 - 偏移量（最小为 0）
+                val layoutHeight = (placeable.height - offsetPx).coerceAtLeast(0)
+
+                layout(placeable.width, layoutHeight) {
+                    // 把内容放到向上偏移的位置
+                    placeable.placeRelative(0, -offsetPx)
+                }
+            }
     ) {
         LocationButton(
             modifier = Modifier
@@ -59,7 +73,7 @@ fun JourneyPanel2(
                 .shadow(
                     elevation = 8.dp,
                     shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
-                    clip = false
+                    clip = true
                 )
                 .background(
                     color = BGLight1,
