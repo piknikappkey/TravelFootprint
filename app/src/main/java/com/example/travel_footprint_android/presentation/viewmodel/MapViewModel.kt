@@ -99,7 +99,7 @@ class MapViewModel @Inject constructor(
                     lat = state.selectedLat,
                     lng = state.selectedLng,
                     notes = notes,
-                    photos = photos
+                    title = "fnaisf"
                 )
                 _uiState.update { it.copy(isLoading = false) }
                 hideAddFootprintDialog()

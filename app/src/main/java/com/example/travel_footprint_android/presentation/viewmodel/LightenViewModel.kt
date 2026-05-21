@@ -260,6 +260,61 @@ class LightenViewModel @Inject constructor(
         }
     }
 
+    //点亮城市通过城市码
+    fun lightCityByAdcode(
+        cityAdcode: String,
+        cityName: String
+    ) {
+        viewModelScope.launch {
+            // 尝试从已缓存的城市数据中获取完整信息
+            val city = getCityInfo(cityAdcode)
+            /**
+             *  val adcode: String,        // 城市代码 (如: 110100)
+             *     val name: String,          // 城市名称 (如: 北京市)
+             *     val provinceAdcode: String,// 所属省份代码
+             *     val centerLat: Double,     // 中心纬度
+             *     val centerLng: Double,     // 中心经度
+             *     val sortOrder: Int = 0     // 排序顺序
+             */
+            if (city != null) {
+                lightCity(
+                    cityAdcode = city.adcode,
+                    cityName = city.name,
+                    provinceAdcode = city.provinceAdcode,
+                    provinceName = "默认省份",
+                    latitude = city.centerLat,
+                    longitude = city.centerLng,
+                    remark = "从地图选择点亮（城市模式）"
+                )
+            } else {
+                // 降级：只保存基本信息
+                lightCity(
+                    cityAdcode = cityAdcode,
+                    cityName = cityName,
+                    provinceAdcode = "",
+                    provinceName = "",
+                    latitude = 0.0,
+                    longitude = 0.0,
+                    remark = "从地图选择点亮（城市模式）"
+                )
+            }
+        }
+    }
+
+    // 添加一个简单的城市缓存
+    private val cityCache = mutableMapOf<String, com.example.travel_footprint_android.data.entity.City>()
+
+    fun cacheCity(city: com.example.travel_footprint_android.data.entity.City) {
+        cityCache[city.adcode] = city
+    }
+
+    private suspend fun getCityInfo(adcode: String): com.example.travel_footprint_android.data.entity.City? {
+        // 先从缓存获取
+        cityCache[adcode]?.let { return it }
+        // 再从数据库获取
+        return appService.getCityByAdcode(adcode)
+    }
+
     // ==================== 批量保存变更 ====================
 
     /**

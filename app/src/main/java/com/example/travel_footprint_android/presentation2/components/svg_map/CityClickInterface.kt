@@ -28,7 +28,7 @@ class CityClickInterface(
     }
     @JavascriptInterface
     fun onCityUnClicked() {
-        Log.d("CityClickInterface", "Received city un click")
+        Log.d("CityClickInterface", "被选中城市被点击")
         cityClickState(false)
     }
 }

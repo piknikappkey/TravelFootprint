@@ -78,7 +78,3 @@ fun LightenScreen2(
     }
 }
 
-enum class LightenCityMode {
-    CITY,
-    PROVINCE
-}
