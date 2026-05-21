@@ -17,6 +17,7 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 
 @Composable
@@ -32,6 +33,7 @@ fun FootprintList(
                 text = "${journeySelected.title}——足迹"
             )
         }
+        LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
         Box(
             modifier = Modifier
                 .fillMaxSize()

@@ -80,12 +80,12 @@ fun JourneyEditLocation(
         onLocationSelected = { location ->
             Log.d("JourneyEditLocation", "location = $location")
 //            if (location.latitude != latitude || location.longitude != longitude) {
-                isSelectedLocation = true
-                showButton = true
-                name = location.name
-                address = location.address
-                latitude = location.latitude
-                longitude = location.longitude
+            isSelectedLocation = true
+            showButton = true
+            name = location.name
+            address = location.address
+            latitude = location.latitude
+            longitude = location.longitude
 //            }
         }
     )

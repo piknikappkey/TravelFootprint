@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.ui.theme.FontDark5
 
 @Composable
 fun FootprintDescription(
@@ -17,7 +19,9 @@ fun FootprintDescription(
     TextMedium(
         text = "足迹描述：",
         firstLine = 0,
-        modifier = Modifier.padding(horizontal = 15.dp)
+        modifier = Modifier.padding(horizontal = 15.dp),
+        fontSize = 15.sp,
+        color = FontDark5,
     )
     Spacer(Modifier.padding(2.dp))
     InputText3(

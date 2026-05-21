@@ -51,6 +51,9 @@
             android:name="com.amap.api.v2.apikey"
             android:value="83279a23557952f6b018e06064b2ed24"/>
 
+        <!-- 开启持续定位服 务-->
+        <service android:name="com.amap.api.location.APSService" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

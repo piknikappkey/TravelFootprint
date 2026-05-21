@@ -33,16 +33,16 @@ import java.util.Date
 
 @Composable
 fun FootprintEdit(
-    footprintSelect: Footprint?,
-    journeySelect: Journey,
+    footprintSelected: Footprint?,
+    journeySelected: Journey,
     addFootprint: (Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
 ) {
     var footprint by remember { mutableStateOf(
-        footprintSelect?.copy()
+        footprintSelected?.copy()
             ?: Footprint(
-                journeyId = journeySelect.id,
-                title = journeySelect.title + "的足迹",
+                journeyId = journeySelected.id,
+                title = journeySelected.title + "的足迹",
                 description = "这是一个新的足迹",
                 createTime = Date(),
                 address = "",
@@ -73,12 +73,12 @@ fun FootprintEdit(
             )
             Spacer(Modifier.width(5.dp))
             TextMedium(
-                text = if(footprintSelect == null) "新增足迹" else "编辑足迹"
+                text = if(footprintSelected == null) "新增足迹" else "编辑足迹"
             )
             Spacer(Modifier.weight(1f))
             ButtonSave(
                 onClick = {
-                    if (footprintSelect == null) {
+                    if (footprintSelected == null) {
                         addFootprint(footprint)
                     } else {
                         updateFootprint(footprint)

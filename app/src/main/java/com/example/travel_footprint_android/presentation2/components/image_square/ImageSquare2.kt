@@ -33,8 +33,8 @@ import java.io.File
 @Composable
 fun ImageSquare2(
     imgPath: String,
-    updateImgPath: (File) -> Unit,
-    deleteImgPath: (String) -> Unit,
+    updateImgPath: (File) -> Unit = { file -> },
+    deleteImgPath: (String) -> Unit = { string -> },
     modifier: Modifier = Modifier,
     aspectRatio: Float = 1f, // 宽高比
     addIconSize: Float = .3f, // “+”图标大小（相较于整个页面）
