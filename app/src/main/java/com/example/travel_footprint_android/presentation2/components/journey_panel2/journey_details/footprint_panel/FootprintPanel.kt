@@ -40,6 +40,7 @@ fun FootprintPanel(
     // 初始化足迹数据
     LaunchedEffect(journeySelected) {
         mapViewModel.loadJourneyFootprints(journeySelected.id)
+        FootprintNavController.init()
     }
 
     Box(

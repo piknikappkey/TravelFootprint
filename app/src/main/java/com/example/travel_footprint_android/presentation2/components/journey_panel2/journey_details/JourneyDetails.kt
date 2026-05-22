@@ -183,7 +183,8 @@ fun JourneyContent(
                 TextMedium(
                     text = journeySelected.description,
                     firstLine = 2,
-                    modifier = Modifier.padding(horizontal = 15.dp)
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    fontSize = 17.sp
                 )
                 Spacer(Modifier.padding(2.dp))
                 // 旅程地点以及时间

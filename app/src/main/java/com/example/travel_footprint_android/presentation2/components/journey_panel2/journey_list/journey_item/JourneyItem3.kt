@@ -76,7 +76,7 @@ fun RightContent(
         // 标题
         TextMedium(
             text = journey.title,
-            fontSize = 15.sp,
+            fontSize = 16.sp,
         )
 
         Spacer(Modifier.padding(1.dp))
@@ -130,6 +130,5 @@ fun RightContent(
             )
             Spacer(Modifier.width(5.dp))
         }
-
     }
 }

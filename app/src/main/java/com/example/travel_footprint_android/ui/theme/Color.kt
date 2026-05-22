@@ -37,20 +37,9 @@ val FontDark8 = Color(0xFF888888)
 val FontDark6 = Color(0xFF666666)
 val FontDark5 = Color(0xFF555555)
 val FontDark4 = Color(0xFF444444)
+val FontDark3 = Color(0xFF333333)
 val FontDark2 = Color(0xFF222222)
 val FontDark0 = Color(0xFF000000)
-
-// 主色调字体颜色-浅<-->深
-val FontColor0 = Color(0xFFD0BCFF)
-val FontColor1 = Color(0xFFC3ABFD)
-val FontColor2 = Color(0xFFB698FD)
-val FontColor3 = Color(0xFFA782FD)
-val FontColor4 = Color(0xFF986DFC)
-val FontColor5 = Color(0xFF8958FC)
-val FontColor6 = Color(0xFF7B45FC)
-
-// 副色调字体颜色-浅<-->深
-
 
 /**
  * 背景样式

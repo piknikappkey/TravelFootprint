@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,11 +36,12 @@ import com.example.travel_footprint_android.presentation2.components.bg_box.BGIm
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.journey_map3.location_search.LocationSearch
 import com.example.travel_footprint_android.presentation2.components.journey_map3.location_search.LocationSearchViewModel
+import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
-import com.example.travel_footprint_android.ui.theme.FontDark2
+import com.example.travel_footprint_android.ui.theme.FontDark4
 import com.example.travel_footprint_android.ui.theme.FontDark5
-import com.example.travel_footprint_android.ui.theme.FontDark6
 import com.example.travel_footprint_android.ui.theme.FontDark8
 import com.example.travel_footprint_android.ui.theme.MainColor3
 
@@ -168,7 +167,6 @@ fun LocationPanel(
     cancel: () -> Unit,
     delete: () -> Unit,
 ) {
-
     BGBox (
         modifier = Modifier
             .padding(16.dp),
@@ -177,19 +175,19 @@ fun LocationPanel(
         BGImgBox(listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3)) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, 8.dp)
             ) {
                 Row {
-                    Text(
+                    TextMedium(
                         text = "已选择位置",
-                        color = FontDark6,
-                        style = TextStyle(fontSize = 14.sp),
+                        color = FontDark5,
+                        fontSize = 16.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Spacer(Modifier.weight(1f))
                     Image(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(22.dp)
                             .clickable(onClick = delete),
                         painter = painterResource(R.drawable.ic_delete_trash),
                         contentDescription = "修改图标",
@@ -210,22 +208,24 @@ fun LocationPanel(
                         tint = MainColor3,
                         modifier = Modifier.size(20.dp)
                     )
-                    Text(
+                    Headline(
                         text = name,
-                        color = FontDark2,
-                        style = TextStyle(fontSize = 16.sp),
+                        fontSize = 18.sp,
                         modifier = Modifier.padding(start = 28.dp)
                     )
+//                    TextMedium(
+//                        text = name,
+//                        modifier = Modifier.padding(start = 28.dp)
+//                    )
                 }
 
                 // 详细地址
                 if (address.isNotEmpty()) {
                     Row {
                         Spacer(Modifier.weight(1f))
-                        Text(
+                        TextMedium(
                             text = address,
-                            color = FontDark5,
-                            style = TextStyle(fontSize = 15.sp),
+                            color = FontDark4,
                         )
                         Spacer(Modifier.width(10.dp))
                     }
@@ -236,12 +236,15 @@ fun LocationPanel(
                 // 经纬度信息
                 Row {
                     Spacer(Modifier.weight(1f))
-                    Text(
+                    TextSmall(
                         text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
                         color = FontDark8,
-                        style = TextStyle(fontSize = 12.sp),
+                        fontSize = 12.sp
+
                     )
                 }
+
+                Spacer(Modifier.height(8.dp))
 
                 if(showButton) {
                     Row {
@@ -264,6 +267,7 @@ fun LocationPanel(
                             submit()
                         }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
             }
         }

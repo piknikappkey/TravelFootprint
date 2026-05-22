@@ -53,7 +53,7 @@ fun JourneyList(
                             modifier = Modifier
                                 .align(Alignment.Center),
                             text = "目前还没有旅程内容哦~\n点击右下角添加按钮，新增你的足迹~",
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                         )
                     }
                 } else {

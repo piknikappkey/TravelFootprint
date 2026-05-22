@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
-import com.example.travel_footprint_android.ui.theme.FontDark5
+import com.example.travel_footprint_android.ui.theme.FontDark4
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
 @Composable
@@ -26,8 +26,7 @@ fun FootprintRating(
         text = "个人评分：",
         firstLine = 0,
         modifier = Modifier.padding(horizontal = 15.dp),
-        fontSize = 15.sp,
-        color = FontDark5,
+        color = FontDark4,
         )
     Spacer(Modifier.padding(2.dp))
     RatingSelector(

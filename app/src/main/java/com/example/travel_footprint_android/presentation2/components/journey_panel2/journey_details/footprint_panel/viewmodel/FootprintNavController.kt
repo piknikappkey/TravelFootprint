@@ -14,6 +14,11 @@ object FootprintNavController {
         _footprintData.value = footprintData
         _footprintNavController.value = destination
     }
+
+    fun init() {
+        _footprintData.value = null
+        _footprintNavController.value = FootprintPanel2State.FOOTPRINT_LIST
+    }
 }
 
 enum class FootprintPanel2State {
