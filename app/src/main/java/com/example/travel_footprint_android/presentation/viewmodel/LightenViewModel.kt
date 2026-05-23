@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.domain.usecase.AppService
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,11 +27,7 @@ class LightenViewModel @Inject constructor(
     private val appService: AppService
 ) : ViewModel() {
 
-    // 删除重复定义的数据类，改为从 AppService 导入
-    // import com.example.travel_footprint_android.data.repository.LightedProvince
-    // import com.example.travel_footprint_android.data.repository.ProvinceCityCount
-
-    /**
+        /**
      * 面板状态
      */
     enum class PanelState {
@@ -134,6 +132,7 @@ class LightenViewModel @Inject constructor(
                     lightedCityCount = cities.size
                 )
             }
+            Log.d("点亮城市数量","${cities.size}")
         } catch (e: Exception) {
             Log.e("LightenViewModel", "加载点亮城市失败", e)
         }
@@ -158,6 +157,33 @@ class LightenViewModel @Inject constructor(
         }
     }
 
+    //调度接口，根据传入对象自行选择点亮方式
+    fun LightedRecord(adcode: String,name: String){
+        viewModelScope.launch {
+            when {
+                // 省级：XX0000 格式
+                adcode.matches(Regex("\\d{2}0000")) -> {
+                    lightProvince(
+                        provinceName = name,
+                        provinceAdcode = adcode,
+                        remark = "从地图选择点亮"
+                    )
+                }
+                // 市级：XXYY00 格式
+                adcode.matches(Regex("\\d{4}00")) && !adcode.matches(Regex("\\d{2}0000")) -> {
+                    lightCityByAdcode(
+                        cityAdcode = adcode,
+                        cityName = name
+                    )
+                }
+            }
+            refreshAllData()
+        }
+    }
+
+
+
+
     // ==================== 点亮/取消点亮 ====================
 
     fun lightCity(
@@ -180,6 +206,7 @@ class LightenViewModel @Inject constructor(
                     longitude = longitude,
                     remark = remark
                 )
+                Log.d("独立点亮","$cityName")
                 // 数据会自动通过 Flow 更新，不需要手动刷新
                 //重新加载已经点亮省份以及城市代码
                 loadLightedCityCodes()
@@ -302,13 +329,13 @@ class LightenViewModel @Inject constructor(
     }
 
     // 添加一个简单的城市缓存
-    private val cityCache = mutableMapOf<String, com.example.travel_footprint_android.data.entity.City>()
+    private val cityCache = mutableMapOf<String, City>()
 
-    fun cacheCity(city: com.example.travel_footprint_android.data.entity.City) {
+    fun cacheCity(city: City) {
         cityCache[city.adcode] = city
     }
 
-    private suspend fun getCityInfo(adcode: String): com.example.travel_footprint_android.data.entity.City? {
+    private suspend fun getCityInfo(adcode: String): City? {
         // 先从缓存获取
         cityCache[adcode]?.let { return it }
         // 再从数据库获取
@@ -423,9 +450,9 @@ class LightenViewModel @Inject constructor(
             ?.cityCount ?: 0
     }
 
-    fun getCitiesByProvince(provinceAdcode: String): Flow<List<com.example.travel_footprint_android.data.entity.City>> {
+    fun getCitiesByProvince(provinceAdcode: String): Flow<List<City>> {
         return if (provinceAdcode.isBlank()) {
-            kotlinx.coroutines.flow.flowOf(emptyList())
+            flowOf(emptyList())
         } else {
             appService.getCitiesByProvince(provinceAdcode)
         }

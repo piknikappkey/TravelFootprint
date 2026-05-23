@@ -157,7 +157,7 @@ fun InteractiveChinaProviceMap(
 //高亮已点亮的省份
 private fun sendLightedDataToWebView(data: List<LightedProvince>, webView: WebView?) {
     val jsonArray = Gson().toJson(data)
-    Log.d("SVGMap", "Sending to JS: $jsonArray")
+    Log.d("传递的省份数据", "Sending to JS: $jsonArray")
     webView?.evaluateJavascript(
         "if(typeof updateProvinceLightsId === 'function') updateProvinceLightsId($jsonArray);",
         null

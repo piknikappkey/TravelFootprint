@@ -455,8 +455,13 @@ class AppService @Inject constructor(
     ): Long {
         return withContext(Dispatchers.IO) {
             lightedCityRepository.lightCity(
-                cityAdcode, cityName, provinceAdcode, provinceName,
-                latitude, longitude, remark
+                cityAdcode=cityAdcode,
+                cityName=cityName,
+                provinceAdcode=provinceAdcode,
+                provinceName=provinceName,
+                latitude=latitude,
+                longitude=longitude,
+                remark=remark
             )
         }
     }
@@ -527,6 +532,7 @@ class AppService @Inject constructor(
             lightedCityRepository.lightProvince(provinceAdcode, provinceName, remark)
         }
     }
+
 
     /**
      * 取消点亮省份

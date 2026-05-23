@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation2.components.svg_map.CityClickInterface
 import com.google.gson.Gson
 import kotlin.math.log
@@ -22,7 +23,7 @@ fun InteractiveChinaCityMap(
     onCityClick: (cityName: String, adcode: String, parentAdcode: String) -> Unit,
     cityClickState: (Boolean) -> Unit,
     lightedProvinces: List<LightedProvince>,
-    onZoomChange: ((Float) -> Unit)? = null  // 新增：缩放回调
+    lightedCity:List<LightedCity>,
 ) {
     //获取当前 Composable 函数所在的 Android Context。
     val context = LocalContext.current
@@ -35,7 +36,7 @@ fun InteractiveChinaCityMap(
         Log.d("页面加载状态","页面成功加载")
     }
     //暂存等待发送的数据。
-    var pendingData by remember { mutableStateOf<List<LightedProvince>?>(null) }
+    var pendingData by remember { mutableStateOf<List<LightedCity>?>(null) }
 
     val webView = remember {
         WebView(context).apply {
@@ -56,17 +57,17 @@ fun InteractiveChinaCityMap(
             setBackgroundColor(android.graphics.Color.TRANSPARENT)
             setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
 
-            // 添加缩放监听接口
-            addJavascriptInterface(
-                object {
-                    @JavascriptInterface
-                    fun onScaleChanged(scale: Float) {
-                        Log.d("ZoomListener", "Province map scale: $scale")
-                        onZoomChange?.invoke(scale)
-                    }
-                },
-                "AndroidScale"
-            )
+//            // 添加缩放监听接口
+//            addJavascriptInterface(
+//                object {
+//                    @JavascriptInterface
+//                    fun onScaleChanged(scale: Float) {
+//                        onZoomChange?.invoke(scale)
+//                        Log.d("ZoomListener", "Province map scale: $scale")
+//                    }
+//                },
+//                "AndroidScale"
+//            )
 
             addJavascriptInterface(
                 CityClickInterface(onCityClick, cityClickState),
@@ -134,15 +135,15 @@ fun InteractiveChinaCityMap(
         }
     }
 
-    //监听 lightedProvinces 数据变化，并自动同步到 WebView 地图中。
+    //监听 lightedcity 数据变化，并自动同步到 WebView 地图中。
     LaunchedEffect(lightedProvinces) {
-        Log.d("SVGMap", "点亮省份页面改变, 变化 = ${lightedProvinces.size}")
+        Log.d("SVGMap", "点亮城市页面改变, 变化 = ${lightedCity.size}")
         if (lightedProvinces.isEmpty()) return@LaunchedEffect
 
         if (isPageLoaded) {
-            sendLightedDataToWebView(lightedProvinces, webView)
+            sendLightedDataToWebView(lightedCity, webView)
         } else {
-            pendingData = lightedProvinces
+            pendingData = lightedCity
         }
     }
 
@@ -160,11 +161,11 @@ fun InteractiveChinaCityMap(
     )
 }
 
-private fun sendLightedDataToWebView(data: List<LightedProvince>, webView: WebView?) {
+private fun sendLightedDataToWebView(data: List<LightedCity>, webView: WebView?) {
     val jsonArray = Gson().toJson(data)
-    Log.d("SVGMap", "Sending to JS: $jsonArray")
+    Log.d("传递的城市数据", "Sending to JS: $jsonArray")
     webView?.evaluateJavascript(
-        "if(typeof updateProvinceLightsId === 'function') updateProvinceLightsId($jsonArray);",
+        "if(typeof updateCityLightsId === 'function') updateCityLightsId($jsonArray);",
         null
     )
 

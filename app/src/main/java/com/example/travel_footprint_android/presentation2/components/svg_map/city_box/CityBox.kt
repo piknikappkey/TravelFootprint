@@ -33,10 +33,12 @@ data class SelectedCityInfo(
 )
 
 @Composable
+
 fun CityBox(
     selectedCityInfo: SelectedCityInfo?,
     cityState: Boolean,
     lightedProvinces: List<LightedProvince>,
+    //是否区分省份城市点亮回调？
     onLightCityClick: (provinceAdcode: String, provinceName: String) -> Unit = { _, _ -> }
 ) {
     val animatedAlpha by animateFloatAsState(

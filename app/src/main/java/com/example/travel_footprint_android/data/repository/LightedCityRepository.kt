@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.travel_footprint_android.data.dao.LightedCityDao
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.LightedCity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -137,6 +138,7 @@ class LightedCityRepository @Inject constructor(
         )
         return lightedCityDao.insertLightedCity(provinceAsCity)
     }
+
 
     /**
      * 取消点亮省份（删除该省份下所有点亮记录）

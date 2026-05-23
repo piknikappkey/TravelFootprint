@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.zIndex
 import com.example.travel_footprint_android.presentation2.screen.JourneyScreen2
-import com.example.travel_footprint_android.presentation2.screen.LightenScreenWrapper
+import com.example.travel_footprint_android.presentation2.screen.LightenScreen2
 import com.example.travel_footprint_android.presentation2.viewmodel.nav_controller.CustomNavController
 import com.example.travel_footprint_android.ui.theme.BGLight0
 
@@ -53,7 +53,7 @@ fun CustomNavHost2(
                 .alpha(aniAlpha.value)
         ) {}
         when (currentDestOld) {
-            NavPathObj2.lighten -> LightenScreenWrapper()
+            NavPathObj2.lighten -> LightenScreen2()
             NavPathObj2.journey -> JourneyScreen2()
         }
     }

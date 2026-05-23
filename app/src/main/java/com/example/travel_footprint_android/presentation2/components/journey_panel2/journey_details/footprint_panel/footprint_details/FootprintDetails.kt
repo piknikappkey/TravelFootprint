@@ -43,9 +43,9 @@ fun FootprintDetails(
     // 是否记录用户定位
     var isRecord by remember { mutableStateOf(true) }
     // 位置记录组件 - 当 isRecord 为 true 时持续获取定位
-    LocationRecorder(isRecord = isRecord) { latitude, longitude ->
-
-    }
+//    LocationRecorder(isRecord = isRecord) { latitude, longitude ->
+//
+//    }
     Column(
         modifier = Modifier
             .fillMaxSize()
