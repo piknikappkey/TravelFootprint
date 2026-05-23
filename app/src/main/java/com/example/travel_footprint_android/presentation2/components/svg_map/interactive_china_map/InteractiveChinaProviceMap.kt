@@ -1,4 +1,4 @@
-// InteractiveChinaMap.kt (完整替换版)
+// InteractiveChinaProviceMap.kt (完整替换版)
 package com.example.travel_footprint_android.presentation2.components.svg_map.interactive_china_map
 
 import android.util.Log
@@ -17,7 +17,7 @@ import com.example.travel_footprint_android.presentation2.components.svg_map.Cit
 import com.google.gson.Gson
 
 @Composable
-fun InteractiveChinaMap(
+fun InteractiveChinaProviceMap(
     onCityClick: (cityName: String, adcode: String, parentAdcode: String) -> Unit,
     cityClickState: (Boolean) -> Unit,
     lightedProvinces: List<LightedProvince>,
@@ -47,6 +47,11 @@ fun InteractiveChinaMap(
             setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
 
             // 添加缩放监听接口
+            /**
+             * 用户双指缩放地图时，实时回调缩放比例
+             *
+             * 外层可以用这个值来切换省级/市级地图
+             */
             addJavascriptInterface(
                 object {
                     @JavascriptInterface
@@ -57,12 +62,15 @@ fun InteractiveChinaMap(
                 },
                 "AndroidScale"
             )
-
+            /**
+             * 用户点击地图上的省份时，HTML 调用 Android.onCityClicked()
+             * 触发 onCityClick 回调，告诉 Compose 哪个省份被点击了
+             */
             addJavascriptInterface(
                 CityClickInterface(onCityClick, cityClickState),
                 "Android"
             )
-
+            //设置 WebView 的初始缩放比例为 220%。
             setInitialScale(220)
 
             webViewClient = object : WebViewClient() {
@@ -146,11 +154,14 @@ fun InteractiveChinaMap(
     )
 }
 
+//高亮已点亮的省份
 private fun sendLightedDataToWebView(data: List<LightedProvince>, webView: WebView?) {
     val jsonArray = Gson().toJson(data)
-    Log.d("SVGMap", "Sending to JS: $jsonArray")
+    Log.d("传递的省份数据", "Sending to JS: $jsonArray")
     webView?.evaluateJavascript(
         "if(typeof updateProvinceLightsId === 'function') updateProvinceLightsId($jsonArray);",
         null
     )
+
+
 }

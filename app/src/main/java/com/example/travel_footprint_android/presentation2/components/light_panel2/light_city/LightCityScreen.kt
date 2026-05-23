@@ -245,6 +245,7 @@ fun LightedCityChip(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            //在这里可以自定义点亮城市样式
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyMedium,

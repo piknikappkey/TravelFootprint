@@ -19,7 +19,7 @@ import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 @Composable
 fun PanelTitle(
     lightPanel2State: LightPanel2State,
-    lightCityList: Int,
+    lightCityCount: Int,
     lightedProvinceCount: Int,
     setLightPanel2State: (LightPanel2State) -> Unit,
     lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
@@ -30,7 +30,7 @@ fun PanelTitle(
     ) {
         if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY ||
             lightPanel2State == LightPanel2State.ALL_DISPLAY) {
-            CityTitle(lightPanel2State, lightCityList, lightedProvinceCount, setLightPanel2State, lightenCityMode)
+            CityTitle(lightPanel2State, lightCityCount, lightedProvinceCount, setLightPanel2State, lightenCityMode)
         }
         if(lightPanel2State == LightPanel2State.EDIT) CityEditTitle(setLightPanel2State, lightenCityMode)
     }

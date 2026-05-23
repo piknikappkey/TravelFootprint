@@ -38,7 +38,9 @@
 			}
 
 			.province-svg {
-				z-index: 0;
+				 will-change: transform;
+    /* 或者使用更现代的方式 */
+    transform: translateZ(0);
 			}
 
 			.city-svg {
@@ -73,6 +75,11 @@
 				stroke: #D2691E;
 				stroke-width: 0.2;
 			}
+			.province-label {
+    	font-size: 0.6px;
+    	pointer-events: none;      /* 🆕 让文字不响应点击 */
+    user-select: none;          /* 🆕 防止文字被选中 */
+}
 		</style>
 	</head>
 	<body onclick="resetClickStyle()">
@@ -95,6 +102,8 @@
 					console.error("Invalid city light data:", e);
 				}
 			}
+
+
 
 			// 根据点亮省份数据渲染地图高亮
 			function renderMapHighlights(oldData, newData) {
@@ -193,6 +202,7 @@
 				})
 				return verifyReturn;
 			}
+
 
 		</script>
 		
@@ -1767,200 +1777,284 @@
 				</g>
 			</svg>
 		</div>
-		
-		
+
+
 		<script type="text/javascript">
 			// Pointer Events 手势处理 - 单指拖动和双指缩放
-			(function() {
-				// 等待 DOM 加载完成
-				if (document.readyState === 'loading') {
-					document.addEventListener('DOMContentLoaded', initGestureHandler);
-				} else {
-					initGestureHandler();
-				}
-				
-				function initGestureHandler() {
-					const svgElement = document.querySelector('.province-svg');
-					if (!svgElement) {
-						return;
-					}
-					
+            (function() {
+                // 等待 DOM 加载完成
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initGestureHandler);
+                } else {
+                    initGestureHandler();
+                }
 
-					let isDragging = false;
-					let isPinching = false;
-					let startX = 0;
-					let startY = 0;
-					let translateX = 0;
-					let translateY = 0;
-					let scale = 1;
-					let initialScale = 1;
-					let initialDistance = 0;
-					let initialPinchCenter = { x: 0, y: 0 };
-					let currentPinchCenter = { x: 0, y: 0 };
-					let pointers = {};
-					let dragThreshold = 10;
-					let hasMoved = false;
-					let startPointerX = 0;
-					let startPointerY = 0;
+                function initGestureHandler() {
+                    const svgElement = document.querySelector('.province-svg');
+                    if (!svgElement) {
+                        return;
+                    }
 
-					function getDistance(p1, p2) {
-						const dx = p1.x - p2.x;
-						const dy = p1.y - p2.y;
-						return Math.sqrt(dx * dx + dy * dy);
-					}
+                    // ========== 性能优化：缓存 DOM 引用 ==========
+                    const labels = document.querySelectorAll('.province-label');
+                    let lastScaleState = null; // 缓存上次缩放状态，避免重复设置 opacity
 
-					function getCenter(p1, p2) {
-						return {
-							x: (p1.x + p2.x) / 2,
-							y: (p1.y + p2.y) / 2
-						};
-					}
+                    // ========== 性能优化：使用 requestAnimationFrame 节流 ==========
+                    let rafId = null;
+                    let pendingTransform = false;
 
-					function updateTransform() {
-						svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-					}
+                    let isDragging = false;
+                    let isPinching = false;
+                    let startX = 0;
+                    let startY = 0;
+                    let translateX = 0;
+                    let translateY = 0;
+                    let scale = 1;
+                    let initialScale = 1;
+                    let initialDistance = 0;
+                    let initialPinchCenter = { x: 0, y: 0 };
+                    let currentPinchCenter = { x: 0, y: 0 };
+                    let pointers = {};
+                    let dragThreshold = 10;
+                    let hasMoved = false;
+                    let startPointerX = 0;
+                    let startPointerY = 0;
 
-					function handlePointerDown(e) {
-						e.preventDefault();
-						const pointerId = e.pointerId;
-						pointers[pointerId] = {
-							x: e.clientX,
-							y: e.clientY
-						};
+                    function getDistance(p1, p2) {
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        return Math.sqrt(dx * dx + dy * dy);
+                    }
 
-						const pointerCount = Object.keys(pointers).length;
+                    function getCenter(p1, p2) {
+                        return {
+                            x: (p1.x + p2.x) / 2,
+                            y: (p1.y + p2.y) / 2
+                        };
+                    }
 
-						if (pointerCount === 1) {
-							isDragging = true;
-							startX = e.clientX - translateX;
-							startY = e.clientY - translateY;
-							startPointerX = e.clientX;
-							startPointerY = e.clientY;
-							hasMoved = false;
-						} else if (pointerCount === 2) {
-							isDragging = false;
-							isPinching = true;
-							// 获取两个手指的位置
-							const pointerValues = Object.values(pointers);
-							const p1 = pointerValues[0];
-							const p2 = pointerValues[1];
-							
-							
-							initialDistance = getDistance(p1, p2);
-							initialScale = scale;
-							// 记录初始中心点（相对于 SVG 元素）
-							const center = getCenter(p1, p2);
-							initialPinchCenter = {
-								x: (center.x - translateX) / scale,
-								y: (center.y - translateY) / scale
-							};
-							currentPinchCenter = center;
-						}
-					}
+                    // ========== 优化后的 updateTransform ==========
+                    function updateTransform() {
+                        // 如果已有待执行的帧，跳过本次调用
+                        if (pendingTransform) return;
 
-					function handlePointerMove(e) {
-						e.preventDefault();
-						
-						// 更新当前手指位置
-						pointers[e.pointerId] = {
-							x: e.clientX,
-							y: e.clientY
-						};
+                        pendingTransform = true;
+                        rafId = requestAnimationFrame(() => {
+                            pendingTransform = false;
 
-						const pointerCount = Object.keys(pointers).length;
+                            // 应用 transform
+                            svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 
-						if (isDragging && pointerCount === 1) {
-							const currentX = e.clientX;
-							const currentY = e.clientY;
-							
-							const moveDistance = Math.sqrt(
-								Math.pow(currentX - startPointerX, 2) + 
-								Math.pow(currentY - startPointerY, 2)
-							);
-							
-							if (moveDistance > dragThreshold) {
-								hasMoved = true;
-							}
-							
-							translateX = currentX - startX;
-							translateY = currentY - startY;
-							updateTransform();
-						} else if (isPinching && pointerCount === 2) {
-							const pointerIds = Object.keys(pointers);
-							const p1 = pointers[pointerIds[0]];
-							const p2 = pointers[pointerIds[1]];
-							const currentDistance = getDistance(p1, p2);
-							
-							// 计算当前双指中心点
-							currentPinchCenter = getCenter(p1, p2);
-							
-							
-							if (initialDistance > 0) {
-								const newScale = initialScale * (currentDistance / initialDistance);
-								const minScale = 0.5;
-								const maxScale = 5;
-								const finalScale = Math.min(Math.max(newScale, minScale), maxScale);
-								
-								// 计算中心点在缩放前后的位置变化
-								// 中心点在 SVG 坐标系中的位置
-								const centerXInSVG = (currentPinchCenter.x - translateX) / scale;
-								const centerYInSVG = (currentPinchCenter.y - translateY) / scale;
-								
-								// 应用新的缩放比例
-								scale = finalScale;
-								
-								// 调整平移量，使得中心点保持在屏幕同一位置
-								translateX = currentPinchCenter.x - centerXInSVG * scale;
-								translateY = currentPinchCenter.y - centerYInSVG * scale;
-								
-								updateTransform();
-							}
-						}
-					}
+                            // ========== 根据缩放比例控制文字显隐（优化版）==========
+                            const showThreshold = 3.6;
+                            const shouldShow = scale < showThreshold;
 
-					function handlePointerUp(e) {
-						e.preventDefault();
-						delete pointers[e.pointerId];
-						const pointerCount = Object.keys(pointers).length;
+                            // 只在状态变化时才更新 opacity，避免每帧都操作 DOM
+                            if (shouldShow !== lastScaleState) {
+                                lastScaleState = shouldShow;
+                                const opacityValue = shouldShow ? '1' : '0';
+                                labels.forEach(label => {
+                                    label.style.opacity = opacityValue;
+                                });
+                            }
+                        });
+                    }
 
-						if (pointerCount === 0) {
-							isDragging = false;
-							isPinching = false;
-							
-							if (hasMoved && svgElement) {
-								svgElement.style.pointerEvents = 'auto';
-							}
-						} else if (pointerCount === 1 && isPinching) {
-							isPinching = false;
-							isDragging = true;
-							const remainingPointerId = Object.keys(pointers)[0];
-							const p = pointers[remainingPointerId];
-							startX = p.x - translateX;
-							startY = p.y - translateY;
-						}
-					}
+                    function handlePointerDown(e) {
+                        e.preventDefault();
+                        const pointerId = e.pointerId;
+                        pointers[pointerId] = {
+                            x: e.clientX,
+                            y: e.clientY
+                        };
 
-					function handlePointerCancel(e) {
-						handlePointerUp(e);
-					}
+                        const pointerCount = Object.keys(pointers).length;
 
-					svgElement.addEventListener('pointerdown', handlePointerDown);
-					svgElement.addEventListener('pointermove', handlePointerMove);
-					svgElement.addEventListener('pointerup', handlePointerUp);
-					svgElement.addEventListener('pointercancel', handlePointerCancel);
-					svgElement.addEventListener('pointerout', handlePointerUp);
-					svgElement.addEventListener('pointerleave', handlePointerUp);
+                        if (pointerCount === 1) {
+                            isDragging = true;
+                            startX = e.clientX - translateX;
+                            startY = e.clientY - translateY;
+                            startPointerX = e.clientX;
+                            startPointerY = e.clientY;
+                            hasMoved = false;
+                        } else if (pointerCount === 2) {
+                            isDragging = false;
+                            isPinching = true;
+                            const pointerValues = Object.values(pointers);
+                            const p1 = pointerValues[0];
+                            const p2 = pointerValues[1];
 
-					svgElement.addEventListener('click', function(e) {
-						if (hasMoved) {
-							e.preventDefault();
-							e.stopPropagation();
-							hasMoved = false;
-						}
-					}, true);
+                            initialDistance = getDistance(p1, p2);
+                            initialScale = scale;
+                            const center = getCenter(p1, p2);
+                            initialPinchCenter = {
+                                x: (center.x - translateX) / scale,
+                                y: (center.y - translateY) / scale
+                            };
+                            currentPinchCenter = center;
+                        }
+                    }
 
-				}
-			})();
+                    function handlePointerMove(e) {
+                        e.preventDefault();
+
+                        pointers[e.pointerId] = {
+                            x: e.clientX,
+                            y: e.clientY
+                        };
+
+                        const pointerCount = Object.keys(pointers).length;
+
+                        if (isDragging && pointerCount === 1) {
+                            const currentX = e.clientX;
+                            const currentY = e.clientY;
+
+                            const moveDistance = Math.sqrt(
+                                Math.pow(currentX - startPointerX, 2) +
+                                Math.pow(currentY - startPointerY, 2)
+                            );
+
+                            if (moveDistance > dragThreshold) {
+                                hasMoved = true;
+                            }
+
+                            translateX = currentX - startX;
+                            translateY = currentY - startY;
+                            updateTransform();
+                        } else if (isPinching && pointerCount === 2) {
+                            const pointerIds = Object.keys(pointers);
+                            const p1 = pointers[pointerIds[0]];
+                            const p2 = pointers[pointerIds[1]];
+                            const currentDistance = getDistance(p1, p2);
+
+                            currentPinchCenter = getCenter(p1, p2);
+
+                            if (initialDistance > 0) {
+                                const newScale = initialScale * (currentDistance / initialDistance);
+                                const minScale = 0.5;
+                                const maxScale = 5;
+                                const finalScale = Math.min(Math.max(newScale, minScale), maxScale);
+
+                                const centerXInSVG = (currentPinchCenter.x - translateX) / scale;
+                                const centerYInSVG = (currentPinchCenter.y - translateY) / scale;
+
+                                scale = finalScale;
+
+                                translateX = currentPinchCenter.x - centerXInSVG * scale;
+                                translateY = currentPinchCenter.y - centerYInSVG * scale;
+
+                                updateTransform();
+
+                                // 回调安卓缩放监听函数（移除 console.log）
+                                if (window.AndroidScale && typeof window.AndroidScale.onScaleChanged === 'function') {
+                                    window.AndroidScale.onScaleChanged(scale);
+                                }
+                            }
+                        }
+                    }
+
+                    function handlePointerUp(e) {
+                        e.preventDefault();
+                        delete pointers[e.pointerId];
+                        const pointerCount = Object.keys(pointers).length;
+
+                        if (pointerCount === 0) {
+                            isDragging = false;
+                            isPinching = false;
+
+                            if (hasMoved && svgElement) {
+                                svgElement.style.pointerEvents = 'auto';
+                            }
+                        } else if (pointerCount === 1 && isPinching) {
+                            isPinching = false;
+                            isDragging = true;
+                            const remainingPointerId = Object.keys(pointers)[0];
+                            const p = pointers[remainingPointerId];
+                            startX = p.x - translateX;
+                            startY = p.y - translateY;
+                        }
+                    }
+
+                    function handlePointerCancel(e) {
+                        handlePointerUp(e);
+                    }
+
+                    svgElement.addEventListener('pointerdown', handlePointerDown);
+                    svgElement.addEventListener('pointermove', handlePointerMove);
+                    svgElement.addEventListener('pointerup', handlePointerUp);
+                    svgElement.addEventListener('pointercancel', handlePointerCancel);
+                    svgElement.addEventListener('pointerout', handlePointerUp);
+                    svgElement.addEventListener('pointerleave', handlePointerUp);
+
+                    svgElement.addEventListener('click', function(e) {
+                        if (hasMoved) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            hasMoved = false;
+                        }
+                    }, true);
+                }
+            })();
+
+
+            // 在中心添加省份名称
+            (function addProvinceLabels() {
+                const svg = document.querySelector('.province-svg');
+                if (!svg) return;
+
+                const labelPositions = {
+                    "110000": { x: 116, y: 15.5, name: "北京" },
+                    "120000": { x: 117, y: 16.5, name: "天津" },
+                    "130000": { x: 115, y: 17, name: "河北" },
+                    "140000": { x: 111.5, y: 18.3, name: "山西" },
+                    "150000": { x: 110.5, y: 14, name: "内蒙古" },
+                    "210000": { x: 122.5, y: 14.5, name: "辽宁" },
+                    "220000": { x: 126.5, y: 13, name: "吉林" },
+                    "230000": { x: 127.5, y: 9, name: "黑龙江" },
+                    "310000": { x: 121.2, y: 24.1, name: "上海" },
+                    "320000": { x: 119.4, y: 22.5, name: "江苏" },
+                    "330000": { x: 119.6, y: 26.3, name: "浙江" },
+                    "340000": { x: 116.8, y: 24, name: "安徽" },
+                    "350000": { x: 117.5, y: 29.8, name: "福建" },
+                    "360000": { x: 115, y: 27.7, name: "江西" },
+                    "370000": { x: 118.0, y: 19.2, name: "山东" },
+                    "410000": { x: 113.1, y: 21.8, name: "河南" },
+                    "420000": { x: 112.5, y: 24.5, name: "湖北" },
+                    "430000": { x: 111.0, y: 28., name: "湖南" },
+                    "440000": { x: 113.5, y: 32.0, name: "广东" },
+                    "450000": { x: 108.5, y: 32, name: "广西" },
+                    "460000": { x: 109.2, y: 36.5, name: "海南" },
+                    "500000": { x: 107.2, y: 25.8, name: "重庆" },
+                    "510000": { x: 102.5, y: 25.2, name: "四川" },
+                    "520000": { x: 106.5, y: 29, name: "贵州" },
+                    "530000": { x: 101, y: 31, name: "云南" },
+                    "540000": { x: 87.5, y: 25, name: "西藏" },
+                    "610000": { x: 108.2, y: 21.5, name: "陕西" },
+                    "620000": { x: 104, y: 20.7, name: "甘肃" },
+                    "630000": { x: 96., y: 20, name: "青海" },
+                    "640000": { x: 105.5, y: 18.4, name: "宁夏" },
+                    "650000": { x: 85.2, y: 14.5, name: "新疆" },
+                    "710000": { x: 120.2, y: 32.1, name: "台湾" },
+                    "810000": { x: 114.2, y: 33.5, name: "香港" },
+                    "820000": { x: 113, y: 33.6, name: "澳门" }
+                };
+
+                const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                labelGroup.setAttribute("id", "province-labels");
+
+                for (const [adcode, pos] of Object.entries(labelPositions)) {
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", pos.x);
+                    text.setAttribute("y", pos.y);
+                    text.setAttribute("class", "province-label");
+                    text.setAttribute("data-adcode", adcode);
+                    text.textContent = pos.name;
+                    text.setAttribute("style", "pointer-events: none; user-select: none;");
+                    labelGroup.appendChild(text);
+                }
+
+                svg.appendChild(labelGroup);
+            })();
 		</script>
 	</body>
 </html>

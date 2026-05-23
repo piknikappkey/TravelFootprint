@@ -21,7 +21,11 @@ interface LightedCityDao {
     @Query("DELETE FROM lighted_cities WHERE cityAdcode = :adcode")
     suspend fun deleteLightedCityByAdcode(adcode: String)
 
-    @Query("SELECT * FROM lighted_cities ORDER BY lightedTime DESC")
+    @Query("""
+    SELECT * FROM lighted_cities 
+    WHERE cityAdcode NOT LIKE '%0000'  -- 排除省级（后4位为0）
+    ORDER BY lightedTime DESC
+""")
     fun getAllLightedCities(): Flow<List<LightedCity>>
 
 
@@ -46,6 +50,7 @@ interface LightedCityDao {
     @Query("""
         SELECT DISTINCT provinceName, provinceAdcode 
         FROM lighted_cities 
+        WHERE provinceAdcode LIKE '__0000'  -- 后4位为00的
         ORDER BY lightedTime DESC
     """)
     suspend fun getDistinctProvinces(): List<LightedProvince>
@@ -53,7 +58,11 @@ interface LightedCityDao {
     /**
      * 获取已点亮省份的数量
      */
-    @Query("SELECT COUNT(DISTINCT provinceAdcode) FROM lighted_cities")
+    @Query("""
+        SELECT COUNT(DISTINCT provinceAdcode) 
+        FROM lighted_cities 
+        WHERE provinceAdcode LIKE '__0000'
+    """)
     suspend fun getLightedProvinceCount(): Int
 
     /**
@@ -61,6 +70,7 @@ interface LightedCityDao {
      */
     @Query("SELECT EXISTS(SELECT 1 FROM lighted_cities WHERE provinceAdcode = :provinceAdcode)")
     suspend fun isProvinceLighted(provinceAdcode: String): Boolean
+
 
     /**
      * 获取省份下所有点亮的城市
@@ -78,6 +88,15 @@ interface LightedCityDao {
         ORDER BY cityCount DESC
     """)
     suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount>
+
+
+    /**
+     * 通过 cityAdcode 点亮城市
+     * 如果已存在则更新，否则插入
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun lightCityByAdcode(city: LightedCity): Long
+
 }
 
 // 点亮省份数据类
