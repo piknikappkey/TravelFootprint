@@ -15,7 +15,7 @@ fun BGBox(
     modifier: Modifier = Modifier,
     elevation: Dp = 1.dp, // 阴影大小
     shape: RoundedCornerShape = RoundedCornerShape(8.dp), // 圆角
-    bgColor: Color = Color(0xffffffff),
+    bgColor: Color = Color(0xFFFCF1EB),
     composable: @Composable () -> Unit,
 ) {
     Box(

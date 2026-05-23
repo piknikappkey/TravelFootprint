@@ -49,10 +49,7 @@ fun FootprintList(
     BGImgBox(
         imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
-        Column(
-            modifier = Modifier
-                .clickable(onClick = { clickItemIndex = -1})
-        ) {
+        Column {
             Spacer(Modifier.height(10.dp))
             HeadRow(journeySelected)
             LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )

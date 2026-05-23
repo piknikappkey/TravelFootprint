@@ -1,8 +1,13 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +41,7 @@ import com.example.travel_footprint_android.ui.theme.BGLight1
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-fun JourneyPanel2(
+fun JourneyPanel6(
     modifier: Modifier = Modifier,
     journeyList: List<Journey>, // 旅程列表
     aniTime: Int,
@@ -88,9 +93,6 @@ fun JourneyPanel2(
                     color = BGLight1,
                     shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
                 )
-                .animateContentSize(  // 关键修饰符
-                    animationSpec = tween(durationMillis = aniTime)
-                )
         ) {
             // 内部用 Column 分隔固定标题和可滚动区域
             Column(
@@ -98,53 +100,71 @@ fun JourneyPanel2(
                     .fillMaxWidth()
                     .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.6f)   // 限制面板最大高度，内容少时自适应
             ) {
-                when(journeyPanel2State) {
-                    JOURNEY_LIST -> {
-                        JourneyList(
-                            journeyList = journeyList,
-                            navigate = { state, journey -> JourneyNavController.navigate(state, journey)}
-                        )
-                    }
-                    JOURNEY_DETAILS -> {
-                        journeySelected?.let {
-                            JourneyDetails(
-                                modifier = Modifier.weight(1f),
-                                journeySelected = it,
-                                updateJourney = { j -> journeyViewModel.updateJourney(j) },
+                // 方案四：自定义 Transition 动画 - 垂直滑动 + 淡入淡出
+                AnimatedContent(
+                    targetState = journeyPanel2State,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(durationMillis = aniTime)) +
+                         slideInVertically(
+                             initialOffsetY = { it / 4 },  // 从下方稍微偏移进入
+                             animationSpec = tween(durationMillis = aniTime)
+                         )) togetherWith
+                        (fadeOut(animationSpec = tween(durationMillis = aniTime)) +
+                         slideOutVertically(
+                             targetOffsetY = { -it / 4 },  // 向上方稍微偏移退出
+                             animationSpec = tween(durationMillis = aniTime)
+                         ))
+                    },
+                    label = "vertical_slide_fade_animation"
+                ) { state ->
+                    when(state) {
+                        JOURNEY_LIST -> {
+                            JourneyList(
+                                journeyList = journeyList,
                                 navigate = { state, journey -> JourneyNavController.navigate(state, journey)}
-
                             )
                         }
-                    }
-                    JOURNEY_EDIT -> {
-                        JourneyEdit(
-                            modifier = Modifier.weight(1f),
-                            journeySelected = journeySelected,
-                            navigate = { state, journey -> JourneyNavController.navigate(state, journey)},
-                            addJourney = { j -> journeyViewModel.createJourney(j) },
-                            updateJourney = { j -> journeyViewModel.updateJourney(j) },
-                            deleteJourney = { j -> journeyViewModel.deleteJourney(j) },
-                        )
-                    }
+                        JOURNEY_DETAILS -> {
+                            journeySelected?.let {
+                                JourneyDetails(
+                                    modifier = Modifier.weight(1f),
+                                    journeySelected = it,
+                                    updateJourney = { j -> journeyViewModel.updateJourney(j) },
+                                    navigate = { state, journey -> JourneyNavController.navigate(state, journey)}
 
-                    FOOTPRINT_LIST -> {
-                        if(footprintListData != null && journeySelected != null) {
-                            FootprintList(footprintListData, journeySelected)
+                                )
+                            }
                         }
-                    }
-                    FOOTPRINT_EDIT -> {
-                        journeySelected?.let {
-                            FootprintEdit(
-                                footprintSelected = footprintSelected,
-                                journeySelected = it,
-                                addFootprint = { j, f ->
-                                    journeyViewModel.addFootprintsForJourney(
-                                        journey = j,
-                                        footprint = f
-                                    )
-                                },
-                                updateFootprint = {}
+                        JOURNEY_EDIT -> {
+                            JourneyEdit(
+                                modifier = Modifier.weight(1f),
+                                journeySelected = journeySelected,
+                                navigate = { state, journey -> JourneyNavController.navigate(state, journey)},
+                                addJourney = { j -> journeyViewModel.createJourney(j) },
+                                updateJourney = { j -> journeyViewModel.updateJourney(j) },
+                                deleteJourney = { j -> journeyViewModel.deleteJourney(j) },
                             )
+                        }
+
+                        FOOTPRINT_LIST -> {
+                            if(footprintListData != null && journeySelected != null) {
+                                FootprintList(footprintListData, journeySelected)
+                            }
+                        }
+                        FOOTPRINT_EDIT -> {
+                            journeySelected?.let {
+                                FootprintEdit(
+                                    footprintSelected = footprintSelected,
+                                    journeySelected = it,
+                                    addFootprint = { j, f ->
+                                        journeyViewModel.addFootprintsForJourney(
+                                            journey = j,
+                                            footprint = f
+                                        )
+                                    },
+                                    updateFootprint = {}
+                                )
+                            }
                         }
                     }
                 }

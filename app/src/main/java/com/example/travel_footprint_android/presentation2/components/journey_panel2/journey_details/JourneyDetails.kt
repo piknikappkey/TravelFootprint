@@ -53,7 +53,6 @@ fun JourneyDetails(
     modifier: Modifier = Modifier,
     journeySelected: Journey, // 当前选中的旅程
     updateJourney: (Journey) -> Unit,
-    deleteJourney: (Journey) -> Unit,
     navigate: (JourneyPanel2State, Journey?) -> Unit
 ) {
 
@@ -76,7 +75,6 @@ fun JourneyDetails(
                 JourneyContent(
                     journeySelected,
                     updateJourney,
-                    deleteJourney,
                 )
 
                 // 足迹内容
@@ -137,14 +135,13 @@ fun JourneyHead(
 fun JourneyContent(
     journeySelected: Journey,
     updateJourney: (Journey) -> Unit,
-    deleteJourney: (Journey) -> Unit,
 ) {
     BGBox(
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 10.dp)
     ) {
         BGImgBox(
-            imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
+            imgList = listOf(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
         ) {
             Column {
                 // 旅程标题

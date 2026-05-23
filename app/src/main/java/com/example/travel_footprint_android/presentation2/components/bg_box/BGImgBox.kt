@@ -1,13 +1,9 @@
 package com.example.travel_footprint_android.presentation2.components.bg_box
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Point
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,33 +15,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.core.graphics.drawable.toBitmap
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import kotlin.math.roundToInt
 import kotlin.random.Random
-
-private object BitmapCache {
-    private const val maxCacheSize = 8
-    private val cache = LinkedHashMap<Int, Bitmap>(maxCacheSize, 0.75f, true)
-    private val optionsCache = LinkedHashMap<Int, BitmapFactory.Options>(maxCacheSize, 0.75f, true)
-
-    fun get(resId: Int): Bitmap? = synchronized(cache) { cache[resId] }
-
-    fun put(resId: Int, bitmap: Bitmap) = synchronized(cache) {
-        if (cache.size >= maxCacheSize) {
-            val oldestKey = cache.keys.first()
-            cache.remove(oldestKey)?.recycle()
-            optionsCache.remove(oldestKey)
-        }
-        cache[resId] = bitmap
-    }
-
-    fun getOptions(resId: Int): BitmapFactory.Options? = synchronized(optionsCache) { optionsCache[resId] }
-
-    fun putOptions(resId: Int, options: BitmapFactory.Options) = synchronized(optionsCache) {
-        optionsCache[resId] = options
-    }
-}
 
 @Composable
 fun BGImgBox(
@@ -67,8 +42,22 @@ fun BGImgBox(
 
     var bgBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
 
-    LaunchedEffect(selectedResId) {
-        bgBitmap = loadBitmapAsync(context, selectedResId, screenSize)
+    val imageLoader = remember {
+        ImageLoader.Builder(context)
+            .crossfade(true)
+            .build()
+    }
+
+    androidx.compose.runtime.LaunchedEffect(selectedResId) {
+        val request = ImageRequest.Builder(context)
+            .data(selectedResId)
+            .allowHardware(false)
+            .build()
+
+        val result = imageLoader.execute(request)
+        if (result is SuccessResult) {
+            bgBitmap = result.drawable.toBitmap().asImageBitmap()
+        }
     }
 
     Box(
@@ -104,64 +93,7 @@ fun BGImgBox(
     }
 }
 
-private suspend fun loadBitmapAsync(
-    context: Context,
-    resId: Int,
-    screenSize: Point
-): androidx.compose.ui.graphics.ImageBitmap? = withContext(Dispatchers.IO) {
-    BitmapCache.get(resId)?.let {
-        return@withContext it.asImageBitmap()
-    }
-
-    val options = BitmapFactory.Options().apply {
-        inJustDecodeBounds = true
-    }
-    BitmapFactory.decodeResource(context.resources, resId, options)
-
-    val sampleSize = calculateInSampleSize(options, screenSize.x, screenSize.y)
-
-    options.apply {
-        inJustDecodeBounds = false
-        inSampleSize = sampleSize
-        inPreferredConfig = Bitmap.Config.RGB_565
-        inMutable = true
-        
-        val cachedBitmap = BitmapCache.get(resId)
-        if (cachedBitmap != null && cachedBitmap.isMutable) {
-            inBitmap = cachedBitmap
-        }
-    }
-
-    val bitmap = BitmapFactory.decodeResource(context.resources, resId, options)
-    bitmap?.let {
-        BitmapCache.put(resId, it)
-        BitmapCache.putOptions(resId, options)
-    }
-
-    bitmap?.asImageBitmap()
-}
-
-private fun calculateInSampleSize(
-    options: BitmapFactory.Options,
-    reqWidth: Int,
-    reqHeight: Int
-): Int {
-    val height = options.outHeight
-    val width = options.outWidth
-    var inSampleSize = 1
-
-    if (height > reqHeight || width > reqWidth) {
-        val halfHeight = height / 2
-        val halfWidth = width / 2
-
-        while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-            inSampleSize *= 2
-        }
-    }
-    return inSampleSize
-}
-
-private fun getScreenSize(context: Context): Point {
+private fun getScreenSize(context: android.content.Context): Point {
     val displayMetrics = context.resources.displayMetrics
     return Point(displayMetrics.widthPixels, displayMetrics.heightPixels)
 }

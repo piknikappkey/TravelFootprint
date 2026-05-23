@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
@@ -43,7 +45,8 @@ fun JourneyEdit(
     navigate: (JourneyPanel2State, Journey?) -> Unit,
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
-) {
+    deleteJourney: (Journey) -> Unit,
+    ) {
     var journey by remember { mutableStateOf(
         journeySelected?.copy()
             ?: Journey(
@@ -69,13 +72,16 @@ fun JourneyEdit(
                 journeySelected,
                 navigate,
                 addJourney,
-                updateJourney
+                updateJourney,
+
             )
             // 可滚动内容
             JourneyContent(
                 modifier,
                 journey,
+                journeySelected,
                 { j -> journey = j.copy() },
+                deleteJourney,
             )
         }
     }
@@ -99,7 +105,11 @@ fun JourneyHead(
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    if(journeySelected == null) {
+                        navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    } else {
+                        navigate(JourneyPanel2State.JOURNEY_DETAILS, journeySelected)
+                    }
                 }),
             painter = painterResource(id = R.drawable.ic_left_long),
             contentDescription = "返回图标",
@@ -133,7 +143,9 @@ fun JourneyHead(
 fun JourneyContent(
     modifier: Modifier = Modifier,
     journey: Journey,
+    journeySelected: Journey? = null,
     setJourney: (Journey) -> Unit,
+    deleteJourney: (Journey) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -197,6 +209,21 @@ fun JourneyContent(
                         }
                     )
                     Spacer(Modifier.padding(10.dp))
+
+                    if(journeySelected != null) {
+                        Row {
+                            Spacer(Modifier.weight(1f))
+                            ButtonDelete(
+                                title = "删除该旅程",
+                                paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                            ) {
+                                deleteJourney(journeySelected)
+                            }
+                            Spacer(Modifier.width(10.dp))
+                        }
+
+                        Spacer(Modifier.padding(10.dp))
+                    }
                 }
             }
         }

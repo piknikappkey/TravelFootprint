@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
-import com.example.travel_footprint_android.ui.theme.FFHanYiKaiTiJian
+import com.example.travel_footprint_android.ui.theme.FFRuanMengChuLianTi
 import com.example.travel_footprint_android.ui.theme.MainColor2
 import com.example.travel_footprint_android.ui.theme.SecondColor2
 import com.example.travel_footprint_android.ui.theme.SecondColor4
@@ -49,7 +49,7 @@ fun InputText3(
     textStyle: TextStyle = TextStyle(
         color = SecondColor4,
         fontSize = 17.sp,
-        fontFamily = FFHanYiKaiTiJian
+        fontFamily = FFRuanMengChuLianTi
     ),
     primaryColor: Color = SecondColor2,
     onSurfaceColor: Color = MainColor2,

@@ -20,9 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_details.LocationRecorder
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
@@ -116,106 +114,102 @@ fun FootprintListPanel() {
         modifier = Modifier
             .padding(horizontal = 15.dp)
     ) {
-        BGImgBox(
-            listOf(R.drawable.bg_simple_hor_small_small)
+        Column(
+            modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp),
-            ) {
-                // 标题栏
-                Row {
+            // 标题栏
+            Row {
+                TextMedium(
+                    text = "记录足迹",
+                    fontSize = 18.sp,
+                    color = FontDark4
+                )
+
+                Spacer(Modifier.weight(1f))
+
+                if (panelState == FootprintListPanelState.START) {
                     TextMedium(
-                        text = "记录足迹",
-                        fontSize = 18.sp,
-                        color = FontDark4
+                        text = "正在记录中...",
+                        color = MainColor2
                     )
+                } else if (panelState == FootprintListPanelState.PAUSE) {
+                    TextMedium(
+                        text = "已暂停",
+                        color = MainColor2
+                    )
+                }
+            }
 
-                    Spacer(Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    if (panelState == FootprintListPanelState.START) {
-                        TextMedium(
-                            text = "正在记录中...",
-                            color = MainColor2
-                        )
-                    } else if (panelState == FootprintListPanelState.PAUSE) {
-                        TextMedium(
-                            text = "已暂停",
-                            color = MainColor2
-                        )
+            DataRow2(
+                "开始时间：",
+                if (startTime > 0) formatDateTime(startTime) else "未开始",
+                "持续时间：",
+                formatDuration(durationTime)
+            )
+
+            DataRow2(
+                "移动距离：",
+                formatDistance(displacementDistance),
+                "移动速度：",
+                String.format(Locale.CHINA, "%.2f m/sec", speed)
+            )
+
+            DataRow2(
+                "消耗卡路里",
+                formatCalories(calories),
+                null,
+                null
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ButtonMain(
+                    onClick = {
+                        if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) {
+                            panelState = FootprintListPanelState.START
+                        } else {
+                            panelState = FootprintListPanelState.PAUSE
+                        }
                     }
+                ) {
+                    TextMedium(
+                        text = if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) "开始" else "暂停",
+                        fontSize = 15.sp
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.weight(1f))
 
-                DataRow2(
-                    "开始时间：",
-                    if (startTime > 0) formatDateTime(startTime) else "未开始",
-                    "持续时间：",
-                    formatDuration(durationTime)
-                )
-
-                DataRow2(
-                    "移动距离：",
-                    formatDistance(displacementDistance),
-                    "移动速度：",
-                    String.format(Locale.CHINA, "%.2f m/sec", speed)
-                )
-
-                DataRow2(
-                    "消耗卡路里",
-                    formatCalories(calories),
-                    null,
-                    null
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                if(panelState != FootprintListPanelState.STOP) {
                     ButtonMain(
                         onClick = {
-                            if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) {
-                                panelState = FootprintListPanelState.START
-                            } else {
-                                panelState = FootprintListPanelState.PAUSE
-                            }
+                            panelState = FootprintListPanelState.STOP
+                            startTime = 0
+                            durationTime = 0
+                            displacementDistance = 0.0
+                            speed = 0.0
+                            calories = 0.0
+                            pausedDuration = 0
+                            pauseStartTime = null
+                            lastLatitude = null
+                            lastLongitude = null
                         }
                     ) {
                         TextMedium(
-                            text = if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) "开始" else "暂停",
+                            text = "结束",
                             fontSize = 15.sp
                         )
                     }
-
-                    Spacer(Modifier.weight(1f))
-
-                    if(panelState != FootprintListPanelState.STOP) {
-                        ButtonMain(
-                            onClick = {
-                                panelState = FootprintListPanelState.STOP
-                                startTime = 0
-                                durationTime = 0
-                                displacementDistance = 0.0
-                                speed = 0.0
-                                calories = 0.0
-                                pausedDuration = 0
-                                pauseStartTime = null
-                                lastLatitude = null
-                                lastLongitude = null
-                            }
-                        ) {
-                            TextMedium(
-                                text = "结束",
-                                fontSize = 15.sp
-                            )
-                        }
-                    }
                 }
-                Spacer(modifier = Modifier.height(5.dp))
             }
+            Spacer(modifier = Modifier.height(5.dp))
         }
     }
 }
