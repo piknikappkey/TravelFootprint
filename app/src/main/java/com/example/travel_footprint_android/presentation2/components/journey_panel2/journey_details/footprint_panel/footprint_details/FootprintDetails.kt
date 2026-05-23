@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -40,9 +36,9 @@ fun FootprintDetails(
     footprintSelected: Footprint,
     journeySelected: Journey,
 ) {
-    // 是否记录用户定位
-    var isRecord by remember { mutableStateOf(true) }
-    // 位置记录组件 - 当 isRecord 为 true 时持续获取定位
+//    // 是否记录用户定位
+//    var isRecord by remember { mutableStateOf(true) }
+//    // 位置记录组件 - 当 isRecord 为 true 时持续获取定位
 //    LocationRecorder(isRecord = isRecord) { latitude, longitude ->
 //
 //    }

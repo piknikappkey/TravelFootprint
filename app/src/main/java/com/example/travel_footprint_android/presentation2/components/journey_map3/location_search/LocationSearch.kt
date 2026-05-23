@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.amap.api.services.help.Tip
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
+import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.BGLight2
 import com.example.travel_footprint_android.ui.theme.FontDark2
@@ -246,19 +247,25 @@ fun SelectedLocationInfo(
                         .weight(1f),
                 )
                 ButtonMain(
-                    title = "取消"
+                    onClick = {onClear()},
                 ) {
-                    onClear()
+                    TextMedium(
+                        text = "取消"
+                    )
                 }
                 Spacer(
                     modifier = Modifier
                         .width(10.dp),
                 )
                 ButtonMain(
-                    title = "确定"
+                    onClick = {
+                        showButton = false
+                        onConfirm()
+                    },
                 ) {
-                    showButton = false
-                    onConfirm()
+                    TextMedium(
+                        text = "确定"
+                    )
                 }
             }
         }

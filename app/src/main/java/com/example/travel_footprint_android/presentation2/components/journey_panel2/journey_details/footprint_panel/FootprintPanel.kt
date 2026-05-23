@@ -1,7 +1,6 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,13 +39,12 @@ fun FootprintPanel(
     // 初始化足迹数据
     LaunchedEffect(journeySelected) {
         mapViewModel.loadJourneyFootprints(journeySelected.id)
+        FootprintNavController.init()
     }
 
     Box(
         modifier = Modifier
-            .animateContentSize(
-                animationSpec = tween(durationMillis = 300)
-            )
+            .animateContentSize()
     ) {
         when(footprintPanel2State) {
             FOOTPRINT_LIST -> {

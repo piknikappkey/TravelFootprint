@@ -11,6 +11,7 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
+import com.example.travel_footprint_android.ui.theme.FFRuanMengChuLianTi
 import com.example.travel_footprint_android.ui.theme.FontDark6
 
 @Composable
@@ -37,7 +38,8 @@ fun TextSmall(
             textIndent = TextIndent(
                 firstLine = firstLine * fontSize, // 首行缩进2个字符的宽度
                 restLine = 0.sp    // 其余行不缩进
-            )
+            ),
+            fontFamily = FFRuanMengChuLianTi,
         )
     )
 }

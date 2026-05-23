@@ -11,14 +11,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.presentation2.components.line.Line
-import com.example.travel_footprint_android.ui.theme.SecondColor1
+import com.example.travel_footprint_android.ui.theme.SecondColor2
 
 @Composable
 fun LineBetween(
-    color: Color = SecondColor1,
+    color: Color = SecondColor2.copy(.9f),
     dashLength: Float = 18f,
-    gapLength: Float = 6f,
-    thickness: Float = 1f,
+    gapLength: Float = 9f,
+    thickness: Float = 1.2f,
     paddingUp: Dp = 6.dp,
     paddingDown: Dp = 6.dp,
     lineLength: Float = .95f,

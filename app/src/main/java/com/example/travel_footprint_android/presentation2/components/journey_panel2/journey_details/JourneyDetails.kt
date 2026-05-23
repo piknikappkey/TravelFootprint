@@ -177,13 +177,14 @@ fun JourneyContent(
                 TextMedium(
                     text = "旅程描述：",
                     firstLine = 0,
-                    modifier = Modifier.padding(horizontal = 15.dp)
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    fontSize = 17.sp
                 )
                 Spacer(Modifier.padding(2.dp))
                 TextMedium(
                     text = journeySelected.description,
                     firstLine = 2,
-                    modifier = Modifier.padding(horizontal = 15.dp)
+                    modifier = Modifier.padding(horizontal = 15.dp),
                 )
                 Spacer(Modifier.padding(2.dp))
                 // 旅程地点以及时间
@@ -223,7 +224,8 @@ fun JourneyContent(
                 TextMedium(
                     text = "旅程回忆",
                     firstLine = 0,
-                    modifier = Modifier.padding(horizontal = 15.dp)
+                    modifier = Modifier.padding(horizontal = 15.dp),
+                    fontSize = 17.sp
                 )
                 Spacer(Modifier.padding(5.dp))
                 Reminiscence(
@@ -242,8 +244,8 @@ fun JourneyContent(
                         navigate(JourneyPanel2State.JOURNEY_LIST, null)
                     }
                     Spacer(Modifier.weight(1f))
-                    ButtonMain(title = "旅程足迹") {
-
+                    ButtonMain(onClick = {}) {
+                        TextMedium("旅程足迹")
                     }
                     Spacer(Modifier.width(10.dp))
                 }

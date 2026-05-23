@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
@@ -27,7 +28,7 @@ import com.example.travel_footprint_android.presentation2.components.button.butt
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
-import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.util.Date
 
@@ -72,8 +73,9 @@ fun FootprintEdit(
                 colorFilter = ColorFilter.tint(SecondColor3),
             )
             Spacer(Modifier.width(5.dp))
-            TextMedium(
-                text = if(footprintSelected == null) "新增足迹" else "编辑足迹"
+            Headline(
+                text = if(footprintSelected == null) "新增足迹" else "编辑足迹",
+                fontSize = 18.sp
             )
             Spacer(Modifier.weight(1f))
             // 保存按钮

@@ -130,6 +130,5 @@ fun RightContent(
             )
             Spacer(Modifier.width(5.dp))
         }
-
     }
 }

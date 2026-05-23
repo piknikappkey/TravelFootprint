@@ -19,7 +19,7 @@ import com.example.travel_footprint_android.presentation2.components.journey_map
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.location.LocationPanel
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
-import com.example.travel_footprint_android.ui.theme.FontDark5
+import com.example.travel_footprint_android.ui.theme.FontDark4
 
 @Composable
 fun FootprintEditLocation(
@@ -53,8 +53,7 @@ fun FootprintEditLocation(
         text = "地址：",
         firstLine = 0,
         modifier = Modifier.padding(horizontal = 15.dp),
-        fontSize = 15.sp,
-        color = FontDark5,
+        color = FontDark4,
     )
 
     Spacer(Modifier.padding(2.dp))
