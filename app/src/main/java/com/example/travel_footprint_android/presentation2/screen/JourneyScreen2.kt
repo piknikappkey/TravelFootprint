@@ -71,9 +71,7 @@ fun JourneyScreen2(
                 },
             aniTime = aniTime,
             journeyList = journeys,
-            updateJourney = { journey -> journeyViewModel.updateJourney(journey)},
-            addJourney = { journey -> journeyViewModel.createJourney(journey)},
-            deleteJourney = { journey -> journeyViewModel.deleteJourney(journey)},
+            journeyViewModel = journeyViewModel,
         )
     }
 }
@@ -89,7 +87,7 @@ fun JourneyShade(
         aniOverFunc = {
             setSizeChange(false)
         },
-        aniTime = aniTime.toLong() * 2,
+        aniTime = aniTime.toLong() + 200,
         shadeShowTime = 0,
         shadeStopTime = aniTime.toLong(),
         shadeHideTime = 100

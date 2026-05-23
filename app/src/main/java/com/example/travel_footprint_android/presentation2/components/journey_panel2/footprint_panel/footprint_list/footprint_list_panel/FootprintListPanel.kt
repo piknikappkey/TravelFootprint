@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_list.footprint_list_panel
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,10 +24,7 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_details.LocationRecorder
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanelState.PAUSE
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanelState.START
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanelState.STOP
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_details.LocationRecorder
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark4
@@ -45,7 +42,7 @@ import kotlin.math.sqrt
 
 @Composable
 fun FootprintListPanel() {
-    var panelState by remember { mutableStateOf(STOP) }
+    var panelState by remember { mutableStateOf(FootprintListPanelState.STOP) }
 
     var startTime by remember { mutableStateOf<Long>(0) }
 
@@ -67,7 +64,7 @@ fun FootprintListPanel() {
 
     LaunchedEffect(panelState) {
         when(panelState) {
-            START -> {
+            FootprintListPanelState.START -> {
                 if (startTime == 0L) {
                     startTime = System.currentTimeMillis()
                 }
@@ -76,7 +73,7 @@ fun FootprintListPanel() {
                     pauseStartTime = null
                 }
                 isRecord = true
-                while (panelState == START) {
+                while (panelState == FootprintListPanelState.START) {
                     val currentTime = System.currentTimeMillis()
                     durationTime = currentTime - startTime - pausedDuration
                     if (durationTime > 0) {
@@ -85,11 +82,11 @@ fun FootprintListPanel() {
                     delay(1000)
                 }
             }
-            PAUSE -> {
+            FootprintListPanelState.PAUSE -> {
                 pauseStartTime = System.currentTimeMillis()
                 isRecord = false
             }
-            STOP -> {
+            FootprintListPanelState.STOP -> {
                 isRecord = false
             }
         }
@@ -135,12 +132,12 @@ fun FootprintListPanel() {
 
                     Spacer(Modifier.weight(1f))
 
-                    if (panelState == START) {
+                    if (panelState == FootprintListPanelState.START) {
                         TextMedium(
                             text = "正在记录中...",
                             color = MainColor2
                         )
-                    } else if (panelState == PAUSE) {
+                    } else if (panelState == FootprintListPanelState.PAUSE) {
                         TextMedium(
                             text = "已暂停",
                             color = MainColor2
@@ -180,25 +177,25 @@ fun FootprintListPanel() {
                 ) {
                     ButtonMain(
                         onClick = {
-                            if(panelState == STOP || panelState == PAUSE) {
-                                panelState = START
+                            if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) {
+                                panelState = FootprintListPanelState.START
                             } else {
-                                panelState = PAUSE
+                                panelState = FootprintListPanelState.PAUSE
                             }
                         }
                     ) {
                         TextMedium(
-                            text = if(panelState == STOP || panelState == PAUSE) "开始" else "暂停",
+                            text = if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) "开始" else "暂停",
                             fontSize = 15.sp
                         )
                     }
 
                     Spacer(Modifier.weight(1f))
 
-                    if(panelState != STOP) {
+                    if(panelState != FootprintListPanelState.STOP) {
                         ButtonMain(
                             onClick = {
-                                panelState = STOP
+                                panelState = FootprintListPanelState.STOP
                                 startTime = 0
                                 durationTime = 0
                                 displacementDistance = 0.0

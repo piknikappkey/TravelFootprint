@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_details
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -22,9 +22,9 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.SecondColor3
@@ -57,7 +57,9 @@ fun FootprintDetails(
                     .size(26.dp)
                     .padding(start = 5.dp)
                     .clickable(onClick = {
-                        FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_LIST)
+                        JourneyNavController.navigate(
+                            JourneyPanel2State.FOOTPRINT_LIST
+                        )
                     }),
                 painter = painterResource(id = R.drawable.ic_left2),
                 contentDescription = "返回图标",
@@ -69,7 +71,10 @@ fun FootprintDetails(
             )
             Spacer(Modifier.weight(1f))
             IconEdit() {
-                FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_EDIT, footprintSelected)
+                JourneyNavController.navigate(
+                    JourneyPanel2State.FOOTPRINT_LIST,
+                    footprintData = footprintSelected
+                )
             }
             Spacer(Modifier.width(10.dp))
         }

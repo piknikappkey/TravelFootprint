@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_edit
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_edit
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -12,20 +12,20 @@ import com.example.travel_footprint_android.presentation2.components.text.text_m
 import com.example.travel_footprint_android.ui.theme.FontDark4
 
 @Composable
-fun FootprintEditCover(
+fun FootprintDescription(
     footprint: Footprint,
     onValueChange: (String) -> Unit,
 ) {
     TextMedium(
-        text = "足迹标题：",
+        text = "足迹描述：",
         firstLine = 0,
         modifier = Modifier.padding(horizontal = 15.dp),
-        color = FontDark4
+        color = FontDark4,
     )
     Spacer(Modifier.padding(2.dp))
     InputText3(
-        value = footprint.title,
+        value = footprint.description,
         onValueChange = onValueChange,
-        tipText = "请填写足迹标题"
+        tipText = "请填写足迹描述"
     )
 }

@@ -33,8 +33,8 @@ fun ButtonMain(
                 color = bgColor,
                 shape = roundedCornerShape
             )
-            .padding(paddingValues)
             .clickable(onClick = onClick)
+            .padding(paddingValues)
     ) {
         content()
     }

@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_edit
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_edit
 
 import android.util.Log
 import androidx.compose.foundation.layout.Spacer

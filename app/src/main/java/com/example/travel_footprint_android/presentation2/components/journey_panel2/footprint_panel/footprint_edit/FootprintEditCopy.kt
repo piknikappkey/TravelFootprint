@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_edit
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_edit
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -25,8 +25,8 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.util.Date
@@ -59,7 +59,7 @@ fun FootprintEditCopy(
                     .size(26.dp)
                     .padding(start = 5.dp)
                     .clickable(onClick = {
-                        FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_LIST)
+                        JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST)
                     }),
                 painter = painterResource(id = R.drawable.ic_left2),
                 contentDescription = "返回图标",
@@ -77,7 +77,7 @@ fun FootprintEditCopy(
                     } else {
                         updateFootprint(footprint)
                     }
-                    FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_LIST)
+                    JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST)
                 }
             )
             Spacer(Modifier.width(10.dp))

@@ -3,7 +3,9 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -22,18 +27,18 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGColumn
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
-import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation2.components.image_square.ImageSquare2
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.FootprintPanel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence.Reminiscence
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
@@ -72,11 +77,10 @@ fun JourneyDetails(
                     journeySelected,
                     updateJourney,
                     deleteJourney,
-                    navigate
                 )
 
                 // 足迹内容
-                FootprintContent(journeySelected)
+//                FootprintContent(journeySelected)
             }
         }
     }
@@ -134,7 +138,6 @@ fun JourneyContent(
     journeySelected: Journey,
     updateJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
-    navigate: (JourneyPanel2State, Journey?) -> Unit
 ) {
     BGBox(
         modifier = Modifier
@@ -145,132 +148,171 @@ fun JourneyContent(
         ) {
             Column {
                 // 旅程标题
-                Spacer(Modifier.padding(2.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Headline(
-                        text = journeySelected.title,
-                    )
-                }
-                Spacer(Modifier.padding(3.dp))
-
+                Title(journeySelected)
                 // 封面图片
-                ImageSquare2(
-                    imgPath = journeySelected.coverImagePath,
-                    updateImgPath = { file ->
-                        journeySelected.coverImagePath = file.absolutePath
-                        updateJourney(journeySelected)
-                    },
-                    deleteImgPath = { imgPath ->
-                        journeySelected.coverImagePath = ""
-                        updateJourney(journeySelected)
-                    },
-                    modifier = Modifier.padding(horizontal = 40.dp),
-                    aspectRatio = 1.2f,
-                    addIconSize = .3f
-                )
+                Cover(journeySelected, updateJourney)
                 LineBetween(paddingUp = 12.dp)
-
                 // 描述内容
-                TextMedium(
-                    text = "旅程描述：",
-                    firstLine = 0,
-                    modifier = Modifier.padding(horizontal = 15.dp),
-                    fontSize = 17.sp
-                )
-                Spacer(Modifier.padding(2.dp))
-                TextMedium(
-                    text = journeySelected.description,
-                    firstLine = 2,
-                    modifier = Modifier.padding(horizontal = 15.dp),
-                )
-                Spacer(Modifier.padding(2.dp))
+                Description(journeySelected)
                 // 旅程地点以及时间
-                Row(
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    // 开始日期
-                    val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val dateStr = fullDateFormat.format(journeySelected.startDate)
-                    // 显示地址与日期
-                    Spacer(Modifier.width(10.dp))
-                    TextSmall(
-                        text = dateStr,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(0.dp).offset(y = 5.dp)
-                    )
-                    Spacer(Modifier.weight(1f))
-                    val region = journeySelected.address.split("\n")[0]
-                    val location = journeySelected.address.split("\n").last()
-                    Column {
-                        TextSmall(
-                            text = location,
-                            firstLine = 0,
-                            modifier = Modifier.padding(horizontal = 15.dp)
-                        )
-                        TextSmall(
-                            text = region,
-                            firstLine = 2,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 15.dp),
-                        )
-                    }
-                }
+                LocationAndTime(journeySelected)
                 LineBetween()
-
                 // 回忆
-                TextMedium(
-                    text = "旅程回忆",
-                    firstLine = 0,
-                    modifier = Modifier.padding(horizontal = 15.dp),
-                    fontSize = 17.sp
-                )
-                Spacer(Modifier.padding(5.dp))
-                Reminiscence(
-                    journey = journeySelected,
-                    updateJourney = updateJourney
-                )
-                LineBetween()
-
-                // 功能按钮
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Spacer(Modifier.width(20.dp))
-                    ButtonDelete {
-                        deleteJourney(journeySelected)
-                        navigate(JourneyPanel2State.JOURNEY_LIST, null)
-                    }
-                    Spacer(Modifier.weight(1f))
-                    ButtonMain(onClick = {}) {
-                        TextMedium("旅程足迹")
-                    }
-                    Spacer(Modifier.width(10.dp))
-                }
-                Spacer(Modifier.padding(5.dp))
+                Recall(journeySelected, updateJourney)
+                FootprintButton(journeySelected)
             }
         }
     }
 }
 
 @Composable
-fun FootprintContent(
-    journeySelected: Journey,
+private fun Title(
+    journeySelected:Journey,
 ) {
-    BGColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 10.dp)
+    Spacer(Modifier.padding(2.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
     ) {
-        BGImgBox(
-            imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
-        ) {
-            // 足迹面板
-            FootprintPanel(
-                journeySelected = journeySelected,
+        Headline(
+            text = journeySelected.title,
+        )
+    }
+    Spacer(Modifier.padding(3.dp))
+}
+
+@Composable
+private fun Cover(
+    journeySelected:Journey,
+    updateJourney: (Journey) -> Unit,
+) {
+    ImageSquare2(
+        imgPath = journeySelected.coverImagePath,
+        updateImgPath = { file ->
+            journeySelected.coverImagePath = file.absolutePath
+            updateJourney(journeySelected)
+        },
+        deleteImgPath = { imgPath ->
+            journeySelected.coverImagePath = ""
+            updateJourney(journeySelected)
+        },
+        modifier = Modifier.padding(horizontal = 40.dp),
+        aspectRatio = 1.2f,
+        addIconSize = .3f
+    )
+}
+
+@Composable
+private fun Description(
+    journeySelected:Journey,
+) {
+    TextMedium(
+        text = "旅程描述：",
+        firstLine = 0,
+        modifier = Modifier.padding(horizontal = 15.dp),
+        fontSize = 17.sp
+    )
+    Spacer(Modifier.padding(2.dp))
+    TextMedium(
+        text = journeySelected.description,
+        firstLine = 2,
+        modifier = Modifier.padding(horizontal = 15.dp),
+    )
+    Spacer(Modifier.padding(2.dp))
+}
+
+@Composable
+private fun LocationAndTime(
+    journeySelected:Journey,
+) {
+    Row(
+        verticalAlignment = Alignment.Bottom
+    ) {
+        // 开始日期
+        val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateStr = fullDateFormat.format(journeySelected.startDate)
+        // 显示地址与日期
+        Spacer(Modifier.width(10.dp))
+        TextSmall(
+            text = dateStr,
+            fontSize = 11.sp,
+            modifier = Modifier.padding(0.dp).offset(y = 5.dp)
+        )
+        Spacer(Modifier.weight(1f))
+        val region = journeySelected.address.split("\n")[0]
+        val location = journeySelected.address.split("\n").last()
+        Column {
+            TextSmall(
+                text = location,
+                firstLine = 0,
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
+            TextSmall(
+                text = region,
+                firstLine = 2,
+                fontSize = 11.sp,
+                modifier = Modifier.padding(horizontal = 15.dp),
             )
         }
     }
+}
+
+@Composable
+private fun Recall(
+    journeySelected:Journey,
+    updateJourney: (Journey) -> Unit,
+) {
+    TextMedium(
+        text = "旅程回忆",
+        firstLine = 0,
+        modifier = Modifier.padding(horizontal = 15.dp),
+        fontSize = 17.sp
+    )
+    Spacer(Modifier.padding(5.dp))
+    Reminiscence(
+        journey = journeySelected,
+        updateJourney = updateJourney
+    )
+}
+
+@Composable
+private fun FootprintButton(
+    journeySelected:Journey,
+    mapViewModel: MapViewModel = hiltViewModel(),
+) {
+    // 足迹数据
+    val footprintUiState by mapViewModel.uiState.collectAsState()
+
+    // 读取足迹数据
+    val footprints = footprintUiState.footprints
+
+    LaunchedEffect(Unit) {
+        mapViewModel.loadJourneyFootprints(journeySelected.id)
+    }
+
+    Row {
+        Spacer(Modifier.weight(1f))
+        ButtonMain(
+            onClick = {
+                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journeySelected, footprintListData = footprints)
+            },
+            paddingValues = PaddingValues(0.dp)
+        ) {
+            BGBox {
+                BGImgBox(
+                    listOf(R.drawable.bg_simple_hor_small_small)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 5.dp, horizontal = 12.dp)
+                    ) {
+                        TextMedium("旅程足迹")
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+    }
+
+    Spacer(Modifier.padding(5.dp))
 }

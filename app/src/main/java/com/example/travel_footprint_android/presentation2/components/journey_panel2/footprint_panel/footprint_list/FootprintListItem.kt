@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_list
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -29,11 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanel
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanel
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark4
@@ -48,6 +49,7 @@ fun FootprintListItem(
     footprint: Footprint,
     footprintClick: (Int?) -> Unit,
     isClicked: Boolean,
+    journeySelected: Journey,
 ) {
     Box(
         modifier = Modifier
@@ -63,7 +65,7 @@ fun FootprintListItem(
         BGImgBox(
             listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3)
         ) {
-            Content(footprint, footprintClick, isClicked)
+            Content(footprint, footprintClick, isClicked, journeySelected)
         }
     }
 }
@@ -73,6 +75,7 @@ fun Content(
     footprint: Footprint,
     footprintClick: (Int?) -> Unit,
     isClicked: Boolean,
+    journeySelected: Journey,
 ) {
 //    var isRecord by remember { mutableStateOf(false) }
 //    LocationRecorder(isRecord = isRecord) { latitude, longitude -> }
@@ -82,7 +85,7 @@ fun Content(
     ) {
         Spacer(Modifier.height(10.dp))
         // 顶部标题及功能栏
-        HeadRow(footprint, footprintClick, isClicked)
+        HeadRow(footprint, footprintClick, isClicked, journeySelected)
         Spacer(Modifier.height(10.dp))
         // 足迹描述
         Description(footprint, isClicked)
@@ -103,6 +106,7 @@ fun HeadRow(
     footprint: Footprint,
     footprintClick: (Int?) -> Unit,
     isClicked: Boolean,
+    journeySelected: Journey,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -133,7 +137,7 @@ fun HeadRow(
             IconEdit(
                 modifier = Modifier.size(16.dp)
             ) {
-                FootprintNavController.navigate(FootprintPanel2State.FOOTPRINT_EDIT, footprint)
+                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_EDIT, footprintData = footprint, journeyData = journeySelected)
             }
         }
         Spacer(Modifier.width(10.dp))
