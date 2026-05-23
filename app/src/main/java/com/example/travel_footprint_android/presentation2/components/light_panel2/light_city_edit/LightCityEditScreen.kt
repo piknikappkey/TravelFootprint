@@ -84,7 +84,8 @@ fun LightCityEditScreen(
                     } else {
                         selectedProvinceCodes - provinceCode
                     }
-                }
+                },
+                lightenCityMode=lightenCityMode
             )
         } else {
             LightProvinceEditSelect(

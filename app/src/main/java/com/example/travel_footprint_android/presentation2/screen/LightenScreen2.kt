@@ -56,6 +56,7 @@ fun LightenScreen2(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
+
             SVGMap(
                 modifier = Modifier.weight(1f),
                 onLightCityClick = { adcode, name ->
@@ -79,6 +80,11 @@ fun LightenScreen2(
 
 //点亮模式
 enum class LightenCityMode {
-    CITY,
-    PROVINCE
+    PROVINCE, CITY;
+
+    val isCityMode: Boolean
+        get() = this == CITY
+
+    val isProvinceMode: Boolean
+        get() = this == PROVINCE
 }

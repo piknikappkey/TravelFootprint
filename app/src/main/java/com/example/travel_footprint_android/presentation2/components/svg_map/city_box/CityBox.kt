@@ -1,5 +1,6 @@
 package com.example.travel_footprint_android.presentation2.components.svg_map.city_box
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import com.example.travel_footprint_android.ui.theme.BGLight1
 
 data class SelectedCityInfo(
@@ -38,6 +41,8 @@ fun CityBox(
     selectedCityInfo: SelectedCityInfo?,
     cityState: Boolean,
     lightedProvinces: List<LightedProvince>,
+    lightedCity: List<LightedCity>,
+    lightenCityMode: LightenCityMode,
     //是否区分省份城市点亮回调？
     onLightCityClick: (provinceAdcode: String, provinceName: String) -> Unit = { _, _ -> }
 ) {
@@ -49,7 +54,18 @@ fun CityBox(
 
     val cityName = selectedCityInfo?.name ?: ""
     val cityAdcode = selectedCityInfo?.adcode ?: ""
-    val isLighted = cityIsLightedByAdcode(cityAdcode, lightedProvinces)
+    val isLighted = when (lightenCityMode) {
+        LightenCityMode.CITY -> {
+            // 城市模式：检查城市是否已点亮
+           cityIsLighted(cityName,lightedCity)
+        }
+        LightenCityMode.PROVINCE -> {
+            // 省份模式：检查省份是否已点亮
+            provinceIsLighted(cityName,lightedProvinces)
+        }
+    }
+    Log.d("选中的地区：${cityName}","模式${lightenCityMode}  +  $isLighted")
+
 
     Box(
         modifier = Modifier
@@ -78,7 +94,7 @@ fun CityBox(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isLighted) "✨ 该城市已点亮！" else "🔘 该城市未点亮",
+                    text = if (isLighted) "该${cityName}地区已点亮！" else "该地区未点亮",
                     fontSize = 14.sp,
                     color = if (isLighted) Color(0xFF4CAF50) else Color(0xFFFF9800)
                 )
@@ -100,16 +116,17 @@ fun CityBox(
     }
 }
 
-fun cityIsLightedByAdcode(
-    adcode: String,
-    lightedProvinces: List<LightedProvince>
-): Boolean {
-    if (adcode.isEmpty()) return false
-    return lightedProvinces.any { it.provinceAdcode == adcode }
-}
-
 // 保留原有函数以兼容旧代码
 fun cityIsLighted(
+    selectedCity: String?,
+    lightedCity: List<LightedCity>
+): Boolean {
+    if (selectedCity == null) return false
+    val cityName = selectedCity.split("_").firstOrNull() ?: return false
+    return lightedCity.any { it.cityName == cityName }
+}
+
+fun provinceIsLighted(
     selectedCity: String?,
     lightedProvinces: List<LightedProvince>
 ): Boolean {
