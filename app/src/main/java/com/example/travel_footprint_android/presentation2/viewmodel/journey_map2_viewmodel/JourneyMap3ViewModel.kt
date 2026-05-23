@@ -107,7 +107,7 @@ class JourneyMap3ViewModel @Inject constructor(
         val coloredIcon = getColoredLocationIcon(context, LocationIconColor)
 
         val myLocationStyle = MyLocationStyle()
-            .myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE)
+            .myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE)
             .showMyLocation(true)
             .myLocationIcon(coloredIcon)
             .strokeColor(LocationStrokeColor)

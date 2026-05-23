@@ -40,8 +40,7 @@ import com.example.travel_footprint_android.presentation2.components.text.headli
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
-import com.example.travel_footprint_android.ui.theme.FontDark4
-import com.example.travel_footprint_android.ui.theme.FontDark5
+import com.example.travel_footprint_android.ui.theme.FontDark6
 import com.example.travel_footprint_android.ui.theme.FontDark8
 import com.example.travel_footprint_android.ui.theme.MainColor3
 
@@ -180,9 +179,9 @@ fun LocationPanel(
                 Row {
                     TextMedium(
                         text = "已选择位置",
-                        color = FontDark5,
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = FontDark6,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        fontSize = 15.sp
                     )
                     Spacer(Modifier.weight(1f))
                     Image(
@@ -225,7 +224,6 @@ fun LocationPanel(
                         Spacer(Modifier.weight(1f))
                         TextMedium(
                             text = address,
-                            color = FontDark4,
                         )
                         Spacer(Modifier.width(10.dp))
                     }
@@ -253,18 +251,18 @@ fun LocationPanel(
                                 .weight(1f),
                         )
                         ButtonMain(
-                            title = "取消"
+                            onClick = cancel
                         ) {
-                            cancel()
+                            TextMedium("取消")
                         }
                         Spacer(
                             modifier = Modifier
                                 .width(10.dp),
                         )
                         ButtonMain(
-                            title = "确定"
+                            onClick = submit
                         ) {
-                            submit()
+                            TextMedium("确定")
                         }
                     }
                     Spacer(Modifier.height(8.dp))

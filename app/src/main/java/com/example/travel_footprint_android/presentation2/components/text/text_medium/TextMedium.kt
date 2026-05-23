@@ -10,15 +10,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.ui.theme.FFHanYiKaiTiJian
-import com.example.travel_footprint_android.ui.theme.FontDark3
+import com.example.travel_footprint_android.ui.theme.FFRuanMengChuLianTi
+import com.example.travel_footprint_android.ui.theme.FontDark4
 
 @Composable
 fun TextMedium(
     text: String,
-    color: Color = FontDark3,
+    color: Color = FontDark4,
     firstLine: Int = 0,
-    fontSize: TextUnit = 18.sp,
+    fontSize: TextUnit = 16.sp,
     maxLines: Int = Int.MAX_VALUE,
     textAlign: TextAlign = TextAlign.Start,
     modifier: Modifier = Modifier
@@ -36,7 +36,7 @@ fun TextMedium(
                 firstLine = (firstLine * 16).sp, // 首行缩进2个字符的宽度
                 restLine = 0.sp    // 其余行不缩进
             ),
-            fontFamily = FFHanYiKaiTiJian,
+            fontFamily = FFRuanMengChuLianTi,
         )
     )
 }

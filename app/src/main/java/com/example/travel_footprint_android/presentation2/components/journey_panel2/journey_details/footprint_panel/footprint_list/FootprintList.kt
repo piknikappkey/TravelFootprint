@@ -65,7 +65,7 @@ fun FootprintList(
                 // 足迹列表
                 LazyColumn(
                     modifier = Modifier
-                        .heightIn(max = 400.dp)
+                        .heightIn(max = 1000.dp)
                         .padding(horizontal = 20.dp)
                 ) {
                     itemsIndexed(footprint, key = { i, it -> it.id}) { index, footprint ->

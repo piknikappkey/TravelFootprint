@@ -20,10 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -35,7 +31,7 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_details.LocationRecorder
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.footprint_panel.viewmodel.FootprintPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
@@ -78,8 +74,8 @@ fun Content(
     footprintClick: (Int?) -> Unit,
     isClicked: Boolean,
 ) {
-    var isRecord by remember { mutableStateOf(false) }
-    LocationRecorder(isRecord = isRecord) { latitude, longitude -> }
+//    var isRecord by remember { mutableStateOf(false) }
+//    LocationRecorder(isRecord = isRecord) { latitude, longitude -> }
 
     Column(
         modifier = Modifier.animateContentSize() // 使整体高度变化平滑
@@ -92,7 +88,9 @@ fun Content(
         Description(footprint, isClicked)
         Spacer(Modifier.height(10.dp))
         // 足迹状态面板
-
+        if(isClicked) {
+            FootprintListPanel()
+        }
         // 底部信息（足迹创建时间、足迹开始地址）
         BottomContent(footprint, isClicked)
         Spacer(Modifier.height(5.dp))
@@ -164,14 +162,6 @@ fun Description(
         fontSize = 17.sp,
         color = FontDark4
     )
-}
-
-// 足迹状态面板
-@Composable
-fun Panel(
-    footprint: Footprint,
-) {
-
 }
 
 // 底部信息（足迹创建时间、足迹开始地址）
