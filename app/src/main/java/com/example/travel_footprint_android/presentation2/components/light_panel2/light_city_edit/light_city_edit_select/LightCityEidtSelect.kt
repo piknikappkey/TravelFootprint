@@ -153,7 +153,7 @@ fun CityList(
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(cities, key = { it.adcode }) { city ->
+                items(cities, key = { city->city.adcode}) { city ->
                     CityItem(
                         city = city,
                         //判断当前城市是否被点亮
