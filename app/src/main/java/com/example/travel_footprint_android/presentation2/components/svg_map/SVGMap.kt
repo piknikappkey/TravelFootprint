@@ -1,15 +1,9 @@
-// SVGMap.kt (修改后)
 package com.example.travel_footprint_android.presentation2.components.svg_map
 
 import android.util.Log
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,13 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.travel_footprint_android.R  // ← 这是你需要的
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation2.components.back_buttom.city_province_backButtom
@@ -56,12 +44,16 @@ fun SVGMap(
     val ZOOM_THRESHOLD = 3.6f  // 缩放阈值，超过此值切换到城市地图
     Log.d("缩放阈值", "当前缩放阈值为：${currentScale}")
 
+    //当前点亮模式
+    var currentMode by remember { mutableStateOf(LightenCityMode.PROVINCE) }
+
     // 监听缩放变化，自动切换地图
     LaunchedEffect(currentScale) {
         when {
             currentScale > ZOOM_THRESHOLD && showProvinceMap -> {
                 Log.d("SVGMap", "Switching to city map, scale=$currentScale")
                 showProvinceMap = false
+                currentMode=LightenCityMode.CITY
                 onModeChange(LightenCityMode.CITY)         // 显示城市
                 showCityMap=true
                 // 切换时关闭城市信息框
@@ -71,6 +63,7 @@ fun SVGMap(
             currentScale <= ZOOM_THRESHOLD && !showProvinceMap -> {
                 Log.d("SVGMap", "Switching to province map, scale=$currentScale")
                 showProvinceMap = true
+                currentMode=LightenCityMode.PROVINCE
                 onModeChange(LightenCityMode.PROVINCE)         // 显示省份
                 showCityMap=false
                 // 切换时关闭城市信息框
@@ -121,7 +114,9 @@ fun SVGMap(
                 city_province_backButtom(
                     ShowMapMode.CITY,
                     onClick = {
+                        onModeChange(LightenCityMode.CITY)
                         NavigateToCityMap()
+                        currentMode= LightenCityMode.CITY
                     }
                 )
             }
@@ -151,18 +146,22 @@ fun SVGMap(
                 city_province_backButtom(
                     ShowMapMode.PROVINCE,
                     onClick = {
+                        onModeChange(LightenCityMode.PROVINCE)
                         backToProvinceMap()
+                        currentMode= LightenCityMode.PROVINCE
                     }
                 )
             }
 
         }
 
-
+    //头顶显示盒子
         CityBox(
             selectedCityInfo = selectedCityInfo,
             cityState = cityState,
             lightedProvinces = lightedProvinces,
+            lightedCity=lightedCity,
+            lightenCityMode = currentMode,
             onLightCityClick = onLightCityClick
         )
     }

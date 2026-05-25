@@ -1,6 +1,7 @@
 // LightPanel2.kt - 完整修复版
 package com.example.travel_footprint_android.presentation2.components.light_panel2
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -103,21 +104,20 @@ fun LightPanel2(
                 lightenCityMode
             )
 
+            //被点亮数据点亮列表区域
             LightCityScreenWithState(
                 lightPanel2State = lightPanel2State,
                 lightCityList = lightCityList,
                 lightedProvinces = lightedProvinces,
                 lightenCityMode = lightenCityMode,
                 isDeleteMode = isDeleteMode,
+                //回调
                 onDeleteProvince = { provinceCode ->
                     lightenViewModel.unlightProvince(provinceCode)
-                    // 删除后立即刷新数据
-                    lightenViewModel.refreshAllData()
                 },
                 onDeleteCity = { cityCode ->
                     lightenViewModel.unlightCity(cityCode)
-                    // 删除后立即刷新数据
-                    lightenViewModel.refreshAllData()
+
                 }
             )
 
@@ -186,9 +186,14 @@ fun LightPanel2(
                 }
             } else {
                 // 非编辑模式下的按钮
+                //点击后只改变编辑状态
                 if (isDeleteMode) {
                     Button(
-                        onClick = { isDeleteMode = false },
+                        onClick = {
+                            isDeleteMode = false
+                            lightenViewModel.refreshAllData()
+                            Log.d("4444","${lightedProvinces}")
+                                  },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("完成")

@@ -11,7 +11,8 @@ import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -411,25 +412,32 @@ class LightenViewModel @Inject constructor(
      */
     fun refreshAllData() {
         viewModelScope.launch {
-            // 先清空状态，强制触发重组
             _uiState.update { state ->
-                state.copy(
-                    lightedCities = emptyList(),
-                    lightedProvinces = emptyList(),
-                    lightedCityCount = 0,
-                    lightedProvinceCount = 0
-                )
+                state.copy(isLoading = true)  // 添加加载状态
             }
 
-            // 延迟一下，确保清空状态已生效
-            delay(50)
+            try {
+                // 并发执行所有加载任务
+                val deferredResults = listOf(
+                    async { loadLightedCityCodes() },
+                    async { loadLightedProvinceCodes() },
+                    async { loadLightedCities() },
+                    async { loadLightedProvinces() },
+                    async { loadProvinceCityCount() }
+                )
 
-            // 重新加载数据
-            loadLightedCityCodes()
-            loadLightedProvinceCodes()
-            loadLightedCities()
-            loadLightedProvinces()
-            loadProvinceCityCount()
+                // 等待所有任务完成
+                deferredResults.awaitAll()
+
+                _uiState.update { state ->
+                    state.copy(isLoading = false)
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(isLoading = false, error = e.message)
+                }
+                Log.e("LightenViewModel", "Refresh failed", e)
+            }
         }
     }
 

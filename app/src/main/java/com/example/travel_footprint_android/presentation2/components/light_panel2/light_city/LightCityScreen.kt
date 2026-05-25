@@ -53,7 +53,7 @@ fun LightCityScreen(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (lightenCityMode == LightenCityMode.CITY) {
+        if (lightenCityMode.isCityMode) {
             // ==================== 城市模式 ====================
             if (lightCityList.isEmpty()) {
                 Text(
@@ -89,7 +89,7 @@ fun LightCityScreen(
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 30.dp, vertical = 15.dp),
+                                .padding(horizontal = 10.dp, vertical = 10.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(lightCityList.take(10), key = { it.cityAdcode }) { city ->
@@ -142,7 +142,7 @@ fun LightCityScreen(
                         FlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 30.dp, vertical = 15.dp),
+                                .padding(horizontal = 2.dp, vertical = 15.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {

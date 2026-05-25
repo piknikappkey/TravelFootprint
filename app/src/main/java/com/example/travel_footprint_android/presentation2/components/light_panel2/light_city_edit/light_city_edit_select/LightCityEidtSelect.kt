@@ -12,10 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.travel_footprint_android.data.entity.City
+import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @Composable
 fun LightCityEidtSelect(
@@ -23,14 +27,27 @@ fun LightCityEidtSelect(
     selectedProvinceCodes: Set<String> = emptySet(),
     onCitySelectionChange: (String, Boolean) -> Unit = { _, _ -> },
     onProvinceSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
-    viewModel: LightenViewModel = hiltViewModel()
+    lightenCityMode: LightenCityMode,
+    lightenViewModel: LightenViewModel   = hiltViewModel()
 ) {
-    val allProvinces by viewModel.allProvinces.collectAsStateWithLifecycle(initialValue = emptyList())
+    //获取UI状态
+    val uiState by lightenViewModel.uiState.collectAsState()
+
+    //获取省份列表
+    val allProvinces by lightenViewModel.allProvinces.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    //选中的省份
     var selectedProvince by remember { mutableStateOf<Province?>(null) }
-    val citiesByProvince by viewModel.getCitiesByProvince(selectedProvince?.adcode ?: "")
+
+    //获取选中省份下的所有城市
+    val citiesByProvince by lightenViewModel.getCitiesByProvince(selectedProvince?.adcode ?: "")
         .collectAsStateWithLifecycle(initialValue = emptyList())
-    val lightedCityCodes by viewModel.lightedCityCodes.collectAsStateWithLifecycle(initialValue = emptySet())
-    val lightedProvinceCodes by viewModel.lightedProvinceCodes.collectAsStateWithLifecycle(initialValue = emptySet())
+    //
+    //获取ui点亮省份数据
+    val lightedProvinces = uiState.lightedProvinces
+    //获取ui点亮城市数据
+    val lightedCity = uiState.lightedCities
+
 
     Row(
         modifier = Modifier
@@ -38,23 +55,21 @@ fun LightCityEidtSelect(
             .height(400.dp)
     ) {
         ProvinceList(
-            provinces = allProvinces,
+            provincesList = allProvinces,
             selectedProvince = selectedProvince,
-            lightedProvinceCodes = lightedProvinceCodes,
             selectedProvinceCodes = selectedProvinceCodes,
-            onProvinceClick = { province ->
+            onProvinceChoose = { province ->
                 selectedProvince = province
             },
-            onProvinceCheckChange = onProvinceSelectionChange,
             modifier = Modifier.weight(1f)
         )
 
-        Divider(modifier = Modifier.width(1.dp))
+        //---------------------------------------------------
 
         CityList(
             cities = citiesByProvince,
             selectedProvince = selectedProvince,
-            lightedCityCodes = lightedCityCodes,
+            lightedCity = lightedCity,
             selectedCityCodes = selectedCityCodes,
             onCityCheckChange = onCitySelectionChange,
             modifier = Modifier.weight(1.5f)
@@ -64,29 +79,21 @@ fun LightCityEidtSelect(
 
 @Composable
 fun ProvinceList(
-    provinces: List<Province>,
+    provincesList: List<Province>,
     selectedProvince: Province?,
-    lightedProvinceCodes: Set<String>,
     selectedProvinceCodes: Set<String>,
-    onProvinceClick: (Province) -> Unit,
-    onProvinceCheckChange: (String, Boolean) -> Unit,
+    onProvinceChoose: (Province) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         Text("省份", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(12.dp))
-        Divider()
-
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(provinces, key = { it.adcode }) { province ->
+            items(provincesList, key = { it.adcode }) { province ->
                 ProvinceItem(
                     province = province,
                     isSelected = selectedProvince?.adcode == province.adcode,
-                    isLighted = lightedProvinceCodes.contains(province.adcode),
                     isTempSelected = selectedProvinceCodes.contains(province.adcode),
-                    onProvinceClick = { onProvinceClick(province) },
-                    onCheckChange = { isChecked ->
-                        onProvinceCheckChange(province.adcode, isChecked)
-                    }
+                    onProvinceChoose = { onProvinceChoose(province) },
                 )
             }
         }
@@ -97,15 +104,13 @@ fun ProvinceList(
 fun ProvinceItem(
     province: Province,
     isSelected: Boolean,
-    isLighted: Boolean,
     isTempSelected: Boolean,
-    onProvinceClick: () -> Unit,
-    onCheckChange: (Boolean) -> Unit
+    onProvinceChoose: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onProvinceClick() }
+            .clickable { onProvinceChoose() }
             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -114,32 +119,30 @@ fun ProvinceItem(
         Text(
             text = province.name,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (isLighted || isTempSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            color = if (isTempSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
-        Checkbox(
-            checked = isLighted || isTempSelected,
-            onCheckedChange = onCheckChange
-        )
+
     }
 }
+
+//城市列表
 
 @Composable
 fun CityList(
     cities: List<City>,
     selectedProvince: Province?,
-    lightedCityCodes: Set<String>,
+    lightedCity: List<LightedCity>,
     selectedCityCodes: Set<String>,
     onCityCheckChange: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         Text(
-            text = if (selectedProvince != null) "${selectedProvince.name} - 城市" else "请选择省份",
+            text ="请选择城市",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(12.dp)
         )
-        Divider()
-
+//-------------------------
         if (selectedProvince == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("请先选择省份", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -153,7 +156,10 @@ fun CityList(
                 items(cities, key = { it.adcode }) { city ->
                     CityItem(
                         city = city,
-                        isLighted = lightedCityCodes.contains(city.adcode),
+                        //判断当前城市是否被点亮
+                        isLighted = selectedCityCodes.any { cityCode ->
+                            lightedCity.any { it.cityAdcode == cityCode }
+                        },
                         isTempSelected = selectedCityCodes.contains(city.adcode),
                         onCheckChange = { isChecked ->
                             onCityCheckChange(city.adcode, isChecked)
