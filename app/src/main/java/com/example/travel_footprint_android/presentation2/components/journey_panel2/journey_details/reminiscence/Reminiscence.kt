@@ -49,11 +49,8 @@ fun Reminiscence(
                 ) {
                     ImageSquare2(
                         imgPath = imgPath,
-                        updateImgPath = { file ->  },
-                        deleteImgPath = { imgPath ->
-                            journey.journeyImagePaths -= imgPath
-                            updateJourney(journey)
-                        },
+                        updateImgPath = { file ->  file},
+                        deleteImgPath = { imgPath -> },
                         aspectRatio = aspectRatio,
                         addIconSize = iconSize,
                         elevation = elevation,
@@ -73,6 +70,7 @@ fun Reminiscence(
                     updateImgPath = { file ->
                         journey.journeyImagePaths += file.absolutePath
                         updateJourney(journey)
+                        null
                     },
                     deleteImgPath = { imgPath -> },
                     aspectRatio = aspectRatio,

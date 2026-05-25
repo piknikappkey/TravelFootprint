@@ -33,6 +33,7 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.location.JourneyEditLocation
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.title.JourneyEditTitle
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.ui.theme.SecondColor3
@@ -62,9 +63,7 @@ fun JourneyEdit(
     }
 
 
-    BGImgBox(
-        listOf(R.drawable.bg_simple_ver_small)
-    ) {
+    BGBox {
         Column {
             // 顶部内容
             JourneyHead(
@@ -81,7 +80,10 @@ fun JourneyEdit(
                 journey,
                 journeySelected,
                 { j -> journey = j.copy() },
-                deleteJourney,
+                { j ->
+                    deleteJourney(j)
+                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                },
             )
         }
     }
@@ -108,7 +110,7 @@ fun JourneyHead(
                     if(journeySelected == null) {
                         navigate(JourneyPanel2State.JOURNEY_LIST, null)
                     } else {
-                        navigate(JourneyPanel2State.JOURNEY_DETAILS, journeySelected)
+                        navigate(JourneyPanel2State.JOURNEY_LIST, journeySelected)
                     }
                 }),
             painter = painterResource(id = R.drawable.ic_left_long),
@@ -174,6 +176,7 @@ fun JourneyContent(
                         journey = journey,
                         updateImgPath = { file ->
                             setJourney(journey.copy(coverImagePath = file.absolutePath))
+                            file
                         },
                         deleteImgPath = { imgPath ->
                             setJourney(journey.copy(coverImagePath = ""))

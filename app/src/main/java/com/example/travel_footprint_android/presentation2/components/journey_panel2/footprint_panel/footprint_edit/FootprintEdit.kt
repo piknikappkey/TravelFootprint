@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,31 +129,36 @@ private fun Content(
     footprint: Footprint,
     setFootprint: (Footprint) -> Unit,
 ) {
-    // 编辑内容区域
-    Spacer(Modifier.padding(3.dp))
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+    ) {
+        // 编辑内容区域
+        Spacer(Modifier.padding(3.dp))
 
-    // 足迹标题编辑
-    FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
+        // 足迹标题编辑
+        FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
 
-    LineBetween()
+        LineBetween()
 
-    // 足迹描述编辑
-    FootprintDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
+        // 足迹描述编辑
+        FootprintDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
 
-    LineBetween()
+        LineBetween()
 
-    // 足迹地址编辑
-    FootprintEditLocation(
-        footprint,
-        setFootprint = { footprint -> },
-    )
+        // 足迹地址编辑
+        FootprintEditLocation(
+            footprint,
+            setFootprint = { f -> setFootprint(f.copy())},
+        )
 
-    LineBetween()
+        LineBetween()
 
-    // 个人评分编辑
-    FootprintRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
+        // 个人评分编辑
+        FootprintRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
 
-    LineBetween()
+        LineBetween()
 
-    Spacer(Modifier.padding(10.dp))
+        Spacer(Modifier.padding(10.dp))
+    }
 }

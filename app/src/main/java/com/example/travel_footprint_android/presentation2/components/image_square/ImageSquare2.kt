@@ -37,7 +37,7 @@ import java.io.File
 @Composable
 fun ImageSquare2(
     imgPath: String,
-    updateImgPath: (File) -> Unit = { file -> },
+    updateImgPath: (File) -> File? = { file -> file},
     deleteImgPath: (String) -> Unit = { string -> },
     modifier: Modifier = Modifier,
     aspectRatio: Float = 1f,
@@ -76,8 +76,7 @@ fun ImageSquare2(
             
             withContext(Dispatchers.Main) {
                 if (file != null) {
-                    updateImgPath(file)
-                    savedImageFile = file
+                    savedImageFile = updateImgPath(file)
                     Log.d("ImageUpload", "文件路径: ${file.absolutePath}")
                 } else {
                     Toast.makeText(context, "保存失败", Toast.LENGTH_SHORT).show()

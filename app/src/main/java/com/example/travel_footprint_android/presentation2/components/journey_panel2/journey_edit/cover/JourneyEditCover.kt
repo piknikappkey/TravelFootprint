@@ -13,7 +13,7 @@ import java.io.File
 @Composable
 fun JourneyEditCover(
     journey: Journey,
-    updateImgPath: (File) -> Unit,
+    updateImgPath: (File) -> File?,
     deleteImgPath: (String) -> Unit,
 ) {
     // 封面图片编辑
