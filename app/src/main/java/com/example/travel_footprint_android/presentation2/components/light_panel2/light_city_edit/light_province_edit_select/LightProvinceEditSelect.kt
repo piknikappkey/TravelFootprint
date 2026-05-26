@@ -97,7 +97,8 @@ fun LightProvinceEditSelect(
                             modifier = Modifier.size(48.dp)
                         )
                         Text(
-                            text = "所有省份都已点亮",
+                            text = "所有省份都已点亮\n" +
+                                    "快去朋友圈分享一下吧~",
                             fontSize = 13.sp,
                             color = Color(0xFF9CA3AF)
                         )

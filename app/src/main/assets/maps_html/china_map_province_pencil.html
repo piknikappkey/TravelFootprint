@@ -26,52 +26,54 @@
             left: 110%;
             right:110%;
             width: fit-content;
+            height: 200px;
             transform: translateX(-50%);
         }
 
         svg {
-            position: relative;
-            top: 0px;
-            left: 0px;
-            transform-origin: 0 0;
-        }
+    position: relative;
+    top: 0px;
+    left: 0px;
+    transform-origin: 0 0;
+}
 
-        .province-svg {
-            will-change: transform;
-            /* 或者使用更现代的方式 */
-            transform: translateZ(0);
-        }
+.province-svg {
+    will-change: transform;
+    /* 或者使用更现代的方式 */
+    transform: translateZ(0);
+}
 
-        .city-svg {
-            transform: translateY(0px);
-            z-index: 1;
-        }
+.city-svg {
+    transform: translateY(0px);
+    z-index: 1;
+}
 
-        .city {
-            fill: #F5F0E6;
-            stroke: #4A4A4A;
-            stroke-width: 0.15;
-            stroke-dasharray: 2, 1;
-            stroke-linejoin: round;
-            stroke-linecap: round;
-            cursor: pointer;
-            transition: all .2s;
-        }
+/* 水彩风格 - 更细的轮廓线条 */
+.city {
+    fill: #F2EDE4;
+    stroke: #9E8E7A;
+    stroke-width: 0.08;
+    stroke-dasharray: 1.5, 0.8;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
 
-        .province {
-            fill: #F5F0E6;
-            stroke: #4A4A4A;
-            stroke-width: 0.15;
-            stroke-dasharray: 2, 1;
-            stroke-linejoin: round;
-            stroke-linecap: round;
-            cursor: pointer;
-            transition: all .2s;
-        }
+.province {
+    fill: #F2EDE4;
+    stroke: #9E8E7A;
+    stroke-width: 0.08;
+    stroke-dasharray: 1.5, 0.8;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
 
         .selected {
-            fill: #FFE4B5;
-            stroke: #D2691E;
+            fill: #94bdff;
+            stroke: #FFEFF6FF;
             stroke-width: 0.2;
         }
 
@@ -209,6 +211,35 @@
         })
         return verifyReturn;
     }
+
+	    // 自定义滚动范围限制
+    var SCROLL_LIMITS = {
+        minX: 0,
+        maxX: 0,    // 最大水平滚动距离（像素）
+        minY: 0,
+        maxY: 0     // 最大垂直滚动距离（像素）
+    };
+
+    function limitScrollRange() {
+        var currentX = window.scrollX || window.pageXOffset;
+        var currentY = window.scrollY || window.pageYOffset;
+
+        var newX = Math.max(SCROLL_LIMITS.minX, Math.min(SCROLL_LIMITS.maxX, currentX));
+        var newY = Math.max(SCROLL_LIMITS.minY, Math.min(SCROLL_LIMITS.maxY, currentY));
+
+        if (newX !== currentX || newY !== currentY) {
+            window.scrollTo(newX, newY);
+        }
+    }
+
+    window.addEventListener('scroll', limitScrollRange);
+    window.addEventListener('touchmove', limitScrollRange);
+    window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(limitScrollRange, 50);
+    });
+    window.addEventListener('load', function() {
+        setTimeout(limitScrollRange, 50);
+    });
 </script>
 
 

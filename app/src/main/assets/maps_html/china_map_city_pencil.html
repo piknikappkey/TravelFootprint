@@ -38,24 +38,23 @@
 				transform-origin: 0 0;
 			}
 
-			.city {
-				fill: #F5F0E6;
-				stroke: #4A4A4A;
-				stroke-width: 0.15;
-				stroke-dasharray: 2, 1;
-				stroke-linejoin: round;
-				stroke-linecap: round;
-				cursor: pointer;
-				transition: all .2s;
-			}
+			/* 水彩风格 - 更细的轮廓线条 */
+.city {
+    fill: #F2EDE4;
+    stroke: #9E8E7A;
+    stroke-width: 0.08;
+    stroke-dasharray: 1.5, 0.8;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+ .selected {
+            fill: #94bdff;
+            stroke: #FFEFF6FF;
+            stroke-width: 0.2;
+        }
 
-
-
-			.selected {
-				fill: #FFE4B5;
-				stroke: #D2691E;
-				stroke-width: 0.2;
-			}
 		</style>
 	</head>
 	<body onclick="resetClickStyle()">

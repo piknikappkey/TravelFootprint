@@ -26,7 +26,7 @@ fun city_province_backButtom(
     showMapMode: ShowMapMode,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconTint: Color = Color.Blue,
+    iconTint: Color = Color(0xFF3B82F6),
     backgroundColor: Color = Color(0xFF9370DB),
     gradientEndColor: Color = Color(0xFFB399FF)
 ) {
