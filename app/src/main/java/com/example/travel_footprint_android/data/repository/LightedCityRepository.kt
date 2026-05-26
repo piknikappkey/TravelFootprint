@@ -82,7 +82,7 @@ class LightedCityRepository @Inject constructor(
     /**
      * 获取所有已点亮的省份
      */
-    suspend fun getLightedProvinces(): List<LightedProvince> =
+    fun getLightedProvinces(): Flow<List<LightedProvince>> =
         lightedCityDao.getDistinctProvinces()
 
     /**

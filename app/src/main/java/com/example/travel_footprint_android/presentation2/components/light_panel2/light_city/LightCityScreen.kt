@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
@@ -29,7 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2State
@@ -56,12 +60,7 @@ fun LightCityScreen(
         if (lightenCityMode.isCityMode) {
             // ==================== 城市模式 ====================
             if (lightCityList.isEmpty()) {
-                Text(
-                    text = "暂无已点亮城市",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)
-                )
+                EmptyStateHint(text = "暂无已点亮城市")
             } else {
                 Crossfade(
                     targetState = lightPanel2State,
@@ -72,9 +71,9 @@ fun LightCityScreen(
                         FlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 30.dp, vertical = 15.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             lightCityList.forEach { city ->
                                 LightedCityChip(
@@ -89,8 +88,8 @@ fun LightCityScreen(
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 10.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             items(lightCityList.take(10), key = { it.cityAdcode }) { city ->
                                 LightedCityChip(
@@ -102,17 +101,7 @@ fun LightCityScreen(
                             // 如果超过10个，显示更多提示
                             if (lightCityList.size > 10) {
                                 item {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primaryContainer)
-                                    ) {
-                                        Text(
-                                            text = "+${lightCityList.size - 10}",
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    }
+                                    MoreChip(count = lightCityList.size - 10)
                                 }
                             }
                         }
@@ -122,12 +111,7 @@ fun LightCityScreen(
         } else {
             // ==================== 省份模式 ====================
             if (lightedProvinces.isEmpty()) {
-                Text(
-                    text = "暂无已点亮省份",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 15.dp)
-                )
+                EmptyStateHint(text = "暂无已点亮省份")
             } else {
                 // 使用 AnimatedContent 实现平滑切换
                 AnimatedContent(
@@ -142,9 +126,9 @@ fun LightCityScreen(
                         FlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 2.dp, vertical = 15.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             lightedProvinces.forEach { province ->
                                 LightedProvinceChip(
@@ -159,8 +143,8 @@ fun LightCityScreen(
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 30.dp, vertical = 15.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             items(lightedProvinces.take(10), key = { it.provinceAdcode }) { province ->
                                 LightedProvinceChip(
@@ -172,17 +156,7 @@ fun LightCityScreen(
                             // 如果超过10个，显示更多提示
                             if (lightedProvinces.size > 10) {
                                 item {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primaryContainer)
-                                    ) {
-                                        Text(
-                                            text = "+${lightedProvinces.size - 10}",
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    }
+                                    MoreChip(count = lightedProvinces.size - 10)
                                 }
                             }
                         }
@@ -194,6 +168,39 @@ fun LightCityScreen(
 }
 
 @Composable
+fun EmptyStateHint(text: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            color = Color(0xFF9CA3AF)
+        )
+    }
+}
+
+@Composable
+fun MoreChip(count: Int) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Color(0xFFF3F4F6))
+    ) {
+        Text(
+            text = "+$count",
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF6B7280)
+        )
+    }
+}
+
+@Composable
 fun LightedProvinceChip(
     name: String,
     isDeleteMode: Boolean,
@@ -201,18 +208,19 @@ fun LightedProvinceChip(
 ) {
     Box(
         modifier = Modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFFEFF6FF))  // 浅蓝色背景，区分城市
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF3B82F6)
             )
 
             if (isDeleteMode) {
@@ -220,9 +228,9 @@ fun LightedProvinceChip(
                     imageVector = Icons.Default.Close,
                     contentDescription = "取消点亮",
                     modifier = Modifier
-                        .size(16.dp)
+                        .size(14.dp)
                         .clickable { onDelete() },
-                    tint = MaterialTheme.colorScheme.error
+                    tint = Color(0xFFEF4444)
                 )
             }
         }
@@ -237,19 +245,19 @@ fun LightedCityChip(
 ) {
     Box(
         modifier = Modifier
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFFEFF6FF))  // 浅蓝色背景，区分城市
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            //在这里可以自定义点亮城市样式
             Text(
                 text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF3B82F6)  // 品牌蓝色文字
             )
 
             if (isDeleteMode) {
@@ -257,9 +265,9 @@ fun LightedCityChip(
                     imageVector = Icons.Default.Close,
                     contentDescription = "取消点亮",
                     modifier = Modifier
-                        .size(16.dp)
+                        .size(14.dp)
                         .clickable { onDelete() },
-                    tint = MaterialTheme.colorScheme.error
+                    tint = Color(0xFFEF4444)
                 )
             }
         }

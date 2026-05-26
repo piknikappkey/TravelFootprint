@@ -53,7 +53,7 @@ interface LightedCityDao {
         WHERE provinceAdcode LIKE '__0000'  -- 后4位为00的
         ORDER BY lightedTime DESC
     """)
-    suspend fun getDistinctProvinces(): List<LightedProvince>
+    fun getDistinctProvinces(): Flow<List<LightedProvince>>
 
     /**
      * 获取已点亮省份的数量

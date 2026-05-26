@@ -75,15 +75,17 @@ class LightedCityViewModel @Inject constructor(
 
     private fun loadLightedProvinceCodes() {
         viewModelScope.launch {
-            val provinces = appService.getLightedProvinces()
-            _lightedProvinceCodes.value = provinces.map { it.provinceAdcode }.toSet()
+            appService.getLightedProvinces().collect { provinces ->
+                _lightedProvinceCodes.value = provinces.map { it.provinceAdcode }.toSet()
+            }
         }
     }
 
     private fun loadLightedProvinces() {
         viewModelScope.launch {
-            val provinces = appService.getLightedProvinces()
-            _lightedProvinces.value = provinces
+            appService.getLightedProvinces().collect { provinces ->
+                _lightedProvinces.value = provinces
+            }
         }
     }
 
