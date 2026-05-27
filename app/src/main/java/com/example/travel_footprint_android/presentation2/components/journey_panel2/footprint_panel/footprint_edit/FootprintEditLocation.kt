@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.journey_map3.location_search.LocationSearch
@@ -84,7 +83,7 @@ fun FootprintEditLocation(
                 Log.d("FootprintEditLocation", "submit")
                 Log.d("FootprintEditLocation", "showButton = $showButton")
                 setFootprint(
-                    footprint.copy()
+                    footprint.copy(address = "${address}\n${name}")
                     /////////////////////////////////////////////////////////////
                 )
                 showButton = false
@@ -122,7 +121,7 @@ fun FootprintEditLocation(
                 latitude = 0.0
                 longitude = 0.0
                 setFootprint(
-                    footprint.copy()
+                    footprint.copy(address = "")
                 )
             }
         )

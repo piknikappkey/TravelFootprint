@@ -1,9 +1,11 @@
 package com.example.travel_footprint_android.presentation2.components.bg_box
 
 import android.graphics.Point
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +31,10 @@ fun BGImgBox(
     drawRectColor: Color = Color.White.copy(alpha = .3f),
     composable: @Composable (() -> Unit)
 ) {
+    val starTime = System.currentTimeMillis()
+
     if (imgList.isEmpty()) {
+//    if (true) {
         Box { composable() }
         return
     }
@@ -48,7 +53,7 @@ fun BGImgBox(
             .build()
     }
 
-    androidx.compose.runtime.LaunchedEffect(selectedResId) {
+    LaunchedEffect(selectedResId) {
         val request = ImageRequest.Builder(context)
             .data(selectedResId)
             .allowHardware(false)
@@ -91,6 +96,8 @@ fun BGImgBox(
     ) {
         composable()
     }
+
+    Log.d("ComposeTime", "BGImgBox: ${System.currentTimeMillis() - starTime}")
 }
 
 private fun getScreenSize(context: android.content.Context): Point {

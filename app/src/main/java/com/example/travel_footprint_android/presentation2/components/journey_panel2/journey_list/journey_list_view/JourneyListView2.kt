@@ -21,7 +21,7 @@ fun JourneyListView2(
             JourneyItem3(
                 journey = journey,
                 journeyClick = { journey ->
-                    navigate(JourneyPanel2State.JOURNEY_DETAILS, journey)
+                    navigate(JourneyPanel2State.JOURNEY_LIST, journey)
                 }
             )
         }

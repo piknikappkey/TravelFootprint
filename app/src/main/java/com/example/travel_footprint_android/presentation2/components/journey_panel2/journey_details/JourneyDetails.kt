@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -27,10 +24,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
@@ -76,9 +71,6 @@ fun JourneyDetails(
                     journeySelected,
                     updateJourney,
                 )
-
-                // 足迹内容
-//                FootprintContent(journeySelected)
             }
         }
     }
@@ -188,6 +180,7 @@ private fun Cover(
         updateImgPath = { file ->
             journeySelected.coverImagePath = file.absolutePath
             updateJourney(journeySelected)
+            file
         },
         deleteImgPath = { imgPath ->
             journeySelected.coverImagePath = ""
@@ -275,23 +268,12 @@ private fun Recall(
 @Composable
 private fun FootprintButton(
     journeySelected:Journey,
-    mapViewModel: MapViewModel = hiltViewModel(),
 ) {
-    // 足迹数据
-    val footprintUiState by mapViewModel.uiState.collectAsState()
-
-    // 读取足迹数据
-    val footprints = footprintUiState.footprints
-
-    LaunchedEffect(Unit) {
-        mapViewModel.loadJourneyFootprints(journeySelected.id)
-    }
-
     Row {
         Spacer(Modifier.weight(1f))
         ButtonMain(
             onClick = {
-                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journeySelected, footprintListData = footprints)
+                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journeySelected)
             },
             paddingValues = PaddingValues(0.dp)
         ) {

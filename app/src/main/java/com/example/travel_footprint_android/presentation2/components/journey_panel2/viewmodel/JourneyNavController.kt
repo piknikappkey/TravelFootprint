@@ -14,13 +14,7 @@ object JourneyNavController {
     private val _footprintData = mutableStateOf<Footprint?>(null)
     val footprintData = _footprintData
 
-    private val _footprintListData = mutableStateOf<List<Footprint>?>(null)
-    val footprintListData = _footprintListData
-
-    fun navigate(destination: JourneyPanel2State, journeyData: Journey? = null, footprintData: Footprint? = null, footprintListData: List<Footprint>? = null) {
-        if(footprintListData != null) {
-            _footprintListData.value = footprintListData
-        }
+    fun navigate(destination: JourneyPanel2State, journeyData: Journey? = null, footprintData: Footprint? = null) {
         _footprintData.value = footprintData
         _journeyData.value = journeyData
         _journeyNavController.value = destination
@@ -29,7 +23,7 @@ object JourneyNavController {
 
 enum class JourneyPanel2State {
     JOURNEY_LIST, // 旅程列表
-    JOURNEY_DETAILS, // 旅程详情
+//    JOURNEY_DETAILS, // 旅程详情
     JOURNEY_EDIT, // 旅程新增/修改
     FOOTPRINT_LIST, // 足迹列表
     FOOTPRINT_EDIT, // 足迹新增/修改

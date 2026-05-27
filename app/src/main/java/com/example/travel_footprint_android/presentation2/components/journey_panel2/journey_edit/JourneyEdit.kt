@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,12 +28,14 @@ import com.example.travel_footprint_android.presentation2.components.bg_box.BGBo
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.images.JourneyEditImages
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.location.JourneyEditLocation
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.title.JourneyEditTitle
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.ui.theme.SecondColor3
@@ -46,6 +49,8 @@ fun JourneyEdit(
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
     ) {
     var journey by remember { mutableStateOf(
         journeySelected?.copy()
@@ -62,8 +67,9 @@ fun JourneyEdit(
     }
 
 
-    BGImgBox(
-        listOf(R.drawable.bg_simple_ver_small)
+    BGBox(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         Column {
             // 顶部内容
@@ -73,7 +79,8 @@ fun JourneyEdit(
                 navigate,
                 addJourney,
                 updateJourney,
-
+                journeyPanelHeightState,
+                setJourneyPanelHeightState,
             )
             // 可滚动内容
             JourneyContent(
@@ -81,7 +88,10 @@ fun JourneyEdit(
                 journey,
                 journeySelected,
                 { j -> journey = j.copy() },
-                deleteJourney,
+                { j ->
+                    deleteJourney(j)
+                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                },
             )
         }
     }
@@ -95,6 +105,8 @@ fun JourneyHead(
     navigate: (JourneyPanel2State, Journey?) -> Unit,
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -108,7 +120,7 @@ fun JourneyHead(
                     if(journeySelected == null) {
                         navigate(JourneyPanel2State.JOURNEY_LIST, null)
                     } else {
-                        navigate(JourneyPanel2State.JOURNEY_DETAILS, journeySelected)
+                        navigate(JourneyPanel2State.JOURNEY_LIST, journeySelected)
                     }
                 }),
             painter = painterResource(id = R.drawable.ic_left_long),
@@ -134,6 +146,10 @@ fun JourneyHead(
                 navigate(JourneyPanel2State.JOURNEY_LIST, null)
             }
         )
+
+        Spacer(Modifier.width(10.dp))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
 
         Spacer(Modifier.width(10.dp))
     }
@@ -174,6 +190,7 @@ fun JourneyContent(
                         journey = journey,
                         updateImgPath = { file ->
                             setJourney(journey.copy(coverImagePath = file.absolutePath))
+                            file
                         },
                         deleteImgPath = { imgPath ->
                             setJourney(journey.copy(coverImagePath = ""))

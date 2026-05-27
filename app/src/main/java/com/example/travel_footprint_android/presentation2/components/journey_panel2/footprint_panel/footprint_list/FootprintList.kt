@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,10 +28,13 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
@@ -39,19 +44,32 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 
 @Composable
 fun FootprintList(
-    footprints: List<Footprint>,
     journeySelected: Journey,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
+    mapViewModel: MapViewModel = hiltViewModel(),
 ) {
+    // 足迹数据
+    val footprintUiState by mapViewModel.uiState.collectAsState()
+
+    // 读取足迹数据
+    val footprints = footprintUiState.footprints
+
+    LaunchedEffect(Unit) {
+        mapViewModel.loadJourneyFootprints(journeySelected.id)
+    }
+
     var clickItemIndex by remember { mutableStateOf(-1) }
 
     Log.d("FootprintList", "footprints = ${footprints}")
 
     BGImgBox(
+        modifier = Modifier.fillMaxSize(),
         imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
         Column {
             Spacer(Modifier.height(10.dp))
-            HeadRow(journeySelected)
+            HeadRow(journeySelected, journeyPanelHeightState, setJourneyPanelHeightState)
             LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
             Content(
                 footprints,
@@ -66,16 +84,17 @@ fun FootprintList(
 @Composable
 private fun HeadRow(
     journeySelected: Journey,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row {
-        Spacer(Modifier.width(10.dp))
         // 返回按钮
         Image(
             modifier = Modifier
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_DETAILS, journeyData = journeySelected)
+                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, journeyData = journeySelected)
                 }),
             painter = painterResource(id = R.drawable.ic_left2),
             contentDescription = "返回图标",
@@ -86,6 +105,10 @@ private fun HeadRow(
             text = "${journeySelected.title}——足迹",
             fontSize = 18.sp
         )
+        Spacer(Modifier.weight(1f))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        Spacer(Modifier.width(10.dp))
     }
 }
 

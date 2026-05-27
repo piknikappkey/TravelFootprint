@@ -21,7 +21,8 @@ fun Image1(
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(context)
             .data(savedImageFile)
-            .size(Size.ORIGINAL)
+            .size(Size(1080, 1080))
+            .scale(coil.size.Scale.FILL)  // 按比例缩放
             .allowHardware(true)
             .build(),
         onError = { error ->

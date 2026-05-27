@@ -65,7 +65,7 @@ fun JourneyItem3(
 }
 
 @Composable
-fun RightContent(
+private fun RightContent(
     journey: Journey,
 ) {
     Column(

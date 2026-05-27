@@ -20,8 +20,16 @@ fun TextMedium(
     firstLine: Int = 0,
     fontSize: TextUnit = 16.sp,
     maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
     textAlign: TextAlign = TextAlign.Start,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    style: TextStyle = TextStyle(
+        textIndent = TextIndent(
+            firstLine = (firstLine * 16).sp, // 首行缩进2个字符的宽度
+            restLine = 0.sp    // 其余行不缩进
+        ),
+        fontFamily = FFRuanMengChuLianTi,
+    ),
 ) {
     Text(
         text = text,
@@ -31,12 +39,7 @@ fun TextMedium(
         fontWeight = FontWeight.W300,      // 字重，如加粗
         textAlign = textAlign,      // 文本对齐方式
         maxLines = maxLines,
-        style = TextStyle(
-            textIndent = TextIndent(
-                firstLine = (firstLine * 16).sp, // 首行缩进2个字符的宽度
-                restLine = 0.sp    // 其余行不缩进
-            ),
-            fontFamily = FFRuanMengChuLianTi,
-        )
+        minLines = minLines,
+        style = style
     )
 }

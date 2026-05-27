@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +28,7 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
@@ -39,6 +42,8 @@ fun FootprintEdit(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     var footprint by remember { mutableStateOf(
         footprintSelected?.copy()
@@ -53,6 +58,7 @@ fun FootprintEdit(
     ) }
 
     BGImgBox(
+        modifier = Modifier.fillMaxSize(),
         imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
         Column(
@@ -66,7 +72,9 @@ fun FootprintEdit(
                 footprint,
                 journeySelected,
                 addFootprint,
-                updateFootprint
+                updateFootprint,
+                journeyPanelHeightState,
+                setJourneyPanelHeightState,
             )
             Spacer(Modifier.height(10.dp))
 
@@ -85,6 +93,8 @@ private fun HeadRow(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -119,6 +129,9 @@ private fun HeadRow(
             }
         )
         Spacer(Modifier.width(10.dp))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        Spacer(Modifier.width(10.dp))
     }
 }
 
@@ -127,31 +140,36 @@ private fun Content(
     footprint: Footprint,
     setFootprint: (Footprint) -> Unit,
 ) {
-    // 编辑内容区域
-    Spacer(Modifier.padding(3.dp))
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+    ) {
+        // 编辑内容区域
+        Spacer(Modifier.padding(3.dp))
 
-    // 足迹标题编辑
-    FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
+        // 足迹标题编辑
+        FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
 
-    LineBetween()
+        LineBetween()
 
-    // 足迹描述编辑
-    FootprintDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
+        // 足迹描述编辑
+        FootprintDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
 
-    LineBetween()
+        LineBetween()
 
-    // 足迹地址编辑
-    FootprintEditLocation(
-        footprint,
-        setFootprint = { footprint -> },
-    )
+        // 足迹地址编辑
+        FootprintEditLocation(
+            footprint,
+            setFootprint = { f -> setFootprint(f.copy())},
+        )
 
-    LineBetween()
+        LineBetween()
 
-    // 个人评分编辑
-    FootprintRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
+        // 个人评分编辑
+        FootprintRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
 
-    LineBetween()
+        LineBetween()
 
-    Spacer(Modifier.padding(10.dp))
+        Spacer(Modifier.padding(10.dp))
+    }
 }

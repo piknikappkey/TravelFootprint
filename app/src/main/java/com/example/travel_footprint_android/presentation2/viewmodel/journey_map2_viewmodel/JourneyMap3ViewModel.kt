@@ -17,6 +17,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
 import com.amap.api.maps.AMap
@@ -33,9 +34,11 @@ import com.example.travel_footprint_android.ui.theme.LocationIconColor
 import com.example.travel_footprint_android.ui.theme.LocationRadiusFillColor
 import com.example.travel_footprint_android.ui.theme.LocationStrokeColor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -63,20 +66,23 @@ class JourneyMap3ViewModel @Inject constructor(
     /** 初始化地图（仅首次调用时执行） */
     private fun initializeMapIfNeeded(context: android.content.Context) {
         if (_mapView.value == null) {
-            val mapView = MapView(context)
-            _mapView.value = mapView
 
-            val aMap = mapView.map
-            _aMap.value = aMap
+            // 异步初始化地图
+            viewModelScope.launch {
+                val mapView = MapView(context)
+                _mapView.value = mapView
+                val aMap = mapView.map
+                _aMap.value = aMap
+                delay(100)  // 让 UI 先渲染
+                val locationClient = AMapLocationClient(context)
+                _locationClient.value = locationClient
+                delay(100)
+                setupMap(aMap, locationClient)
+                setLocationIcon(aMap, context)
+                setupMapClickListener(aMap)
 
-            val locationClient = AMapLocationClient(context)
-            _locationClient.value = locationClient
-
-            setupMap(aMap, locationClient)
-            setLocationIcon(aMap, context)
-            setupMapClickListener(aMap)
-
-            _isInitialized.value = true
+                _isInitialized.value = true
+            }
         }
     }
 
