@@ -28,6 +28,7 @@ fun SVGMap(
     onLightCityClick: (adcode: String, name: String) -> Unit,
     lightedProvinces: List<LightedProvince>,
     lightedCity: List<LightedCity>,
+    panelIsExpanded: Boolean,
     onModeChange: (LightenCityMode) -> Unit = {}
 ) {
     var selectedCityInfo by remember { mutableStateOf<SelectedCityInfo?>(null) }
@@ -113,6 +114,7 @@ fun SVGMap(
             ) {
                 city_province_backButtom(
                     ShowMapMode.CITY,
+                    panelIsExpanded,
                     onClick = {
                         onModeChange(LightenCityMode.CITY)
                         NavigateToCityMap()
@@ -145,6 +147,7 @@ fun SVGMap(
             ) {
                 city_province_backButtom(
                     ShowMapMode.PROVINCE,
+                    panelIsExpanded,
                     onClick = {
                         onModeChange(LightenCityMode.PROVINCE)
                         backToProvinceMap()

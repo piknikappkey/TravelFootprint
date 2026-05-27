@@ -132,7 +132,10 @@ private fun ProvinceList(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            items(provinces) { province ->
+            items(provinces,
+                key = { province -> province.adcode }
+            )
+            { province ->
                 ProvinceItem(
                     province = province,
                     isSelected = province.adcode == selectedProvince,

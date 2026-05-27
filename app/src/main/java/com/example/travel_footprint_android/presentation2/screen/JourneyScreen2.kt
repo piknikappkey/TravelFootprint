@@ -25,6 +25,11 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation2.components.ani_shade.AniShade
 import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel3
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel4
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel5
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel6
+import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel7
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.SecondColor3

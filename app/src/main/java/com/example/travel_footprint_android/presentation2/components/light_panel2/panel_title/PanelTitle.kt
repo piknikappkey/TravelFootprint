@@ -1,115 +1,102 @@
 package com.example.travel_footprint_android.presentation2.components.light_panel2.panel_title
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2State
-import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2Tab
 
 @Composable
 fun PanelTitle(
-    lightPanel2State: LightPanel2State,
-    lightCityCount: Int,
-    lightedProvinceCount: Int,
-    setLightPanel2State: (LightPanel2State) -> Unit,
-    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
+    selectedTab: LightPanel2Tab,
+    onTabSelected: (LightPanel2Tab) -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
+            .background(Color.White)
     ) {
-        if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY ||
-            lightPanel2State == LightPanel2State.ALL_DISPLAY) {
-            CityTitle(lightPanel2State, lightCityCount, lightedProvinceCount, setLightPanel2State, lightenCityMode)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            LightPanel2Tab.entries.forEach { tab ->
+                TabItem(
+                    tab = tab,
+                    isSelected = selectedTab == tab,
+                    onClick = { onTabSelected(tab) }
+                )
+            }
         }
-        if(lightPanel2State == LightPanel2State.EDIT) CityEditTitle(setLightPanel2State, lightenCityMode)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(0.5.dp)
+                .background(Color(0xFFE5E7EB))
+        )
     }
 }
 
 @Composable
-fun CityTitle(
-    lightPanel2State: LightPanel2State,
-    lightedCityCount: Int,
-    lightedProvinceCount: Int,
-    setLightPanel2State: (LightPanel2State) -> Unit,
-    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
+private fun TabItem(
+    tab: LightPanel2Tab,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
-    Row {
-        Text("已点亮${if(lightenCityMode == LightenCityMode.CITY) lightedCityCount else lightedProvinceCount}个" + if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份")
-        Spacer(modifier = Modifier.weight(1f))
-        if(
-            lightenCityMode == LightenCityMode.CITY && lightedCityCount > 10 ||
-            lightenCityMode == LightenCityMode.PROVINCE && lightedProvinceCount > 10
-            ) {
-            if(lightPanel2State == LightPanel2State.ROUGH_DISPLAY) {
-                // 拓展按钮
-                Text(
-                    text = "拓展",
-                    modifier = Modifier
-                        .clickable(
-                            onClick = {
-                                setLightPanel2State(LightPanel2State.ALL_DISPLAY)
-                            }
-                        )
-                )
-            }
-            if(lightPanel2State == LightPanel2State.ALL_DISPLAY) {
-                // 收缩按钮
-                Text(
-                    text = "收缩",
-                    modifier = Modifier
-                        .clickable(
-                            onClick = {
-                                setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
-                            }
-                        )
-                )
-            }
-        }
-    }
-}
+    val bgColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFFEFF6FF) else Color.Transparent,
+        animationSpec = tween(200),
+        label = "tabBg"
+    )
+    val textColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFF3B82F6) else Color(0xFF6B7280),
+        animationSpec = tween(200),
+        label = "tabText"
+    )
+    val fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
 
-@Composable
-fun CityEditTitle(
-    setLightPanel2State: (LightPanel2State) -> Unit,
-    lightenCityMode: LightenCityMode, // 显示模式（城市/省份）
-) {
-    Column {
-        Row {
-
-            //由于底部更新了取消按钮，暂时取消顶部按钮
-//            // 取消按钮
-//            Text(
-//                text = "取消",
-//                modifier = Modifier
-//                    .clickable(
-//                        onClick = {
-//                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
-//                        }
-//                    )
-//            )
-//            Spacer(modifier = Modifier.weight(1f))
-//            // 保存按钮
-//            Text(
-//                text = "保存",
-//                modifier = Modifier
-//                    .clickable(
-//                        onClick = {
-//                            setLightPanel2State(LightPanel2State.ROUGH_DISPLAY)
-//                        }
-//                    )
-//            )
-        }
-//        Text("修改${if(lightenCityMode == LightenCityMode.CITY) "城市" else "省份"}")
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(bgColor)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = tab.label,
+            fontSize = 14.sp,
+            fontWeight = fontWeight,
+            color = textColor
+        )
     }
 }

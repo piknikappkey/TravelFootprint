@@ -37,6 +37,13 @@ class JourneyViewModel @Inject constructor(
         val editingJourney: Journey? = null,
         val showDeleteConfirmDialog: Boolean = false,
         val deletingJourney: Journey? = null,
+        val footprints: List<Footprint> = emptyList(),
+        val showFootprintAddDialog: Boolean = false,
+        val showFootprintEditDialog: Boolean = false,
+        val editingFootprint: Footprint? = null,
+        val showFootprintDeleteConfirmDialog: Boolean = false,
+        val deletingFootprint: Footprint? = null,
+        val currentJourneyId: Long? = null,
         val error: String? = null
     )
 
@@ -617,5 +624,237 @@ class JourneyViewModel @Inject constructor(
             editingJourney = null,
             deletingJourney = null
         ) }
+    }
+
+    // ==================== 足迹管理 - 加载 ====================
+
+    /**
+     * 加载指定旅程的足迹列表
+     * @param journeyId 旅程 ID
+     */
+    fun loadFootprintsForJourney(journeyId: Long) {
+        viewModelScope.launch {
+            try {
+                appService.getFootprintsForMap(journeyId).collect { footprintList ->
+                    _uiState.update { state ->
+                        state.copy(
+                            footprints = footprintList,
+                            currentJourneyId = journeyId,
+                            error = null
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "加载足迹失败")
+                }
+            }
+        }
+    }
+
+    // ==================== 足迹管理 - 添加对话框 ====================
+
+    /**
+     * 显示添加足迹对话框
+     */
+    fun showAddFootprintDialog() {
+        _uiState.update { it.copy(showFootprintAddDialog = true) }
+    }
+
+    /**
+     * 隐藏添加足迹对话框
+     */
+    fun hideAddFootprintDialog() {
+        _uiState.update { it.copy(showFootprintAddDialog = false) }
+    }
+
+    // ==================== 足迹管理 - 更新 ====================
+
+    /**
+     * 显示编辑足迹对话框
+     * @param footprint 要编辑的足迹
+     */
+    fun showEditFootprintDialog(footprint: Footprint) {
+        _uiState.update { it.copy(showFootprintEditDialog = true, editingFootprint = footprint) }
+    }
+
+    /**
+     * 隐藏编辑足迹对话框
+     */
+    fun hideEditFootprintDialog() {
+        _uiState.update { it.copy(showFootprintEditDialog = false, editingFootprint = null) }
+    }
+
+    /**
+     * 更新足迹（使用独立参数）
+     * @param footprintId 足迹 ID
+     * @param lat 纬度
+     * @param lng 经度
+     * @param photos 照片列表（可选）
+     * @param notes 描述
+     * @param title 标题
+     * @param rating 评分
+     */
+    fun updateFootprint(
+        footprintId: Long,
+        lat: Double,
+        lng: Double,
+        photos: List<String>? = null,
+        notes: String,
+        title: String,
+        rating: Int
+    ) {
+        viewModelScope.launch {
+            try {
+                FootprintRepository.updateFootprint(
+                    footprintId = footprintId,
+                    lat = lat,
+                    lng = lng,
+                    photos = photos,
+                    notes = notes,
+                    title = title,
+                    rating = rating
+                )
+
+                refreshFootprintCounts()
+                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
+                hideEditFootprintDialog()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "更新足迹失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新足迹（使用 Footprint 对象）
+     * @param footprint 足迹对象（必须包含有效的 id）
+     */
+    fun updateFootprint(footprint: Footprint) {
+        viewModelScope.launch {
+            try {
+                require(footprint.id > 0) { "足迹 ID 不能为空" }
+                appService.updateFootprint(footprint)
+
+                refreshFootprintCounts()
+                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
+                hideEditFootprintDialog()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "更新足迹失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新足迹位置
+     * @param footprintId 足迹 ID
+     * @param lat 纬度
+     * @param lng 经度
+     */
+    fun updateFootprintLocation(footprintId: Long, lat: Double, lng: Double) {
+        viewModelScope.launch {
+            try {
+                appService.updateFootprintLocation(footprintId, lat, lng)
+                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "更新足迹位置失败")
+                }
+            }
+        }
+    }
+
+    // ==================== 足迹管理 - 删除 ====================
+
+    /**
+     * 显示删除足迹确认对话框
+     * @param footprint 要删除的足迹
+     */
+    fun showDeleteFootprintConfirmDialog(footprint: Footprint) {
+        _uiState.update { it.copy(showFootprintDeleteConfirmDialog = true, deletingFootprint = footprint) }
+    }
+
+    /**
+     * 隐藏删除足迹确认对话框
+     */
+    fun hideDeleteFootprintConfirmDialog() {
+        _uiState.update { it.copy(showFootprintDeleteConfirmDialog = false, deletingFootprint = null) }
+    }
+
+    /**
+     * 通过 ID 删除足迹
+     * @param footprintId 足迹 ID
+     */
+    fun deleteFootprint(footprintId: Long) {
+        viewModelScope.launch {
+            try {
+                appService.deleteFootprint(footprintId)
+                refreshFootprintCounts()
+                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
+                hideDeleteFootprintConfirmDialog()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "删除足迹失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 通过对象删除足迹
+     * @param footprint 足迹对象
+     */
+    fun deleteFootprint(footprint: Footprint) {
+        deleteFootprint(footprint.id)
+    }
+
+    /**
+     * 删除当前选中的足迹
+     */
+    fun deleteCurrentFootprint() {
+        _uiState.value.deletingFootprint?.let { footprint ->
+            deleteFootprint(footprint.id)
+        }
+    }
+
+    /**
+     * 清空指定旅程的所有足迹
+     * @param journeyId 旅程 ID
+     */
+    fun clearAllFootprints(journeyId: Long) {
+        viewModelScope.launch {
+            try {
+                appService.clearAllFootprints(journeyId)
+                refreshFootprintCounts()
+                loadFootprintsForJourney(journeyId)
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "清空足迹失败")
+                }
+            }
+        }
+    }
+
+    // ==================== 足迹管理 - 查询 ====================
+
+    /**
+     * 获取足迹详情
+     * @param footprintId 足迹 ID
+     */
+    fun getFootprintDetail(footprintId: Long) = appService.getFootprintDetail(footprintId)
+
+    // ==================== 辅助方法 ====================
+
+    /**
+     * 刷新足迹数量统计
+     */
+    private suspend fun refreshFootprintCounts() {
+        val newCounts = appService.getAllFootprintCounts()
+        _uiState.update { state ->
+            state.copy(footprintCounts = newCounts)
+        }
     }
 }

@@ -488,9 +488,8 @@ class AppService @Inject constructor(
     /**
      * 获取所有已点亮的省份
      */
-    suspend fun getLightedProvinces(): List<LightedProvince> = withContext(Dispatchers.IO) {
+    fun getLightedProvinces(): Flow<List<LightedProvince>> =
         lightedCityRepository.getLightedProvinces()
-    }
 
     /**
      * 获取已点亮省份的数量

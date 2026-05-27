@@ -61,14 +61,14 @@ object GeoDataInitializer {
     private fun parseProvinces(jsonObject: JSONObject): List<Province> {
         val provincesArray = jsonObject.getJSONArray("provinces")
         val provinces = mutableListOf<Province>()
+        val seenAdcodes = mutableSetOf<String>()  // 添加去重集合
 
         for (i in 0 until provincesArray.length()) {
             val item = provincesArray.getJSONObject(i)
             val adcode = item.getString("adcode")
             val name = item.getString("name")
 
-            // 只添加省级行政区（adcode 以 0000 结尾）
-            if (adcode.endsWith("0000")) {
+            if (adcode.endsWith("0000") && seenAdcodes.add(adcode)) {  // add()返回false表示已存在
                 provinces.add(
                     Province(
                         adcode = adcode,

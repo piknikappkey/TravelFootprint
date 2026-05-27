@@ -97,6 +97,39 @@ fun InteractiveChinaProviceMap(
                         null
                     )
 
+                    // 注入限制滚动的脚本
+                    view?.evaluateJavascript(
+                        """
+            (function() {
+                // 限制滚动范围（maxY = 0 禁止垂直滚动）
+                var minX = 0;
+                var maxX = 500;  // 设置最大水平滚动距离
+                var minY = 0;
+                var maxY = 0;    // 禁止垂直滚动
+                
+                function limitScroll() {
+                    var currentX = window.scrollX;
+                    var currentY = window.scrollY;
+                    
+                    var newX = Math.max(minX, Math.min(maxX, currentX));
+                    var newY = Math.max(minY, Math.min(maxY, currentY));
+                    
+                    if (newX !== currentX || newY !== currentY) {
+                        window.scrollTo(newX, newY);
+                    }
+                }
+                
+                // 监听滚动事件
+                window.addEventListener('scroll', limitScroll);
+                window.addEventListener('touchmove', limitScroll, { passive: false });
+                
+                // 立即执行一次
+                limitScroll();
+            })();
+            """.trimIndent(),
+                        null
+                    )
+
                     view?.post {
                         try {
                             val method = WebView::class.java.getDeclaredMethod("computeHorizontalScrollRange")

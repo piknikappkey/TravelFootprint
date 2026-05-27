@@ -22,12 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
-import com.example.travel_footprint_android.ui.theme.BGLight1
 
 data class SelectedCityInfo(
     val name: String,           // 城市名称，如 "北京市"
@@ -36,14 +36,12 @@ data class SelectedCityInfo(
 )
 
 @Composable
-
 fun CityBox(
     selectedCityInfo: SelectedCityInfo?,
     cityState: Boolean,
     lightedProvinces: List<LightedProvince>,
     lightedCity: List<LightedCity>,
     lightenCityMode: LightenCityMode,
-    //是否区分省份城市点亮回调？
     onLightCityClick: (provinceAdcode: String, provinceName: String) -> Unit = { _, _ -> }
 ) {
     val animatedAlpha by animateFloatAsState(
@@ -56,16 +54,14 @@ fun CityBox(
     val cityAdcode = selectedCityInfo?.adcode ?: ""
     val isLighted = when (lightenCityMode) {
         LightenCityMode.CITY -> {
-            // 城市模式：检查城市是否已点亮
-           cityIsLighted(cityName,lightedCity)
+            cityIsLighted(cityName, lightedCity)
         }
         LightenCityMode.PROVINCE -> {
-            // 省份模式：检查省份是否已点亮
-            provinceIsLighted(cityName,lightedProvinces)
+            provinceIsLighted(cityName, lightedProvinces)
         }
     }
-    Log.d("选中的地区：${cityName}","模式${lightenCityMode}  +  $isLighted")
 
+    Log.d("选中的地区：${cityName}", "模式${lightenCityMode} + $isLighted")
 
     Box(
         modifier = Modifier
@@ -74,9 +70,16 @@ fun CityBox(
     ) {
         Column(
             modifier = Modifier
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp), clip = false)
-                .background(color = BGLight1, shape = RoundedCornerShape(12.dp))
-                .padding(vertical = 12.dp, horizontal = 16.dp)
+                .shadow(
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    clip = false
+                )
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(vertical = 16.dp, horizontal = 18.dp)
                 .wrapContentHeight()
                 .fillMaxWidth()
         ) {
@@ -84,7 +87,9 @@ fun CityBox(
                 Text(
                     text = cityName,
                     fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1F2937),
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
             }
 
@@ -94,21 +99,27 @@ fun CityBox(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isLighted) "该${cityName}地区已点亮！" else "该地区未点亮",
-                    fontSize = 14.sp,
-                    color = if (isLighted) Color(0xFF4CAF50) else Color(0xFFFF9800)
+                    text = if (isLighted) "✓ 该地区已点亮" else "该地区未点亮",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isLighted) Color(0xFF10B981) else Color(0xFFF59E0B)
                 )
 
                 if (!isLighted && selectedCityInfo != null) {
                     Button(
                         onClick = { onLightCityClick(cityAdcode, cityName) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50),
+                            containerColor = Color(0xFF3B82F6),
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("点亮此地", fontSize = 12.sp)
+                        Text(
+                            text = "点亮此地",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
                     }
                 }
             }
@@ -121,7 +132,7 @@ fun cityIsLighted(
     selectedCity: String?,
     lightedCity: List<LightedCity>
 ): Boolean {
-    if (selectedCity == null) return false
+    if (selectedCity.isNullOrEmpty()) return false
     val cityName = selectedCity.split("_").firstOrNull() ?: return false
     return lightedCity.any { it.cityName == cityName }
 }
@@ -130,7 +141,7 @@ fun provinceIsLighted(
     selectedCity: String?,
     lightedProvinces: List<LightedProvince>
 ): Boolean {
-    if (selectedCity == null) return false
+    if (selectedCity.isNullOrEmpty()) return false
     val cityName = selectedCity.split("_").firstOrNull() ?: return false
     return lightedProvinces.any { it.provinceName == cityName }
 }

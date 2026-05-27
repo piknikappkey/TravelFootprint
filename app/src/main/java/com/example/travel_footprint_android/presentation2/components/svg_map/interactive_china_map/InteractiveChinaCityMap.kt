@@ -135,10 +135,10 @@ fun InteractiveChinaCityMap(
         }
     }
 
-    //监听 lightedcity 数据变化，并自动同步到 WebView 地图中。
-    LaunchedEffect(lightedProvinces) {
+    //监听 lightedCity 数据变化，并自动同步到 WebView 地图中。
+    LaunchedEffect(lightedCity) {
         Log.d("SVGMap", "点亮城市页面改变, 变化 = ${lightedCity.size}")
-        if (lightedProvinces.isEmpty()) return@LaunchedEffect
+        if (lightedCity.isEmpty()) return@LaunchedEffect
 
         if (isPageLoaded) {
             sendLightedDataToWebView(lightedCity, webView)
