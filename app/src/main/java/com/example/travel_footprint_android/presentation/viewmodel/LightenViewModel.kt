@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -216,12 +217,17 @@ class LightenViewModel @Inject constructor(
                     // 市级：XXYY00 格式
                     cleanAdcode.matches(Regex("\\d{4}00")) && !cleanAdcode.matches(Regex("\\d{2}0000")) -> {
                         val city = getCityInfo(cleanAdcode)
+                        val provinces = appService.getAllProvinces().first()
+                        val provinceName = city?.provinceAdcode?.let { adcode ->
+                            provinces.find { it.adcode == adcode }?.name
+                        } ?: "未知省份"
+
                         if (city != null) {
                             appService.lightCity(
                                 cityAdcode = city.adcode,
                                 cityName = city.name,
                                 provinceAdcode = city.provinceAdcode,
-                                provinceName = "默认省份",
+                                provinceName = "$provinceName",
                                 latitude = city.centerLat,
                                 longitude = city.centerLng,
                                 remark = "从地图选择点亮（城市模式）"

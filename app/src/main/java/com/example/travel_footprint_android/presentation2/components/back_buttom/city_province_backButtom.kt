@@ -1,9 +1,11 @@
 package com.example.travel_footprint_android.presentation2.components.back_buttom
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -18,21 +20,34 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.util.Logger
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
 @Composable
 fun city_province_backButtom(
     showMapMode: ShowMapMode,
+    panelIsExpanded: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     iconTint: Color = Color(0xFF3B82F6),
     backgroundColor: Color = Color(0xFF9370DB),
     gradientEndColor: Color = Color(0xFFB399FF)
 ) {
+
+    Log.d("面板展开状态","$panelIsExpanded")
     IconButton(
         onClick = onClick,
-        modifier = modifier
+        modifier =if (panelIsExpanded){
+            Modifier.offset(y=(-380.dp))
+        }
+        else{
+            Modifier.offset(y=(-30).dp)
+        }
+          //.padding(
+//            top = if (panelIsExpanded) (-200).dp else 16.dp,
+//            start = 16.dp
+//        )
     ) {
         Box(
             modifier = Modifier
