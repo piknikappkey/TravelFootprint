@@ -28,6 +28,7 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
@@ -41,6 +42,8 @@ fun FootprintEdit(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     var footprint by remember { mutableStateOf(
         footprintSelected?.copy()
@@ -55,6 +58,7 @@ fun FootprintEdit(
     ) }
 
     BGImgBox(
+        modifier = Modifier.fillMaxSize(),
         imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
         Column(
@@ -68,7 +72,9 @@ fun FootprintEdit(
                 footprint,
                 journeySelected,
                 addFootprint,
-                updateFootprint
+                updateFootprint,
+                journeyPanelHeightState,
+                setJourneyPanelHeightState,
             )
             Spacer(Modifier.height(10.dp))
 
@@ -87,6 +93,8 @@ private fun HeadRow(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -120,6 +128,9 @@ private fun HeadRow(
                 JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journeySelected)
             }
         )
+        Spacer(Modifier.width(10.dp))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
         Spacer(Modifier.width(10.dp))
     }
 }

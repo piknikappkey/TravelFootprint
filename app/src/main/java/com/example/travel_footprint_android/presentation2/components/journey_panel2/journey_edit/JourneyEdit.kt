@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +28,7 @@ import com.example.travel_footprint_android.presentation2.components.bg_box.BGBo
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.images.JourneyEditImages
@@ -47,6 +49,8 @@ fun JourneyEdit(
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
     ) {
     var journey by remember { mutableStateOf(
         journeySelected?.copy()
@@ -63,7 +67,10 @@ fun JourneyEdit(
     }
 
 
-    BGBox {
+    BGBox(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         Column {
             // 顶部内容
             JourneyHead(
@@ -72,7 +79,8 @@ fun JourneyEdit(
                 navigate,
                 addJourney,
                 updateJourney,
-
+                journeyPanelHeightState,
+                setJourneyPanelHeightState,
             )
             // 可滚动内容
             JourneyContent(
@@ -97,6 +105,8 @@ fun JourneyHead(
     navigate: (JourneyPanel2State, Journey?) -> Unit,
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -136,6 +146,10 @@ fun JourneyHead(
                 navigate(JourneyPanel2State.JOURNEY_LIST, null)
             }
         )
+
+        Spacer(Modifier.width(10.dp))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
 
         Spacer(Modifier.width(10.dp))
     }

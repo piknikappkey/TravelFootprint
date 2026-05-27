@@ -29,7 +29,7 @@ import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2
 @Composable
 fun JourneyMap3(
     modifier: Modifier = Modifier,
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(),
+    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3"),
 ) {
     val isInitialized by journeyMap3ViewModel.isInitialized.collectAsState()
     val mapView = journeyMap3ViewModel.getMapView()
@@ -61,7 +61,7 @@ fun JourneyMap3(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isInitialized) {
         if (isInitialized) {
             journeyMap3ViewModel.startLocation()
         }

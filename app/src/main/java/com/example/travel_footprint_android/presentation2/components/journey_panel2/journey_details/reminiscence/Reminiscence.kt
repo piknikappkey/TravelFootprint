@@ -24,7 +24,7 @@ fun Reminiscence(
     updateJourney: (Journey) -> Unit,
     showDelIcon: Boolean = false,
 ) {
-    val imgSize = 70.dp
+    val imgSize = 80.dp
     val aspectRatio = 1f
     val iconSize = .4f
     val elevation = 2.dp
@@ -38,10 +38,10 @@ fun Reminiscence(
                 .widthIn(min = 295.dp)
                 .align(Alignment.Center)
                 .padding(horizontal = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),  // 水平间距
+            horizontalArrangement = Arrangement.spacedBy(0.dp),  // 水平间距
             verticalArrangement = Arrangement.spacedBy(4.dp)     // 垂直行间距
         ) {
-            journey.journeyImagePaths.forEach { imgPath ->
+            journey.journeyImagePaths.forEachIndexed { i, imgPath ->
                 Box(
                     modifier = Modifier
                         .height(imgSize)
@@ -50,13 +50,17 @@ fun Reminiscence(
                     ImageSquare2(
                         imgPath = imgPath,
                         updateImgPath = { file ->  file},
-                        deleteImgPath = { imgPath -> },
+                        deleteImgPath = { imgPath ->
+                            val newList = journey.journeyImagePaths - imgPath
+                            updateJourney(journey.copy(journeyImagePaths = newList))
+                        },
                         aspectRatio = aspectRatio,
                         addIconSize = iconSize,
                         elevation = elevation,
                         shape = shape,
                         delIconSize = delIconSize,
                         showDelIcon = showDelIcon,
+                        lazy = true,
                     )
                 }
             }

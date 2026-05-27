@@ -2,6 +2,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -9,16 +10,25 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -41,18 +51,41 @@ import com.example.travel_footprint_android.ui.theme.BGLight1
 @Composable
 fun JourneyPanel7(
     modifier: Modifier = Modifier,
-    journeyList: List<Journey>, // 旅程列表
+    journeyList: List<Journey>,
     aniTime: Int,
     journeyViewModel: JourneyViewModel = hiltViewModel(),
 ) {
-    // 面板状态
     val journeyPanel2State = JourneyNavController.journeyNavController.value
-
-    // 当前选中的旅程
     val journeySelected = JourneyNavController.journeyData.value
-
-    // 当前选中的足迹
     val footprintSelected = JourneyNavController.footprintData.value
+
+    val configuration = LocalConfiguration.current
+    val density = configuration.densityDpi.toFloat() / 160f
+    val screenHeightPixels = configuration.screenHeightDp * density
+
+    var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val aniJourneyHeight = if (isDragging) {
+        currentHeightRatio
+    } else {
+        animateFloatAsState(
+            targetValue = currentHeightRatio,
+            animationSpec = tween(durationMillis = 300),
+            label = "journeyPanelHeight"
+        ).value
+    }
+
+    val togglePanelHeight = { _: Boolean ->
+        if (!isDragging) {
+            currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
+        }
+    }
+
+    val onDragDelta = { deltaY: Float ->
+        val ratioDelta = -deltaY / screenHeightPixels
+        currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+    }
 
     Box(
         modifier = modifier
@@ -89,24 +122,44 @@ fun JourneyPanel7(
                     shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
                 )
         ) {
-            // 内部用 Column 分隔固定标题和可滚动区域
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.6f)   // 限制面板最大高度，内容少时自适应
+                    .height(configuration.screenHeightDp.dp * aniJourneyHeight)
             ) {
-                // 方案四：自定义 Transition 动画 - 垂直滑动 + 淡入淡出
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .background(Color.Transparent)
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { isDragging = true },
+                                onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                                onDragEnd = { isDragging = false }
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(4.dp)
+                            .background(Color.Gray.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+                    )
+                }
+
                 AnimatedContent(
                     targetState = journeyPanel2State,
                     transitionSpec = {
                         (fadeIn(animationSpec = tween(durationMillis = aniTime)) +
                          slideInVertically(
-                             initialOffsetY = { it / 4 },  // 从下方稍微偏移进入
+                             initialOffsetY = { it / 4 },
                              animationSpec = tween(durationMillis = aniTime)
                          )) togetherWith
                         (fadeOut(animationSpec = tween(durationMillis = aniTime)) +
                          slideOutVertically(
-                             targetOffsetY = { -it / 4 },  // 向上方稍微偏移退出
+                             targetOffsetY = { -it / 4 },
                              animationSpec = tween(durationMillis = aniTime)
                          ))
                     },
@@ -117,7 +170,10 @@ fun JourneyPanel7(
                             JourneyList3(
                                 journeyList = journeyList,
                                 updateJourney = { j -> journeyViewModel.updateJourney(j) },
-                                journeySelected = journeySelected
+                                journeySelected = journeySelected,
+                                aniTime,
+                                currentHeightRatio > 0.5f,
+                                togglePanelHeight,
                             )
                         }
                         JOURNEY_EDIT -> {
@@ -128,12 +184,18 @@ fun JourneyPanel7(
                                 addJourney = { j -> journeyViewModel.createJourney(j) },
                                 updateJourney = { j -> journeyViewModel.updateJourney(j) },
                                 deleteJourney = { j -> journeyViewModel.deleteJourney(j) },
+                                currentHeightRatio > 0.5f,
+                                togglePanelHeight,
                             )
                         }
 
                         FOOTPRINT_LIST -> {
-                            if(journeySelected != null) {
-                                FootprintList(journeySelected)
+                            journeySelected?.let {
+                                FootprintList(
+                                    it,
+                                    currentHeightRatio > 0.5f,
+                                    togglePanelHeight,
+                                )
                             }
                         }
                         FOOTPRINT_EDIT -> {
@@ -147,7 +209,9 @@ fun JourneyPanel7(
                                             footprint = f
                                         )
                                     },
-                                    updateFootprint = {}
+                                    updateFootprint = {},
+                                    currentHeightRatio > 0.5f,
+                                    togglePanelHeight,
                                 )
                             }
                         }

@@ -1,11 +1,7 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list.journey_item
 
-import androidx.compose.animation.AnimatedVisibility
+import android.util.Log
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -50,6 +49,8 @@ fun JourneyItem5(
     showDetail: Boolean,
     updateJourney: (Journey) -> Unit,
 ) {
+    val starTime = System.currentTimeMillis()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,27 +61,29 @@ fun JourneyItem5(
                 clip = true
             )
     ) {
+        val bgList = remember { listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2) }
         BGImgBox(
-            listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2)
+            bgList
         ) {
             val modifier = if(showDetail) Modifier else Modifier.clickable(onClick = journeyClick)
             Row(
-                modifier = modifier
-                    .padding(vertical = 5.dp),
+                modifier = modifier,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(
+                Row(
                     modifier = Modifier
-                        .animateContentSize()
+                        .animateContentSize(
+//                            animationSpec = tween(durationMillis = 300)
+                        )
                 ) {
                     if(!showDetail) {
                         Spacer(Modifier.width(3.dp))
                         ImageSquare2(
                             imgPath = journey.coverImagePath,
-                            modifier = Modifier.width(100.dp).padding(horizontal = 5.dp),
+                            modifier = Modifier.width(110.dp),
                             aspectRatio = 1.2f,
                             addIconSize = .3f,
-                            shape = RoundedCornerShape(5.dp)
+                            shape = RoundedCornerShape(5.dp),
                         )
                     }
                 }
@@ -88,6 +91,11 @@ fun JourneyItem5(
             }
         }
     }
+    if(showDetail) {
+        Spacer(Modifier.padding(5.dp))
+    }
+
+    Log.d("ComposeTime", "JourneyItem5: ${System.currentTimeMillis() - starTime}")
 }
 
 @Composable
@@ -96,16 +104,22 @@ private fun RightContent(
     showDetail: Boolean,
     updateJourney: (Journey) -> Unit,
 ) {
+    // 1. 缓存日期格式化器，避免每次重组都创建新实例
+    val fullDateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val yearFormat = remember { SimpleDateFormat("yyyy", Locale.getDefault()) }
+    val shortDateFormat = remember { SimpleDateFormat("MM-dd", Locale.getDefault()) }
+    val currentYear = remember { yearFormat.format(Date()) }
+
+    // 2. 缓存地址分割结果，避免重复 split 操作
+    val addressParts = remember(journey.address) { journey.address.split("\n") }
+    val region = addressParts.firstOrNull() ?: ""
+    val location = addressParts.lastOrNull() ?: ""
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 0.dp, horizontal = 5.dp)
-            .animateContentSize(
-//                animationSpec = spring(
-//                    dampingRatio = Spring.DampingRatioMediumBouncy,
-//                    stiffness = Spring.StiffnessLow
-//                )
-            )
+            .padding(vertical = 8.dp, horizontal = 5.dp)
+            .animateContentSize()
     ) {
         // 标题
         Row(
@@ -117,16 +131,11 @@ private fun RightContent(
                 fontSize = if(showDetail) 20.sp else 15.sp,
                 color = if(showDetail) FontDark3 else FontDark4,
             )
-            Spacer(Modifier.padding(9.dp))
         }
 
         Spacer(Modifier.padding(1.dp))
 
-        AnimatedVisibility(
-            visible = showDetail,
-            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
-        ) {
+        if(showDetail) {
             Column {
                 ImageSquare2(
                     imgPath = journey.coverImagePath,
@@ -139,7 +148,7 @@ private fun RightContent(
                         journey.coverImagePath = ""
                         updateJourney(journey)
                     },
-                    modifier = Modifier.padding(horizontal = 40.dp),
+                    modifier = Modifier.padding(horizontal = 30.dp),
                     aspectRatio = 1.2f,
                     addIconSize = .3f
                 )
@@ -147,18 +156,15 @@ private fun RightContent(
             }
         }
 
-        // 描述（不显示细节时：两行以内，多余用...代替）
-        val truncatedDesc = if (journey.description.length > 14) {
-            journey.description.substring(0, 14) + "... ..."
-        } else {
-            journey.description
+        // 使用 derivedStateOf 缓存截断描述，仅当 description 实际变化时才重新计算，避免 showDetail 切换时无效执行字符串操作
+        val truncatedDesc by remember {
+            derivedStateOf {
+                val desc = journey.description
+                if (desc.length > 14) desc.substring(0, 14) + "... ..." else desc
+            }
         }
 
-        AnimatedVisibility(
-            visible = showDetail,
-            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
-        ) {
+        if(showDetail) {
             Column {
                 TextMedium(
                     text = "旅程描述：",
@@ -183,16 +189,11 @@ private fun RightContent(
         Spacer(Modifier.padding(2.dp))
 
         // 显示地址与日期
-        AnimatedVisibility(
-            visible = showDetail,
-            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
-        ) {
+        if(showDetail) {
             Column {
                 Row(
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     val dateStr = fullDateFormat.format(journey.startDate)
                     Spacer(Modifier.width(10.dp))
                     TextSmall(
@@ -201,8 +202,6 @@ private fun RightContent(
                         modifier = Modifier.padding(0.dp).offset(y = 5.dp)
                     )
                     Spacer(Modifier.weight(1f))
-                    val region = journey.address.split("\n")[0]
-                    val location = journey.address.split("\n").last()
                     Column {
                         TextSmall(
                             text = location,
@@ -221,25 +220,29 @@ private fun RightContent(
             }
         }
         if(!showDetail) {
-            // 开始日期
-            val yearFormat = SimpleDateFormat("yyyy", Locale.getDefault())
-            val fullDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val shortDateFormat = SimpleDateFormat("MM-dd", Locale.getDefault())
-
-            val currentYear = yearFormat.format(Date())
-            val startYear = yearFormat.format(journey.startDate)
-
-            val dateStr = if (currentYear == startYear) {
-                // 同一年，只显示月日
-                shortDateFormat.format(journey.startDate)
-            } else {
-                // 不同年，显示完整日期
-                fullDateFormat.format(journey.startDate)
+            // 使用 derivedStateOf 缓存日期字符串计算，仅当 startDate 或 currentYear 变化时才重新计算
+            val dateStr by remember {
+                derivedStateOf {
+                    val startYear = yearFormat.format(journey.startDate)
+                    if (currentYear == startYear) {
+                        shortDateFormat.format(journey.startDate)
+                    } else {
+                        fullDateFormat.format(journey.startDate)
+                    }
+                }
             }
+            // 位置信息（字数不能太多）
+            val loc by remember {
+                derivedStateOf {
+                    val l = location
+                    if (l.length > 10) l.substring(0, 10) + "..." else l
+                }
+            }
+
             Row {
                 Spacer(Modifier.width(10.dp))
                 TextSmall(
-                    text = journey.address.split("\n").last()
+                    text = loc
                 )
                 Spacer(Modifier.weight(1f))
                 TextSmall(
@@ -250,11 +253,7 @@ private fun RightContent(
         }
 
 
-        AnimatedVisibility(
-            visible = showDetail,
-            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
-        ) {
+        if(showDetail) {
             Column {
                 TextMedium(
                     text = "旅程回忆",
@@ -291,9 +290,6 @@ private fun RightContent(
                     Spacer(Modifier.width(5.dp))
                 }
             }
-        }
-        if(showDetail) {
-            Spacer(Modifier.padding(10.dp))
         }
     }
 }

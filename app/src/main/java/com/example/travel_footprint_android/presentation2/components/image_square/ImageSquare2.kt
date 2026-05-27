@@ -7,10 +7,12 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,10 +32,15 @@ import com.example.travel_footprint_android.presentation2.components.image_squar
 import com.example.travel_footprint_android.presentation2.components.image_square.image1.Image1
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * @param lazy 是否延迟加载图片。当为 true 时，先显示占位图，延迟一小段时间后再开始加载，
+ *             用于避免大量图片同时加载造成的卡顿（如 Reminiscence 中的多张回忆图片）。
+ */
 @Composable
 fun ImageSquare2(
     imgPath: String,
@@ -46,21 +53,47 @@ fun ImageSquare2(
     shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     delIconSize: Dp = 25.dp,
     showDelIcon: Boolean = false,
+    lazy: Boolean = true,
 ) {
+    val starTime = System.currentTimeMillis()
+
     val context = LocalContext.current
 
     var savedImageFile by remember { mutableStateOf<File?>(null) }
+    // 标记是否已开始加载（用于延迟加载模式）
+    var isLoading by remember { mutableStateOf(!lazy && imgPath.isNotEmpty()) }
 
-    LaunchedEffect(imgPath) {
-        Log.d("ImageUpload", "imgPath: $imgPath")
-        if (imgPath.isNotEmpty()) {
-            val exists = withContext(Dispatchers.IO) {
-                File(imgPath).exists()
+    // 延迟加载逻辑：等待一帧后再开始加载，避免首次展开详情时所有图片同时加载
+    LaunchedEffect(lazy, imgPath) {
+        if (!lazy) {
+            // 非延迟模式，立即加载
+            if (imgPath.isNotEmpty()) {
+                val exists = withContext(Dispatchers.IO) {
+                    File(imgPath).exists()
+                }
+                savedImageFile = if (exists) File(imgPath) else null
+                isLoading = false
+            } else {
+                savedImageFile = null
+                isLoading = false
             }
-            savedImageFile = if (exists) File(imgPath) else null
-            return@LaunchedEffect
+        } else {
+            // 延迟模式：先显示占位图，延迟后开始加载
+            isLoading = true
+            if (imgPath.isNotEmpty()) {
+                try {
+                    delay(ImageLoadControl.loadImageStart())   // 计数器 +1，延迟加载
+                    val exists = withContext(Dispatchers.IO) { File(imgPath).exists() }
+                    savedImageFile = if (exists) File(imgPath) else null
+                } finally {
+                    ImageLoadControl.loadImageOver()            // 无论如何都 -1
+                    isLoading = false
+                }
+            } else {
+                savedImageFile = null
+                isLoading = false
+            }
         }
-        savedImageFile = null
     }
 
     val pickMedia = rememberLauncherForActivityResult(
@@ -91,18 +124,24 @@ fun ImageSquare2(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .animateContentSize()
+                .padding(8.dp)
         ) {
-            val modifierImg = Modifier
-                .fillMaxWidth()
-                .aspectRatio(aspectRatio)
-                .shadow(
-                    elevation = elevation,
-                    shape = shape,
-                    clip = true
-                )
-                .background(
-                    color = Color(0xffffffff),
-                )
+            val modifierImg = remember {
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(aspectRatio)
+                    .shadow(
+                        elevation = elevation,
+                        shape = shape,
+                        clip = true
+                    )
+                    .background(
+                        color = Color(0xffffffff),
+                    )
+            }
+            // 延迟加载模式且正在加载中时，显示灰色占位图
+            val isLazyLoading = lazy && isLoading && imgPath.isNotEmpty()
             if (savedImageFile != null) {
                 Image1(modifierImg, savedImageFile!!)
                 if (showDelIcon) {
@@ -115,6 +154,8 @@ fun ImageSquare2(
                         }
                     )
                 }
+            } else if (isLazyLoading) {
+                // 加载中不显示内容
             } else {
                 AddIcon(
                     modifierImg,
@@ -123,6 +164,8 @@ fun ImageSquare2(
             }
         }
     }
+
+    Log.d("ComposeTime", "ImageSquare2: ${System.currentTimeMillis() - starTime}")
 }
 
 fun copyToInternalStorage2(context: Context, uri: Uri): File? {
@@ -138,5 +181,19 @@ fun copyToInternalStorage2(context: Context, uri: Uri): File? {
     } catch (e: Exception) {
         Log.e("ImageUpload", "复制文件异常", e)
         null
+    }
+}
+
+// 用于控制图片加载顺序，防止高并发io操作
+object ImageLoadControl {
+    var loadImage = 0
+
+    fun loadImageStart(): Long {
+        loadImage++
+        return ((loadImage - 1) * 200 + 300).toLong()
+    }
+
+    fun loadImageOver() {
+        loadImage--
     }
 }

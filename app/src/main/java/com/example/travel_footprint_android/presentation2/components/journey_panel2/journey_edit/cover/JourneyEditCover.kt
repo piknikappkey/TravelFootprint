@@ -27,7 +27,7 @@ fun JourneyEditCover(
         imgPath = journey.coverImagePath,
         updateImgPath = updateImgPath,
         deleteImgPath = deleteImgPath,
-        modifier = Modifier.padding(horizontal = 60.dp),
+        modifier = Modifier.padding(horizontal = 40.dp),
         aspectRatio = 1.2f,
         addIconSize = .3f,
         showDelIcon = true,

@@ -34,6 +34,7 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
@@ -44,6 +45,8 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 @Composable
 fun FootprintList(
     journeySelected: Journey,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
     mapViewModel: MapViewModel = hiltViewModel(),
 ) {
     // 足迹数据
@@ -61,11 +64,12 @@ fun FootprintList(
     Log.d("FootprintList", "footprints = ${footprints}")
 
     BGImgBox(
+        modifier = Modifier.fillMaxSize(),
         imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
         Column {
             Spacer(Modifier.height(10.dp))
-            HeadRow(journeySelected)
+            HeadRow(journeySelected, journeyPanelHeightState, setJourneyPanelHeightState)
             LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
             Content(
                 footprints,
@@ -80,9 +84,10 @@ fun FootprintList(
 @Composable
 private fun HeadRow(
     journeySelected: Journey,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
     Row {
-        Spacer(Modifier.width(10.dp))
         // 返回按钮
         Image(
             modifier = Modifier
@@ -100,6 +105,10 @@ private fun HeadRow(
             text = "${journeySelected.title}——足迹",
             fontSize = 18.sp
         )
+        Spacer(Modifier.weight(1f))
+
+        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        Spacer(Modifier.width(10.dp))
     }
 }
 

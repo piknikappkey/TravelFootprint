@@ -1,6 +1,5 @@
 package com.example.travel_footprint_android.presentation2.viewmodel.nav_controller
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.example.travel_footprint_android.presentation2.navigation.NavPath2
 import com.example.travel_footprint_android.presentation2.navigation.NavPathObj2

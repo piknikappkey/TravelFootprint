@@ -18,7 +18,7 @@ import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2
 @Composable
 fun LocationButton(
     modifier: Modifier = Modifier,
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(),
+    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3"),
 ) {
     // 保存当前位置
     val currentLocation by journeyMap3ViewModel.currentLocation.collectAsState()

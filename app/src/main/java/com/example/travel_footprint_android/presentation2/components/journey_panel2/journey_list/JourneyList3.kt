@@ -1,22 +1,21 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,6 +32,7 @@ import com.example.travel_footprint_android.presentation2.components.bg_box.BGBo
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.icon.icon_add.IconAdd
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list.journey_list_view.JourneyListView4
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
@@ -45,32 +45,41 @@ fun JourneyList3(
     journeyList: List<Journey>,
     updateJourney: (Journey) -> Unit,
     journeySelected: Journey?,
+    aniTime: Int,
+    journeyPanelHeightState: Boolean,
+    setJourneyPanelHeightState: (Boolean) -> Unit,
     ) {
+    val starTime = System.currentTimeMillis()
+
     BGImgBox(
         imgList = listOf(R.drawable.bg_rectangular_1__3__0),
-        modifier = Modifier.animateContentSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .animateContentSize(
+                animationSpec = tween(durationMillis = aniTime / 2)
+            )
     ) {
         Column{
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 返回按钮
-                AnimatedVisibility(
-                    visible = journeySelected != null,
-                    enter = fadeIn() + slideInHorizontally(initialOffsetX = { -20 }),
-                    exit = fadeOut() + slideOutHorizontally(targetOffsetX = { -20 })
+                Column(
+                    modifier = Modifier.animateContentSize()
                 ) {
-                    Image(
-                        modifier = Modifier
-                            .size(26.dp)
-                            .padding(start = 5.dp)
-                            .clickable(onClick = {
-                                JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
-                            }),
-                        painter = painterResource(id = R.drawable.ic_left_long),
-                        contentDescription = "返回图标",
-                        colorFilter = ColorFilter.tint(SecondColor3),
-                    )
+                    if(journeySelected != null) {
+                        Image(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .padding(start = 5.dp)
+                                .clickable(onClick = {
+                                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                                }),
+                            painter = painterResource(id = R.drawable.ic_left_long),
+                            contentDescription = "返回图标",
+                            colorFilter = ColorFilter.tint(SecondColor3),
+                        )
+                    }
                 }
                 // 固定标题
                 Headline(
@@ -80,28 +89,30 @@ fun JourneyList3(
                         .padding(vertical = 5.dp, horizontal = 10.dp)
                 )
 
-                AnimatedVisibility(
-                    visible = journeySelected != null,
-                    enter = fadeIn() + scaleIn(initialScale = 0.8f),
-                    exit = fadeOut() + scaleOut(targetScale = 0.8f)
+                Column(
+                    modifier = Modifier.animateContentSize()
                 ) {
-                    IconEdit() {
-                        JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, journeySelected)
+                    if(journeySelected != null) {
+                        IconEdit() {
+                            JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, journeySelected)
+                        }
                     }
                 }
+                Spacer(Modifier.width(10.dp))
+                IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+
                 Spacer(Modifier.width(10.dp))
             }
 
             // 可滚动内容
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
             ) {
 
                 if (journeyList.isEmpty()) {
                     Box(
                         modifier = Modifier
-                            .heightIn(250.dp),
                     ) {
                         TextMedium(
                             modifier = Modifier
@@ -142,4 +153,5 @@ fun JourneyList3(
             }
         }
     }
+    Log.d("ComposeTime", "JourneyList3: ${System.currentTimeMillis() - starTime}")
 }
