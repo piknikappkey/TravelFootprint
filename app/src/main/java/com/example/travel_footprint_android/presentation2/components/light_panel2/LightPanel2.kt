@@ -87,9 +87,19 @@ fun LightPanel2(
         mutableStateOf(LightPanel2Tab.LIGHT_UP)
     }
 
-    // 打卡记录
-    var checkInRecords by remember {
-        mutableStateOf<List<CheckInRecord>>(emptyList())
+    // 打卡记录（已持久化到数据库）
+    val dbCheckInRecords by lightenViewModel.checkInRecords.collectAsState()
+    val checkInRecords = remember(dbCheckInRecords) {
+        dbCheckInRecords.map { entity ->
+            CheckInRecord(
+                cityAdcode = entity.cityAdcode,
+                cityName = entity.cityName,
+                note = entity.note,
+                time = entity.time,
+                tags = entity.tags,
+                photoPaths = entity.photoPaths
+            )
+        }
     }
 
     // 屏幕高度
@@ -290,16 +300,13 @@ fun LightPanel2(
                         LightPanel2Tab.CHECK_IN -> {
 
                             CheckInContent(
-                                lightCityList = lightCityList, checkInRecords = checkInRecords,
-
+                                lightCityList = lightCityList,
+                                checkInRecords = checkInRecords,
                                 onAddCheckIn = { adcode, cityName, note ->
-
-                                    checkInRecords = checkInRecords + CheckInRecord(
-                                        cityAdcode = adcode,
-                                        cityName = cityName,
-                                        note = note,
-                                        time = Date()
-                                    )
+                                    lightenViewModel.addCheckInRecord(adcode, cityName, note)
+                                },
+                                onAddCheckInRich = { adcode, cityName, note, tags ->
+                                    lightenViewModel.addCheckInRecord(adcode, cityName, note, tags)
                                 })
                         }
 

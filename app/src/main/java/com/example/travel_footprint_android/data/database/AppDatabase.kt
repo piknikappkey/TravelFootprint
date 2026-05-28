@@ -8,7 +8,16 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.travel_footprint_android.data.dao.*
-import com.example.travel_footprint_android.data.entity.*
+import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
+import com.example.travel_footprint_android.data.entity.City
+import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.data.entity.FootprintTagCrossRef
+import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.data.entity.Location
+import com.example.travel_footprint_android.data.entity.MediaAttachment
+import com.example.travel_footprint_android.data.entity.Province
+import com.example.travel_footprint_android.data.entity.Tag
 
 @Database(
     entities = [
@@ -20,9 +29,10 @@ import com.example.travel_footprint_android.data.entity.*
         FootprintTagCrossRef::class,
         LightedCity::class,
         Province::class,
-        City::class
+        City::class,
+        CheckInRecordEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -36,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun lightedCityDao(): LightedCityDao
     abstract fun provinceDao(): ProvinceDao
     abstract fun cityDao(): CityDao
+    abstract fun checkInRecordDao(): CheckInRecordDao
 
     companion object {
         @Volatile
@@ -68,7 +79,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // 🆕 版本 3 到 4 的迁移：添加旅程地址和经纬度字段
+        // 版本 3 到 4 的迁移：添加旅程地址和经纬度字段
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // 添加 address 列
@@ -82,6 +93,24 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // 版本 4 到 5 的迁移：添加打卡记录表
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `check_in_records` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `cityAdcode` TEXT NOT NULL,
+                        `cityName` TEXT NOT NULL,
+                        `note` TEXT NOT NULL DEFAULT '',
+                        `time` INTEGER NOT NULL,
+                        `tags` TEXT NOT NULL DEFAULT '[]',
+                        `photoPaths` TEXT NOT NULL DEFAULT '[]'
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_check_in_records_cityAdcode ON check_in_records(cityAdcode)")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -89,7 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "travel_journal.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

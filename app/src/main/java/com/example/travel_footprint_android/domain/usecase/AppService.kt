@@ -6,12 +6,14 @@ import android.net.Uri
 import android.util.Log
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
 import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.MediaAttachment
 import com.example.travel_footprint_android.data.entity.Province
+import com.example.travel_footprint_android.data.repository.CheckInRecordRepository
 import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.data.repository.JourneyRepository
 import com.example.travel_footprint_android.data.repository.LightedCityRepository
@@ -40,6 +42,7 @@ class AppService @Inject constructor(
     private val locationService: LocationService,
     private val lightedCityRepository: LightedCityRepository,
     private val regionRepository: RegionRepository,
+    private val checkInRecordRepository: CheckInRecordRepository,
     @ApplicationContext private val context: Context  // 添加这一行
 ) {
 
@@ -560,4 +563,29 @@ class AppService @Inject constructor(
     suspend fun searchCities(keyword: String): List<City> =
         regionRepository.searchCities(keyword)
 
+    // ==================== 打卡记录相关 ====================
+
+    fun getAllCheckInRecords(): Flow<List<CheckInRecordEntity>> =
+        checkInRecordRepository.getAllRecords()
+
+    fun getCheckInRecordsByCity(adcode: String): Flow<List<CheckInRecordEntity>> =
+        checkInRecordRepository.getRecordsByCity(adcode)
+
+    suspend fun addCheckInRecord(
+        cityAdcode: String,
+        cityName: String,
+        note: String,
+        tags: List<String> = emptyList(),
+        photoPaths: List<String> = emptyList()
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            checkInRecordRepository.insertRecord(cityAdcode, cityName, note, tags, photoPaths)
+        }
+    }
+
+    suspend fun deleteCheckInRecordsByCity(adcode: String) {
+        withContext(Dispatchers.IO) {
+            checkInRecordRepository.deleteRecordsByCity(adcode)
+        }
+    }
 }
