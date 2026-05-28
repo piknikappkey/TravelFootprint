@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
 import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
@@ -83,6 +84,7 @@ class LightenViewModel @Inject constructor(
     init {
         loadAllData()
         startContinuousCollectors()
+        startCheckInRecordCollector()
     }
 
 
@@ -850,5 +852,37 @@ class LightenViewModel @Inject constructor(
         loadAllData()
     }
 
+    // ==================== 打卡记录相关 ====================
 
+    private val _checkInRecords = MutableStateFlow<List<CheckInRecordEntity>>(emptyList())
+    val checkInRecords: StateFlow<List<CheckInRecordEntity>> = _checkInRecords.asStateFlow()
+
+    fun addCheckInRecord(cityAdcode: String, cityName: String, note: String, tags: List<String> = emptyList()) {
+        viewModelScope.launch {
+            try {
+                appService.addCheckInRecord(cityAdcode, cityName, note, tags)
+                // 数据会自动通过 Flow 更新，无需手动刷新
+            } catch (e: Exception) {
+                Log.e("LightenViewModel", "添加打卡记录失败", e)
+            }
+        }
+    }
+
+    fun deleteCheckInRecordsByCity(adcode: String) {
+        viewModelScope.launch {
+            try {
+                appService.deleteCheckInRecordsByCity(adcode)
+            } catch (e: Exception) {
+                Log.e("LightenViewModel", "删除打卡记录失败", e)
+            }
+        }
+    }
+
+    fun startCheckInRecordCollector() {
+        viewModelScope.launch {
+            appService.getAllCheckInRecords().collect { records ->
+                _checkInRecords.value = records
+            }
+        }
+    }
 }

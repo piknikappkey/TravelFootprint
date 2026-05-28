@@ -27,7 +27,8 @@ object DatabaseModule {
             AppDatabase::class.java,
             "travel_journal.db"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)  // 添加两个迁移
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -78,6 +79,12 @@ object DatabaseModule {
     @Singleton
     fun provideCityDao(database: AppDatabase): CityDao {
         return database.cityDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckInRecordDao(database: AppDatabase): CheckInRecordDao {
+        return database.checkInRecordDao()
     }
 
     // 数据库迁移：从版本1到版本2（添加 lighted_cities 表）

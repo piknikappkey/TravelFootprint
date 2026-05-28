@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.dao.FootprintDao
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.data.repository.FootprintRepository
 import com.example.travel_footprint_android.domain.usecase.AppService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,6 +39,7 @@ class JourneyViewModel @Inject constructor(
         val showDeleteConfirmDialog: Boolean = false,
         val deletingJourney: Journey? = null,
         val footprints: List<Footprint> = emptyList(),
+        val LocationList:List<Location> = emptyList(),
         val showFootprintAddDialog: Boolean = false,
         val showFootprintEditDialog: Boolean = false,
         val editingFootprint: Footprint? = null,
@@ -762,6 +764,96 @@ class JourneyViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { state ->
                     state.copy(error = e.message ?: "更新足迹位置失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新足迹位置（使用 Location 对象）
+     * @param location 位置对象（必须包含有效的 footprintId）
+     */
+    fun updateFootprintLocation(location: Location) {
+        viewModelScope.launch {
+            try {
+                appService.updateLocationByFootprint(location.footprintId, location.latitude, location.longitude, location.index)
+                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "更新足迹位置失败")
+                }
+            }
+        }
+    }
+
+    // ==================== 位置地址管理（Location） ====================
+
+    /**
+     * 添加位置地址
+     * @param location 位置对象
+     */
+    fun addLocation(location: Location) {
+        viewModelScope.launch {
+            try {
+                appService.addAddress(location)
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "添加位置失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 删除位置地址
+     * @param location 要删除的位置对象
+     */
+    fun deleteLocation(location: Location) {
+        viewModelScope.launch {
+            try {
+                appService.deleteLocation(location)
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "删除位置失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新位置地址（使用 Location 对象）
+     * @param location 更新后的位置对象（必须包含有效的 id）
+     */
+    fun updateLocation(location: Location) {
+        viewModelScope.launch {
+            try {
+                appService.setAddressByFootprint(location.id, location.footprintId, location.latitude, location.longitude, location.index)
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "更新位置失败")
+                }
+            }
+        }
+    }
+
+    /**
+     * 查询位置地址（使用 Location 对象，取其 footprintId 查询）
+     * @param location 位置对象（用于获取 footprintId）
+     * @return 该足迹关联的所有位置地址列表
+     */
+    fun getLocation(footprint: Footprint) {
+        viewModelScope.launch {
+            try {
+                appService.getAddressesByFootprint(footprint.id).collect { LocationList ->
+                    _uiState.update { state ->
+                        state.copy(
+                            LocationList = LocationList
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "加载足迹的地址列表失败")
                 }
             }
         }
