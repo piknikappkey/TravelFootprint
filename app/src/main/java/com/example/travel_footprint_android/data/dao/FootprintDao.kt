@@ -82,6 +82,9 @@ interface FootprintDao {
         val count: Int
     )
 
+    @Query("SELECT * FROM footprints WHERE id = :footprintId")
+    suspend fun getFootprintById(footprintId: Long): Footprint?
+
 
 }
 

@@ -51,7 +51,7 @@ class FootprintRepository @Inject constructor(
             footprintId = footprintId,
             latitude = lat,
             longitude = lng,
-            orderIndex = 0
+            index = 0
         )
         locationDao.insertLocation(location)
 
@@ -93,7 +93,7 @@ class FootprintRepository @Inject constructor(
 //            footprintId = footprintId,
 //            latitude = lat,
 //            longitude = lng,
-//            orderIndex = 0
+//            index = 0
 //        )
 //        locationDao.insertLocation(location)
 
@@ -263,4 +263,29 @@ class FootprintRepository @Inject constructor(
         return tagDao.getTagsByFootprint(footprintId)
     }
 
+    suspend fun getFootprintById(footprintId: Long): Footprint? {
+        return footprintDao.getFootprintById(footprintId)
+    }
+
+    // ==================== 地址管理（Location/Address） ====================
+
+    suspend fun getAddressesByFootprint(footprintId: Long): Flow<List<Location>> {
+        return locationDao.getAddressesByFootprint(footprintId)
+    }
+
+    suspend fun addAddress(location: Location) {
+        locationDao.addAddress(location)
+    }
+
+    suspend fun deleteLocation(location: Location) {
+        locationDao.deleteLocation(location)
+    }
+
+    suspend fun setAddressByFootprint(id: Long, footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        locationDao.setAddressByFootprint(id, footprintId, latitude, longitude, index)
+    }
+
+    suspend fun updateLocationsByFootprint(footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        locationDao.updateLocationsByFootprint(footprintId, latitude, longitude, index)
+    }
 }

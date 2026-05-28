@@ -10,6 +10,7 @@ import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
 import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.MediaAttachment
 import com.example.travel_footprint_android.data.entity.Province
@@ -192,6 +193,32 @@ class AppService @Inject constructor(
     }
 
     fun getFootprintDetail(footprintId: Long) = footprintRepository.getFootprintDetail(footprintId)
+
+    // ==================== 地址管理（Location） ====================
+
+    suspend fun getAddressesByFootprint(footprintId: Long): Flow<List<Location>> {
+        return footprintRepository.getAddressesByFootprint(footprintId)
+    }
+
+    suspend fun addAddress(location: Location) {
+        footprintRepository.addAddress(location)
+    }
+
+    suspend fun deleteLocation(location: Location) {
+        footprintRepository.deleteLocation(location)
+    }
+
+    suspend fun setAddressByFootprint(id: Long, footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        footprintRepository.setAddressByFootprint(id, footprintId, latitude, longitude, index)
+    }
+
+    suspend fun updateLocationByFootprint(footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        footprintRepository.updateLocationsByFootprint(footprintId, latitude, longitude, index)
+    }
+
+    suspend fun getFootprintById(footprintId: Long): Footprint? {
+        return footprintRepository.getFootprintById(footprintId)
+    }
 
     // ==================== 标签相关 ====================
 

@@ -32,7 +32,7 @@ import com.example.travel_footprint_android.data.entity.Tag
         City::class,
         CheckInRecordEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -111,6 +111,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // 版本 5 到 6 的迁移：足迹表新增字段，位置表orderIndex重命名为idx
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `startTime` INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `duration` INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `distance` REAL NOT NULL DEFAULT 0.0")
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `speed` REAL NOT NULL DEFAULT 0.0")
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `calories` REAL NOT NULL DEFAULT 0.0")
+
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `locations_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `footprintId` INTEGER NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `idx` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`footprintId`) REFERENCES `footprints`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("""
+                    INSERT INTO `locations_new` (`id`, `footprintId`, `latitude`, `longitude`, `idx`)
+                    SELECT `id`, `footprintId`, `latitude`, `longitude`, `orderIndex` FROM `locations`
+                """)
+                database.execSQL("DROP TABLE `locations`")
+                database.execSQL("ALTER TABLE `locations_new` RENAME TO `locations`")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -118,7 +146,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "travel_journal.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
