@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
@@ -42,6 +43,7 @@ fun FootprintEdit(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    deleteFootprint: (Footprint) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
 ) {
@@ -57,32 +59,30 @@ fun FootprintEdit(
             )
     ) }
 
-    BGImgBox(
-        modifier = Modifier.fillMaxSize(),
-        imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            Spacer(Modifier.height(10.dp))
-            // 顶部导航栏
-            HeadRow(
-                footprintSelected,
-                footprint,
-                journeySelected,
-                addFootprint,
-                updateFootprint,
-                journeyPanelHeightState,
-                setJourneyPanelHeightState,
-            )
-            Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(10.dp))
+        // 顶部导航栏
+        HeadRow(
+            footprintSelected,
+            footprint,
+            journeySelected,
+            addFootprint,
+            updateFootprint,
+            journeyPanelHeightState,
+            setJourneyPanelHeightState,
+        )
+        Spacer(Modifier.height(10.dp))
 
-            Content(
-                footprint,
-                { f -> footprint = f }
-            )
-        }
+        Content(
+            footprint,
+            footprintSelected,
+            journeySelected,
+            { f -> footprint = f.copy() },
+            deleteFootprint
+        )
     }
 }
 
@@ -138,7 +138,10 @@ private fun HeadRow(
 @Composable
 private fun Content(
     footprint: Footprint,
+    footprintSelected: Footprint?,
+    journeySelected: Journey,
     setFootprint: (Footprint) -> Unit,
+    deleteFootprint: (Footprint) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -171,5 +174,21 @@ private fun Content(
         LineBetween()
 
         Spacer(Modifier.padding(10.dp))
+
+        if(footprintSelected != null) {
+            Row {
+                Spacer(Modifier.weight(1f))
+                ButtonDelete(
+                    title = "删除该旅程",
+                    paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                ) {
+                    deleteFootprint(footprintSelected)
+                    JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected)
+                }
+                Spacer(Modifier.width(10.dp))
+            }
+
+            Spacer(Modifier.padding(10.dp))
+        }
     }
 }

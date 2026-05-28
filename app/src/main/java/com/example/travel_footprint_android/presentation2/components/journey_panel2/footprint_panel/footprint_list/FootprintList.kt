@@ -33,7 +33,6 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
@@ -63,21 +62,16 @@ fun FootprintList(
 
     Log.d("FootprintList", "footprints = ${footprints}")
 
-    BGImgBox(
-        modifier = Modifier.fillMaxSize(),
-        imgList = listOf<Int>(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
-    ) {
-        Column {
-            Spacer(Modifier.height(10.dp))
-            HeadRow(journeySelected, journeyPanelHeightState, setJourneyPanelHeightState)
-            LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
-            Content(
-                footprints,
-                journeySelected,
-                clickItemIndex,
-                { i -> clickItemIndex = i}
-            )
-        }
+    Column {
+        Spacer(Modifier.height(10.dp))
+        HeadRow(journeySelected, journeyPanelHeightState, setJourneyPanelHeightState)
+        LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
+        Content(
+            footprints,
+            journeySelected,
+            clickItemIndex,
+            { i -> clickItemIndex = i}
+        )
     }
 }
 

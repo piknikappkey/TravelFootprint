@@ -67,9 +67,7 @@ fun BGImgBox(
 
     Box(
         modifier = modifier
-            .background(
-                color = Color.White
-            )
+            .background(Color(0xFFFCF1EB))
             .drawBehind {
                 bgBitmap?.let { bitmap ->
                     val canvasWidth = size.width

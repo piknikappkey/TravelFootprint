@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,14 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
-import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.image_square.ImageSquare2
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence.Reminiscence
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark3
@@ -54,7 +49,7 @@ fun JourneyItem5(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp, horizontal = if(showDetail) 10.dp else 25.dp) // 外边距
+            .padding(vertical = 5.dp, horizontal = if (showDetail) 10.dp else 25.dp) // 外边距
             .shadow(
                 elevation = 1.dp,
                 shape = RoundedCornerShape(3.dp),
@@ -199,7 +194,9 @@ private fun RightContent(
                     TextSmall(
                         text = dateStr,
                         fontSize = 11.sp,
-                        modifier = Modifier.padding(0.dp).offset(y = 5.dp)
+                        modifier = Modifier
+                            .padding(0.dp)
+                            .offset(y = 5.dp)
                     )
                     Spacer(Modifier.weight(1f))
                     Column {
@@ -266,29 +263,6 @@ private fun RightContent(
                     journey = journey,
                     updateJourney = updateJourney
                 )
-                Row {
-                    Spacer(Modifier.weight(1f))
-                    ButtonMain(
-                        onClick = {
-                            JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journey)
-                        },
-                        paddingValues = PaddingValues(0.dp)
-                    ) {
-                        BGBox {
-                            BGImgBox(
-                                listOf(R.drawable.bg_simple_hor_small_small)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(vertical = 5.dp, horizontal = 12.dp)
-                                ) {
-                                    TextMedium("旅程足迹")
-                                }
-                            }
-                        }
-                    }
-                    Spacer(Modifier.width(5.dp))
-                }
             }
         }
     }
