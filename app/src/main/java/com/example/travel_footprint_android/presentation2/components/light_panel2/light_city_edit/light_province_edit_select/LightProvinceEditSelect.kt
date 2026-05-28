@@ -78,7 +78,7 @@ fun LightProvinceEditSelect(
             Divider(
                 color = Color(0xFFE5E7EB),
                 thickness = 0.5.dp,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 6.dp)
             )
 
             if (unlightedProvinces.isEmpty()) {

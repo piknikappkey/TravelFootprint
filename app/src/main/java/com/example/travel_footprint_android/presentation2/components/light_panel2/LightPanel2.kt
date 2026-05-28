@@ -1,6 +1,9 @@
 package com.example.travel_footprint_android.presentation2.components.light_panel2
 
+import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,20 +28,25 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +55,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation2.components.back_buttom.city_province_backButtom
 import com.example.travel_footprint_android.presentation2.components.light_panel2.checkin.CheckInContent
 import com.example.travel_footprint_android.presentation2.components.light_panel2.checkin.CheckInRecord
 import com.example.travel_footprint_android.presentation2.components.light_panel2.corner.CornerContent
@@ -53,18 +63,21 @@ import com.example.travel_footprint_android.presentation2.components.light_panel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.light_city_edit.LightCityEditScreen
 import com.example.travel_footprint_android.presentation2.components.light_panel2.milestone.MilestoneContent
 import com.example.travel_footprint_android.presentation2.components.light_panel2.panel_title.PanelTitle
+import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
 import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun LightPanel2(
     modifier: Modifier = Modifier,
     lightenCityMode: LightenCityMode,
     lightenViewModel: LightenViewModel = hiltViewModel(),
-    onExpandedChanged: ((Boolean) -> Unit)? = null  // 展开状态变化回调，通知外层切换地图组件
-
+    onExpandedChanged: ((Boolean) -> Unit)? = null,
+    showMapMode: ShowMapMode? = null,
+    onBackButtonClick: (() -> Unit)? = null,
 ) {
 
     val uiState by lightenViewModel.uiState.collectAsState()
@@ -102,25 +115,39 @@ fun LightPanel2(
         }
     }
 
-    // 屏幕高度
     val configuration = LocalConfiguration.current
-    val screenHeightDp = configuration.screenHeightDp.dp
+    val density = configuration.densityDpi.toFloat() / 160f
+    val screenHeightPixels = configuration.screenHeightDp * density
 
-    // 面板高度
-    val collapsedHeight = 40.dp
-    val expandedHeight = screenHeightDp * 0.5f
+    var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
+    var isDragging by remember { mutableStateOf(false) }
 
-    // 是否展开
-    var isExpanded by remember {
-        mutableStateOf(false)
+    val aniPanelHeight = if (isDragging) {
+        currentHeightRatio
+    } else {
+        animateFloatAsState(
+            targetValue = currentHeightRatio,
+            animationSpec = tween(durationMillis = 300),
+            label = "lightPanelHeight"
+        ).value
     }
 
-    // 当前面板高度（核心状态）
-    var panelHeight by remember {
-        mutableStateOf(collapsedHeight)
+    val isExpanded = currentHeightRatio > 0.5f
+
+    LaunchedEffect(isExpanded) {
+        onExpandedChanged?.invoke(isExpanded)
     }
 
-    val density = LocalDensity.current
+    val togglePanelHeight = { _: Boolean ->
+        if (!isDragging) {
+            currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
+        }
+    }
+
+    val onDragDelta = { deltaY: Float ->
+        val ratioDelta = -deltaY / screenHeightPixels
+        currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+    }
 
     // 编辑模式下的选择状态
     var selectedCityCodes by remember {
@@ -141,230 +168,218 @@ fun LightPanel2(
 
     // 内容最大高度
     val scrollableMaxHeight =
-        (panelHeight - 60.dp).coerceAtLeast(0.dp)
-
-    // 创建一个带回调的状态更新函数
-    fun updateExpandedState(expanded: Boolean) {
-        isExpanded = expanded
-        onExpandedChanged?.invoke(isExpanded)
-    }
+        (configuration.screenHeightDp.dp * currentHeightRatio - 60.dp).coerceAtLeast(0.dp)
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val offsetPx = 60.dp.roundToPx()
+                val layoutHeight = (placeable.height - offsetPx).coerceAtLeast(0)
+                layout(placeable.width, layoutHeight) {
+                    placeable.placeRelative(0, -offsetPx)
+                }
+            }
     ) {
+        if (showMapMode != null && onBackButtonClick != null) {
+            city_province_backButtom(
+                showMapMode = showMapMode,
+                panelIsExpanded = true,
+                onClick = onBackButtonClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(y = (-70).dp)
+            )
+        }
 
-        Column(
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .height(panelHeight)
                 .shadow(
-                    elevation = 8.dp, shape = RoundedCornerShape(
-                        topStart = 16.dp, topEnd = 16.dp
-                    ), clip = false
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                    clip = true
                 )
                 .background(
-                    color = Color.White, shape = RoundedCornerShape(
-                        topStart = 16.dp, topEnd = 16.dp
-                    )
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
                 )
         ) {
-
-            // ================= 拖拽区域 =================
-
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(24.dp)
-                    .background(
-                        Color.White, RoundedCornerShape(
-                            topStart = 16.dp, topEnd = 16.dp
-                        )
-                    )
-                    .pointerInput(Unit) {
-
-                        detectVerticalDragGestures(
-
-                            onVerticalDrag = { _, dragAmount ->
-
-                                // 向上拖拽 dragAmount 为负数
-                                // 所以这里必须取反
-                                val dragDp = with(density) {
-                                    (-dragAmount).toDp()
-                                }
-
-                                panelHeight = (panelHeight + dragDp).coerceIn(
-                                    collapsedHeight, expandedHeight
-                                )
-                            },
-
-                            onDragEnd = {
-
-                                val middleHeight =
-                                    collapsedHeight + (expandedHeight - collapsedHeight) / 2
-
-                                isExpanded = panelHeight > middleHeight
-
-                                updateExpandedState(isExpanded) //拖拽结束回调
-
-                                panelHeight = if (isExpanded) {
-                                    expandedHeight
-                                } else {
-                                    collapsedHeight
-                                }
-                            }
-
-                        )
-                    }, contentAlignment = Alignment.Center
+                    .height(configuration.screenHeightDp.dp * aniPanelHeight)
             ) {
-
-                // 拖拽指示条
+                // ================= 拖拽区域 =================
                 Box(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .background(
-                            Color(0xFFE0E0E0), CircleShape
-                        )
-                )
-            }
-
-            // ================= Tab 标题 =================
-
-            PanelTitle(
-                selectedTab = selectedTab, onTabSelected = { tab ->
-
-                    selectedTab = tab
-
-                    // 点击 Tab 自动展开
-                    if (!isExpanded) {
-                        updateExpandedState(true)
-
-                        isExpanded = true
-
-                        panelHeight = expandedHeight
-                    }
-                })
-
-            // ================= 内容区域 =================
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-
-                if (panelHeight > collapsedHeight + 10.dp) {
-
-                    when (selectedTab) {
-
-                        LightPanel2Tab.LIGHT_UP -> {
-
-                            LightUpContentOnly(
-                                lightPanel2State = lightPanel2State,
-                                lightCityList = lightCityList,
-                                lightedCityCount = lightedCityCount,
-                                lightedProvinces = lightedProvinces,
-                                lightedProvinceCount = lightedProvinceCount,
-                                lightenCityMode = lightenCityMode,
-                                isDeleteMode = isDeleteMode,
-                                scrollableMaxHeight = scrollableMaxHeight,
-
-                                onStateChange = {
-                                    lightPanel2State = it
-                                },
-
-                                onDeleteModeChange = {
-                                    isDeleteMode = it
-                                },
-
-                                onLightenViewModel = lightenViewModel,
-
-                                onSelectionChanged = { sCities, uCities, sProvinces, uProvinces ->
-
-                                    selectedCityCodes = sCities
-                                    unselectedCityCodes = uCities
-                                    selectedProvinceCodes = sProvinces
-                                    unselectedProvinceCodes = uProvinces
-                                })
-                        }
-
-                        LightPanel2Tab.CORNER -> {
-
-                            CornerContent(
-                                lightedProvinceCount = lightedProvinceCount,
-                                lightCityList = lightCityList
+                        .fillMaxWidth()
+                        .height(24.dp)  // 拖拽触控区域
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { isDragging = true },
+                                onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                                onDragEnd = { isDragging = false }
                             )
-                        }
-
-                        LightPanel2Tab.CHECK_IN -> {
-
-                            CheckInContent(
-                                lightCityList = lightCityList,
-                                checkInRecords = checkInRecords,
-                                onAddCheckIn = { adcode, cityName, note ->
-                                    lightenViewModel.addCheckInRecord(adcode, cityName, note)
-                                },
-                                onAddCheckInRich = { adcode, cityName, note, tags ->
-                                    lightenViewModel.addCheckInRecord(adcode, cityName, note, tags)
-                                })
-                        }
-
-                        LightPanel2Tab.MILESTONE -> {
-
-                            MilestoneContent(
-                                lightedProvinceCount = lightedProvinceCount
+                        },
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    // 视觉上的浮动指示器 - 与面板分离
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 8.dp)  // 与面板顶部产生间距
+                            .width(40.dp)
+                            .height(4.dp)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(2.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.1f),
+                                spotColor = Color.Black.copy(alpha = 0.1f)
                             )
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFFE2E8F0).copy(alpha = 0.9f),
+                                        Color(0xFF94A3B8).copy(alpha = 0.9f),
+                                        Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                                    )
+                                )
+                            )
+                    )
+                }
+
+                // ================= Tab 标题 =================
+
+                PanelTitle(
+                    selectedTab = selectedTab, onTabSelected = { tab ->
+                        selectedTab = tab
+                        if (!isExpanded) {
+                            currentHeightRatio = 0.6f
+                        }
+                    })
+
+                // ================= 内容区域 =================
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+
+                    if (true) {
+
+                        when (selectedTab) {
+
+                            LightPanel2Tab.LIGHT_UP -> {
+
+                                LightUpContentOnly(
+                                    lightPanel2State = lightPanel2State,
+                                    lightCityList = lightCityList,
+                                    lightedCityCount = lightedCityCount,
+                                    lightedProvinces = lightedProvinces,
+                                    lightedProvinceCount = lightedProvinceCount,
+                                    lightenCityMode = lightenCityMode,
+                                    isDeleteMode = isDeleteMode,
+                                    scrollableMaxHeight = scrollableMaxHeight,
+
+                                    onStateChange = {
+                                        lightPanel2State = it
+                                    },
+
+                                    onDeleteModeChange = {
+                                        isDeleteMode = it
+                                    },
+
+                                    onLightenViewModel = lightenViewModel,
+
+                                    onSelectionChanged = { sCities, uCities, sProvinces, uProvinces ->
+
+                                        selectedCityCodes = sCities
+                                        unselectedCityCodes = uCities
+                                        selectedProvinceCodes = sProvinces
+                                        unselectedProvinceCodes = uProvinces
+                                    })
+                            }
+
+                            LightPanel2Tab.CORNER -> {
+
+                                CornerContent(
+                                    lightedProvinceCount = lightedProvinceCount,
+                                    lightCityList = lightCityList
+                                )
+                            }
+
+                            LightPanel2Tab.CHECK_IN -> {
+
+                                CheckInContent(
+                                    lightCityList = lightCityList,
+                                    checkInRecords = checkInRecords,
+                                    onAddCheckIn = { adcode, cityName, note ->
+                                        lightenViewModel.addCheckInRecord(adcode, cityName, note)
+                                    },
+                                    onAddCheckInRich = { adcode, cityName, note, tags ->
+                                        lightenViewModel.addCheckInRecord(adcode, cityName, note, tags)
+                                    })
+                            }
+
+                            LightPanel2Tab.MILESTONE -> {
+
+                                MilestoneContent(
+                                    lightCityList = lightCityList,
+                                    lightedProvinceCount = lightedProvinceCount
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            // ================= 底部按钮 =================
+                // ================= 底部按钮 =================
 
-            if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
+                if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
 
-                BottomActionButtons(
+                    BottomActionButtons(
 
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
 
-                    lightPanel2State = lightPanel2State,
+                        lightPanel2State = lightPanel2State,
 
-                    isDeleteMode = isDeleteMode,
+                        isDeleteMode = isDeleteMode,
 
-                    lightCityList = lightCityList,
+                        lightCityList = lightCityList,
 
-                    lightedProvinces = lightedProvinces,
+                        lightedProvinces = lightedProvinces,
 
-                    lightenCityMode = lightenCityMode,
+                        lightenCityMode = lightenCityMode,
 
-                    selectedCityCodes = selectedCityCodes,
+                        selectedCityCodes = selectedCityCodes,
 
-                    unselectedCityCodes = unselectedCityCodes,
+                        unselectedCityCodes = unselectedCityCodes,
 
-                    selectedProvinceCodes = selectedProvinceCodes,
+                        selectedProvinceCodes = selectedProvinceCodes,
 
-                    unselectedProvinceCodes = unselectedProvinceCodes,
+                        unselectedProvinceCodes = unselectedProvinceCodes,
 
-                    onStateChange = {
-                        lightPanel2State = it
-                    },
+                        onStateChange = {
+                            lightPanel2State = it
+                        },
 
-                    onDeleteModeChange = {
-                        isDeleteMode = it
-                    },
+                        onDeleteModeChange = {
+                            isDeleteMode = it
+                        },
 
-                    onLightenViewModel = lightenViewModel,
+                        onLightenViewModel = lightenViewModel,
 
-                    onSelectionReset = {
+                        onSelectionReset = {
 
-                        selectedCityCodes = emptySet()
-                        unselectedCityCodes = emptySet()
-                        selectedProvinceCodes = emptySet()
-                        unselectedProvinceCodes = emptySet()
-                    })
+                            selectedCityCodes = emptySet()
+                            unselectedCityCodes = emptySet()
+                            selectedProvinceCodes = emptySet()
+                            unselectedProvinceCodes = emptySet()
+                        })
+                }
             }
         }
     }
@@ -391,7 +406,7 @@ private fun LightUpContentOnly(
             .fillMaxWidth()
             .heightIn(max = scrollableMaxHeight)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(6.dp)
     ) {
         LightCityScreenWithState(
             lightPanel2State = lightPanel2State,
@@ -417,7 +432,7 @@ private fun LightUpContentOnly(
         }
 
         if (lightPanel2State != LightPanel2State.EDIT) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(6.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -433,7 +448,7 @@ private fun LightUpContentOnly(
                 color = Color(0xFF1F2937),
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(6.dp))
 
             val provinceTimeline = remember(lightCityList) {
                 lightCityList.groupBy { it.provinceAdcode }.map { (_, cities) ->
