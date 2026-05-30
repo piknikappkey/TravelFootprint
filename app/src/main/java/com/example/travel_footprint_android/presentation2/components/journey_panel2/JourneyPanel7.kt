@@ -41,7 +41,6 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_list.FootprintList
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.JourneyEdit
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_list.JourneyList3
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.location_button.LocationButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.FOOTPRINT_EDIT
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.FOOTPRINT_LIST
@@ -129,12 +128,6 @@ fun JourneyPanel7(
                     .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(5.dp))
             )
         }
-
-        LocationButton(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(y = (-50).dp)
-        )
 
         Box(
             modifier = Modifier

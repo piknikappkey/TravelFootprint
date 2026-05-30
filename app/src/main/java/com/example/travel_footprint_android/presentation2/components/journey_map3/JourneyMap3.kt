@@ -29,6 +29,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.amap.api.maps.MapView
 import com.example.travel_footprint_android.data.entity.Location
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.location_button.LocationButton
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 
 @Composable
@@ -78,11 +79,14 @@ fun JourneyMap3(
                     }
                 }
         )
+        LocationButton(
+            modifier = Modifier.matchParentSize()
+        )
     }
 
     LaunchedEffect(isInitialized) {
         if (isInitialized) {
-            journeyMap3ViewModel.startLocation()
+            journeyMap3ViewModel.startLocation(aniMoveTime = 2000)
         }
     }
 

@@ -1,5 +1,9 @@
 package com.example.travel_footprint_android.presentation2.components.image_random
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -43,6 +47,9 @@ fun ImageRandom(
     onRemove: (() -> Unit)? = null,
     isChaos: Boolean = false,
 ) {
+    // 当前是否处于拖动中
+    var isPress by remember { mutableStateOf(false) }
+
     val drawableResId = remember {
         if (img == 0) {
             val fields = R.drawable::class.java.declaredFields
@@ -72,10 +79,16 @@ fun ImageRandom(
         val high = maxOf(minSize, maxSize)
         if (low == high) low else Random.nextInt(low, high + 1)
     }
+    val aniImgSize by animateFloatAsState(
+        targetValue = if (isPress) imgSize.toFloat() + 20f else imgSize.toFloat(),
+        animationSpec = tween(durationMillis = 200),
+    )
+
     val angle = remember {
         val low = minOf(minAngle, maxAngle)
         val high = maxOf(minAngle, maxAngle)
-        if (low == high) low.toFloat() else Random.nextInt(low, high + 1).toFloat()
+        val initial = if (low == high) low.toFloat() else Random.nextInt(low, high + 1).toFloat()
+        Animatable(initial)
     }
 
     val existenceMs = remember {
@@ -88,11 +101,22 @@ fun ImageRandom(
         }
     }
 
+    // 用于支持拖动功能
     val density = LocalDensity.current
     val initialMarginPxX = with(density) { offsetX.dp.toPx() }
     val initialMarginPxY = with(density) { offsetY.dp.toPx() }
     var offsetRealX by remember { mutableStateOf(initialMarginPxX) }
     var offsetRealY by remember { mutableStateOf(initialMarginPxY) }
+
+    val rotationSpeed = 30f // 度/秒
+
+    LaunchedEffect(isPress) {
+        if (!isPress) return@LaunchedEffect
+        while (true) {
+            delay(16)
+            angle.snapTo(angle.value + rotationSpeed * 0.016f)
+        }
+    }
 
     if (existenceMs >= 0L && onRemove != null) {
         LaunchedEffect(Unit) {
@@ -103,29 +127,51 @@ fun ImageRandom(
 
     val dragModifier = if (isChaos) {
         Modifier
-            .rotate(angle)
+            .rotate(angle.value)
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    offsetRealX += dragAmount.x
-                    offsetRealY += dragAmount.y
-                }
+                detectDragGestures(
+                    onDragStart = {
+                        isPress = true
+                    },
+                    onDragEnd = {
+                        isPress = false
+                    },
+                    onDragCancel = {
+                        isPress = false
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        offsetRealX += dragAmount.x
+                        offsetRealY += dragAmount.y
+                    }
+                )
             }
     } else {
         Modifier
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    offsetRealX += dragAmount.x
-                    offsetRealY += dragAmount.y
-                }
+                detectDragGestures(
+                    onDragStart = {
+                        isPress = true
+                    },
+                    onDragEnd = {
+                        isPress = false
+                    },
+                    onDragCancel = {
+                        isPress = false
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        offsetRealX += dragAmount.x
+                        offsetRealY += dragAmount.y
+                    }
+                )
             }
-            .rotate(angle)
+            .rotate(angle.value)
     }
 
     val imgModifier = Modifier
         .offset { IntOffset(offsetRealX.roundToInt(), offsetRealY.roundToInt()) }
-        .size(width = imgSize.dp, height = imgSize.dp)
+        .size(width = aniImgSize.dp, height = aniImgSize.dp)
         .alpha(alpha)
         .clickable(
             interactionSource = remember { MutableInteractionSource() },

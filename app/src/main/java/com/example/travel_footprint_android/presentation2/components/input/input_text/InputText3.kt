@@ -53,7 +53,8 @@ fun InputText3(
     ),
     primaryColor: Color = SecondColor2,
     onSurfaceColor: Color = MainColor2,
-    imageVector: ImageVector = Icons.Default.Edit
+    imageVector: ImageVector = Icons.Default.Edit,
+    modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -61,11 +62,9 @@ fun InputText3(
     val borderWidth = if (isFocused) 2.dp else 1.dp
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .padding(padding)
             .clip(RoundedCornerShape(12.dp))
-//            .background(containerColor)
             .border(
                 width = borderWidth,
                 color = borderColor,

@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.presentation2.components.light_pane
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -15,6 +16,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LightCityEditSetTime(
     selectedCities: String,
@@ -39,6 +41,7 @@ fun LightCityEditSetTime(
     Text(selectedCities + "点亮时间: $lightedTime")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetDateDialog(
     setShowDialog: (Boolean) -> Unit,

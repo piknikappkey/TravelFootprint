@@ -1,6 +1,5 @@
 package com.example.travel_footprint_android.presentation2.components.image_random
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -36,8 +35,11 @@ fun ImageRain(
     size: Int = 0,
     minSize: Int = 30,
     maxSize: Int = 50,
+    minAngle: Int = 0,
+    maxAngle: Int = 360,
     minExistenceTime: Int = 10000,
     maxExistenceTime: Int = 20000,
+    isChaos: Boolean = false,
 ) {
     val images = remember { mutableStateListOf<RainImageData>() }
     var nextId by remember { mutableStateOf(0L) }
@@ -87,12 +89,15 @@ fun ImageRain(
                         maxOffsetY = data.offsetY,
                         minSize = data.size,
                         maxSize = data.size,
+                        minAngle = minAngle,
+                        maxAngle = maxAngle,
                         alpha = alpha.value,
                         minExistenceTime = minExistenceTime,
                         maxExistenceTime = maxExistenceTime,
                         onRemove = {
                             show = false
                         },
+                        isChaos = isChaos
                     )
                 }
             }

@@ -64,6 +64,8 @@ class JourneyMap3ViewModel @Inject constructor(
 
     private var animationJob: Job? = null
 
+    private var _aniMoveTime: Long = 0
+
     val aMap: StateFlow<AMap?> = _aMap.asStateFlow()
 
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
@@ -119,7 +121,12 @@ class JourneyMap3ViewModel @Inject constructor(
             if (location.errorCode == 0) {
                 val latLng = LatLng(location.latitude, location.longitude)
                 _currentLocation.value = latLng
-                aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
+                val aniTime = _aniMoveTime
+                if (aniTime > 0) {
+                    aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f), aniTime, null)
+                } else {
+                    aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
+                }
             }
         }
     }
@@ -209,7 +216,8 @@ class JourneyMap3ViewModel @Inject constructor(
     }
 
     /** 启动定位服务 */
-    fun startLocation() {
+    fun startLocation(aniMoveTime: Long = 0) {
+        _aniMoveTime = aniMoveTime
         _locationClient.value?.startLocation()
     }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.TextUnit
@@ -40,9 +39,8 @@ fun ButtonSave(
                 color = color,
                 shape = roundedCornerShape
             )
-//            .border(2.dp, color.copy(.5f), roundedCornerShape)
-            .padding(paddingValues) // 内边距让背景更自然
             .clickable(onClick = onClick)
+            .padding(paddingValues) // 内边距让背景更自然
     ) {
         TextMedium(
             text = title,

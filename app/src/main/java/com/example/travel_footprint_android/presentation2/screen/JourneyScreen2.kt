@@ -78,6 +78,23 @@ fun JourneyScreen2(
         hasLocationPermission = granted.values.all { it }
     }
 
+    // 图片雨透明度
+    val aniImgRainAlpha by animateFloatAsState(
+        targetValue = if (rainEnabled) 1f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "aniImgRainAlpha"
+    )
+    // 随机图片拖拽混乱模式
+    var isChaos by remember { mutableStateOf(false) }
+    var rainMaxImages by remember { mutableStateOf(10) }
+    var rainIntervalMs by remember { mutableStateOf(1000L) }
+    var rainMinExistenceTime by remember { mutableStateOf(10000) }
+    var rainMaxExistenceTime by remember { mutableStateOf(20000) }
+    var rainMinSize by remember { mutableStateOf(30) }
+    var rainMaxSize by remember { mutableStateOf(50) }
+    var rainMinAngle by remember { mutableStateOf(0) }
+    var rainMaxAngle by remember { mutableStateOf(360) }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -116,21 +133,25 @@ fun JourneyScreen2(
             )
         }
 
-        val aniImgRainAlpha by animateFloatAsState(
-            targetValue = if (rainEnabled) 1f else 0f,
-            animationSpec = tween(durationMillis = 200),
-            label = "aniImgRainAlpha"
-        )
-
         ImageRain(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(aniImgRainAlpha),
+            isChaos = isChaos,
+            maxImages = rainMaxImages,
+            intervalMs = rainIntervalMs,
+            minExistenceTime = rainMinExistenceTime,
+            maxExistenceTime = rainMaxExistenceTime,
+            minSize = rainMinSize,
+            maxSize = rainMaxSize,
+            minAngle = rainMinAngle,
+            maxAngle = rainMaxAngle,
         )
 
         ButtonDraggable(
             modifier = Modifier.fillMaxSize(),
-            onClick = { showRainDialog = true }
+            onClick = { showRainDialog = true },
+            showRainDialog = showRainDialog
         ) {
             Headline(
                 text = "\u2699",
@@ -145,7 +166,25 @@ fun JourneyScreen2(
         RainSettingDialog(
             rainEnabled = rainEnabled,
             onRainEnabledChange = { rainEnabled = it },
-            onDismiss = { showRainDialog = false }
+            onDismiss = { showRainDialog = false },
+            isChaos = isChaos,
+            onIsChaosChange = { isChaos = it },
+            maxImages = rainMaxImages,
+            onMaxImagesChange = { rainMaxImages = it },
+            intervalMs = rainIntervalMs,
+            onIntervalMsChange = { rainIntervalMs = it },
+            minExistenceTime = rainMinExistenceTime,
+            onMinExistenceTimeChange = { rainMinExistenceTime = it },
+            maxExistenceTime = rainMaxExistenceTime,
+            onMaxExistenceTimeChange = { rainMaxExistenceTime = it },
+            minSize = rainMinSize,
+            onMinSizeChange = { rainMinSize = it },
+            maxSize = rainMaxSize,
+            onMaxSizeChange = { rainMaxSize = it },
+            minAngle = rainMinAngle,
+            onMinAngleChange = { rainMinAngle = it },
+            maxAngle = rainMaxAngle,
+            onMaxAngleChange = { rainMaxAngle = it },
         )
     }
 }
