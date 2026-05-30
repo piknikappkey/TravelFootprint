@@ -7,6 +7,6 @@ enum class LightPanel2Tab(val label: String) {
     MILESTONE("里程");
 
     companion object {
-        val TOTAL_PROVINCE_COUNT = 34
+        val TOTAL_PROVINCE_COUNT = 36
     }
 }
