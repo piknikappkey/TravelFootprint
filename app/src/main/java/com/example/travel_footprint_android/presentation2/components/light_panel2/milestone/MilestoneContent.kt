@@ -1,13 +1,18 @@
 package com.example.travel_footprint_android.presentation2.components.light_panel2.milestone
 
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +39,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,34 +56,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2Tab
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
-
-private const val EARTH_RADIUS_KM = 6371.0
-
-private fun haversineDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
-    val dLat = Math.toRadians(lat2 - lat1)
-    val dLng = Math.toRadians(lng2 - lng1)
-    val a = sin(dLat / 2).pow(2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLng / 2).pow(2)
-    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return EARTH_RADIUS_KM * c
-}
-
-private fun Double.pow(exp: Int): Double {
-    var result = 1.0
-    repeat(exp) { result *= this }
-    return result
-}
 
 data class MonthlyMileage(
     val monthLabel: String,
@@ -88,9 +76,14 @@ data class MileageData(
     val monthlyData: List<MonthlyMileage>
 )
 
-private fun calculateMileage(cities: List<LightedCity>): MileageData {
-    if (cities.size < 2) {
-        val total = 0.0
+private fun calculateMileageFromFootprints(footprints: List<Footprint>): MileageData {
+    Log.d("MilestoneContent", "calculateMileageFromFootprints called with ${footprints.size} footprints")
+    if (footprints.isNotEmpty()) {
+        val totalDist = footprints.sumOf { it.distance }
+        Log.d("MilestoneContent", "Total distance in DB: $totalDist m, footprints: ${footprints.map { "${it.id}=${it.distance}m" }}")
+    }
+
+    if (footprints.isEmpty()) {
         val months = (0 until 6).map { i ->
             val cal = Calendar.getInstance()
             cal.add(Calendar.MONTH, -i)
@@ -99,44 +92,61 @@ private fun calculateMileage(cities: List<LightedCity>): MileageData {
                 distanceKm = 0.0
             )
         }.reversed()
-        return MileageData(totalKm = total, monthlyData = months)
+        return MileageData(totalKm = 0.0, monthlyData = months)
     }
 
-    val sorted = cities.sortedBy { it.lightedTime }
-    val calendar = Calendar.getInstance()
-    val sixMonthsAgo = Calendar.getInstance().apply { add(Calendar.MONTH, -5) }
-    sixMonthsAgo.set(Calendar.DAY_OF_MONTH, 1)
-    sixMonthsAgo.set(Calendar.HOUR_OF_DAY, 0)
-    sixMonthsAgo.set(Calendar.MINUTE, 0)
-    sixMonthsAgo.set(Calendar.SECOND, 0)
-    sixMonthsAgo.set(Calendar.MILLISECOND, 0)
-    val sixMonthsAgoTime = sixMonthsAgo.time
-
     val dateFormat = SimpleDateFormat("yyyyMM", Locale.getDefault())
+    val monthLabelFormat = SimpleDateFormat("M月", Locale.getDefault())
 
-    val monthlyDistances = mutableMapOf<String, Double>()
+    val monthlyDistances = mutableMapOf<String, MutableList<Double>>()
     var totalKm = 0.0
 
-    for (i in 1 until sorted.size) {
-        val prev = sorted[i - 1]
-        val curr = sorted[i]
-        val dist = haversineDistance(prev.latitude, prev.longitude, curr.latitude, curr.longitude)
-        totalKm += dist
-        val monthKey = dateFormat.format(curr.lightedTime)
-        monthlyDistances[monthKey] = (monthlyDistances[monthKey] ?: 0.0) + dist
+    for (footprint in footprints) {
+        val distanceKm = footprint.distance / 1000.0
+        totalKm += distanceKm
+        val monthKey = dateFormat.format(footprint.startTime)
+        monthlyDistances.getOrPut(monthKey) { mutableListOf() }.add(distanceKm)
     }
 
     val monthlyData = (0 until 6).map { i ->
         val cal = Calendar.getInstance()
-        cal.add(Calendar.MONTH, - (5 - i))
+        cal.add(Calendar.MONTH, -(5 - i))
         val key = dateFormat.format(cal.time)
+        val distances = monthlyDistances[key] ?: emptyList()
         MonthlyMileage(
-            monthLabel = SimpleDateFormat("M月", Locale.getDefault()).format(cal.time),
-            distanceKm = monthlyDistances[key] ?: 0.0
+            monthLabel = monthLabelFormat.format(cal.time),
+            distanceKm = distances.sum()
         )
     }
 
-    return MileageData(totalKm = totalKm.roundToInt().toDouble(), monthlyData = monthlyData)
+    return MileageData(totalKm = totalKm, monthlyData = monthlyData)
+}
+
+data class MonthGroup(
+    val monthLabel: String,
+    val monthKey: String,
+    val footprints: List<Footprint>
+)
+
+private fun groupFootprintsByMonth(footprints: List<Footprint>): List<MonthGroup> {
+    if (footprints.isEmpty()) return emptyList()
+
+    val dateFormat = SimpleDateFormat("yyyyMM", Locale.getDefault())
+    val monthLabelFormat = SimpleDateFormat("yyyy年M月", Locale.getDefault())
+
+    val grouped = footprints
+        .sortedByDescending { it.startTime }
+        .groupBy { dateFormat.format(it.startTime) }
+
+    return grouped.entries.map { (key, list) ->
+        val cal = Calendar.getInstance()
+        cal.time = dateFormat.parse(key) ?: Date()
+        MonthGroup(
+            monthLabel = monthLabelFormat.format(cal.time),
+            monthKey = key,
+            footprints = list
+        )
+    }.sortedByDescending { it.monthKey }
 }
 
 private val CardGradientStart = Color(0xFF1A1A2E)
@@ -150,12 +160,19 @@ private val ChartGridColor = Color(0x22FFFFFF)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MilestoneContent(
-    lightCityList: List<LightedCity>,
-    lightedProvinceCount: Int
+    lightCityList: List<com.example.travel_footprint_android.data.entity.LightedCity>,
+    lightedProvinceCount: Int,
+    allFootprints: List<Footprint>
 ) {
-    val mileageData = remember(lightCityList) {
-        calculateMileage(lightCityList)
+    val mileageData = remember(allFootprints) {
+        calculateMileageFromFootprints(allFootprints)
     }
+
+    val monthGroups = remember(allFootprints) {
+        groupFootprintsByMonth(allFootprints)
+    }
+
+    var showAllRecords by remember { mutableStateOf(false) }
 
     val achievedMilestones = remember(lightedProvinceCount) {
         milestones.filter { it.requiredProvinces <= lightedProvinceCount }
@@ -170,7 +187,19 @@ fun MilestoneContent(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        MileageSummaryCard(mileageData = mileageData)
+        MileageSummaryCard(
+            mileageData = mileageData,
+            showAllRecords = showAllRecords,
+            onToggleAllRecords = { showAllRecords = !showAllRecords }
+        )
+
+        AnimatedVisibility(
+            visible = showAllRecords,
+            enter = expandVertically(),
+            exit = shrinkVertically()
+        ) {
+            AllRecordsSection(monthGroups = monthGroups)
+        }
 
         Spacer(Modifier.height(20.dp))
 
@@ -272,7 +301,142 @@ fun MilestoneContent(
 }
 
 @Composable
-private fun MileageSummaryCard(mileageData: MileageData) {
+private fun AllRecordsSection(monthGroups: List<MonthGroup>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        Text(
+            text = "全部记录",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF1F2937)
+        )
+        Spacer(Modifier.height(12.dp))
+
+        if (monthGroups.isEmpty()) {
+            Text(
+                text = "暂无足迹记录",
+                fontSize = 14.sp,
+                color = Color(0xFF9CA3AF),
+                modifier = Modifier.padding(vertical = 20.dp)
+            )
+        } else {
+            monthGroups.forEach { group ->
+                MonthGroupSection(group)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthGroupSection(group: MonthGroup) {
+    val groupTotalKm = group.footprints.sumOf { it.distance / 1000.0 }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = group.monthLabel,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF374151)
+            )
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(0.5.dp)
+                    .background(Color(0xFFE5E7EB))
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "${String.format("%.1f", groupTotalKm)} km",
+                fontSize = 12.sp,
+                color = Color(0xFF6B7280),
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        group.footprints.forEach { footprint ->
+            FootprintRecordItem(footprint)
+        }
+    }
+}
+
+@Composable
+private fun FootprintRecordItem(footprint: Footprint) {
+    val dateFormat = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
+    val distanceKm = footprint.distance / 1000.0
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFF8FAFC))
+            .clickable { }
+            .padding(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF60A5FA))
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = footprint.title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1F2937),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = dateFormat.format(footprint.startTime),
+                    fontSize = 11.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = String.format("%.2f", distanceKm),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF3B82F6)
+                )
+                Text(
+                    text = "km",
+                    fontSize = 10.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MileageSummaryCard(
+    mileageData: MileageData,
+    showAllRecords: Boolean,
+    onToggleAllRecords: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -315,7 +479,7 @@ private fun MileageSummaryCard(mileageData: MileageData) {
                 )
                 Spacer(Modifier.height(12.dp))
                 Button(
-                    onClick = { },
+                    onClick = onToggleAllRecords,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF3B82F6)
                     ),
@@ -323,7 +487,7 @@ private fun MileageSummaryCard(mileageData: MileageData) {
                     modifier = Modifier.height(32.dp)
                 ) {
                     Text(
-                        text = "全部记录",
+                        text = if (showAllRecords) "收起记录" else "全部记录",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -352,7 +516,7 @@ private fun formatTotalKm(km: Double): String {
         km >= 10000 -> String.format("%.1f", km / 10000) + "万"
         km >= 1000 -> String.format("%.0f", km)
         km >= 100 -> String.format("%.0f", km)
-        else -> String.format("%.0f", km)
+        else -> String.format("%.1f", km)
     }
 }
 
@@ -375,7 +539,7 @@ private fun MonthlyChart(
     val maxValue = monthlyData.maxOfOrNull { it.distanceKm } ?: 1.0
     val safeMax = if (maxValue <= 0) 1.0f else maxValue.toFloat()
     val chartTopPadding = 20f
-    val chartBottomPadding = 28f
+    val chartBottomPadding = 44f
 
     Canvas(modifier = modifier) {
         val width = size.width
@@ -454,23 +618,23 @@ private fun MonthlyChart(
             )
         }
 
-        val peakIndex = monthlyData.indices.maxByOrNull { monthlyData[it].distanceKm }
-        if (peakIndex != null && monthlyData[peakIndex].distanceKm > 0) {
-            val peakPoint = dataPoints[peakIndex]
-            val labelText = String.format("%.0f", monthlyData[peakIndex].distanceKm)
-            val paint = android.graphics.Paint().apply {
-                color = 0xFFFFFFFF.toInt()
-                textSize = 22f
-                textAlign = android.graphics.Paint.Align.CENTER
-                isAntiAlias = true
-                isFakeBoldText = true
+        dataPoints.forEachIndexed { index, point ->
+            if (monthlyData[index].distanceKm > 0) {
+                val labelText = String.format("%.2f", monthlyData[index].distanceKm)
+                val paint = android.graphics.Paint().apply {
+                    color = 0xFFFFFFFF.toInt()
+                    textSize = 22f
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    isAntiAlias = true
+                    isFakeBoldText = true
+                }
+                drawContext.canvas.nativeCanvas.drawText(
+                    labelText,
+                    point.x,
+                    point.y - 12.dp.toPx(),
+                    paint
+                )
             }
-            drawContext.canvas.nativeCanvas.drawText(
-                labelText,
-                peakPoint.x,
-                peakPoint.y - 12.dp.toPx(),
-                paint
-            )
         }
 
         val gridLines = 3
@@ -496,7 +660,7 @@ private fun MonthlyChart(
             drawContext.canvas.nativeCanvas.drawText(
                 data.monthLabel,
                 x,
-                height - 4.dp.toPx(),
+                height - 10.dp.toPx(),
                 labelPaint
             )
         }
@@ -529,8 +693,6 @@ private fun MilestoneCard(
     progress: Float
 ) {
     val bgColor = if (isAchieved) Color(0xFFEFF6FF) else Color(0xFFF3F4F6)
-    val textColor = if (isAchieved) Color(0xFF1F2937) else Color(0xFFD1D5DB)
-    val descColor = if (isAchieved) Color(0xFF6B7280) else Color(0xFFE5E7EB)
 
     Column(
         modifier = Modifier
@@ -579,7 +741,7 @@ private fun MilestoneCard(
         Text(
             text = milestone.description,
             fontSize = 11.sp,
-            color = descColor,
+            color = if (isAchieved) Color(0xFF6B7280) else Color(0xFFE5E7EB),
             textAlign = TextAlign.Center
         )
 
@@ -590,26 +752,17 @@ private fun MilestoneCard(
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(if (isAchieved) Color(0xFFBFDBFE) else Color(0xFFE5E7EB))
+                .background(Color(0xFFE5E7EB))
         ) {
-            if (!isAchieved) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress)
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color(0xFF93C5FD))
-                )
-            }
-        }
-
-        if (!isAchieved) {
-            Spacer(Modifier.height(4.dp))
-            val percent = (progress * 100).toInt()
-            Text(
-                text = "进度 $percent%",
-                fontSize = 10.sp,
-                color = Color(0xFF9CA3AF)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(if (isAchieved) 1f else progress)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(
+                        if (isAchieved) Color(0xFF3B82F6)
+                        else Color(0xFF93C5FD)
+                    )
             )
         }
     }

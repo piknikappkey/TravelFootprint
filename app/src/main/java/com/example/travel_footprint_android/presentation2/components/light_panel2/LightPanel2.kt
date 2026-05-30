@@ -120,6 +120,9 @@ fun LightPanel2(
         }
     }
 
+    // 所有足迹
+    val allFootprints by lightenViewModel.allFootprints.collectAsState()
+
     val configuration = LocalConfiguration.current
     val density = configuration.densityDpi.toFloat() / 160f
     val screenHeightPixels = configuration.screenHeightDp * density
@@ -240,6 +243,7 @@ fun LightPanel2(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(configuration.screenHeightDp.dp * aniPanelHeight)
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
@@ -249,24 +253,22 @@ fun LightPanel2(
                         color = Color.White,
                         shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
                     )
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = { isDragging = true },
+                            onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                            onDragEnd = { isDragging = false }
+                        )
+                    }
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(configuration.screenHeightDp.dp * aniPanelHeight)
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = { isDragging = true },
-                                onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
-                                onDragEnd = { isDragging = false }
-                            )
-                        },
+                    modifier = Modifier.fillMaxSize()
                 ) {
 
                     // ================= Tab 标题 =================
 
                     PanelTitle(
-                        modifier= Modifier,
+                        modifier = Modifier,
                         selectedTab = selectedTab, onTabSelected = { tab ->
                             selectedTab = tab
                             selectedProvinceAdcode = null
@@ -360,20 +362,22 @@ fun LightPanel2(
                                         })
                                 }
 
-                                LightPanel2Tab.MILESTONE -> {
+                                LightPanel2Tab.MILESTONE ->
 
                                     MilestoneContent(
                                         lightCityList = lightCityList,
-                                        lightedProvinceCount = lightedProvinceCount
+                                        lightedProvinceCount = lightedProvinceCount,
+                                        allFootprints = allFootprints
                                     )
-                                }
                             }
                         }
                     }
 
+
                     // ================= 底部按钮 =================
 
                     if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
+
 
                         BottomActionButtons(
 
@@ -416,12 +420,15 @@ fun LightPanel2(
                                 selectedProvinceCodes = emptySet()
                                 unselectedProvinceCodes = emptySet()
                             })
+
                     }
+
                 }
+            }
             }
         }
     }
-}
+
 
 // ========== 内容区域（不含底部按钮） ==========
 @Composable
