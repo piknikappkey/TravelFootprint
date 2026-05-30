@@ -2,6 +2,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +48,8 @@ fun FootprintEdit(
     deleteFootprint: (Footprint) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
 ) {
     var footprint by remember { mutableStateOf(
         footprintSelected?.copy()
@@ -55,7 +59,8 @@ fun FootprintEdit(
                 description = "这是一个新的足迹",
                 createTime = Date(),
                 address = journeySelected.address,
-                rating = 1
+                rating = 1,
+                startTime = Date(0L),
             )
     ) }
 
@@ -73,6 +78,8 @@ fun FootprintEdit(
             updateFootprint,
             journeyPanelHeightState,
             setJourneyPanelHeightState,
+            setIsDragging = setIsDragging,
+            onDragDelta = onDragDelta,
         )
         Spacer(Modifier.height(10.dp))
 
@@ -95,6 +102,8 @@ private fun HeadRow(
     updateFootprint: (Footprint) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -113,10 +122,18 @@ private fun HeadRow(
         )
         Spacer(Modifier.width(5.dp))
         Headline(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { setIsDragging(true) },
+                        onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                        onDragEnd = { setIsDragging(false) }
+                    )
+                },
             text = if(footprintSelected == null) "新增足迹" else "编辑足迹",
             fontSize = 18.sp
         )
-        Spacer(Modifier.weight(1f))
         // 保存按钮
         ButtonSave(
             onClick = {

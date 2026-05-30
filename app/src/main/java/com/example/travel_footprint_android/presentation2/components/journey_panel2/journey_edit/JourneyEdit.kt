@@ -2,6 +2,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
@@ -50,6 +52,8 @@ fun JourneyEdit(
     deleteJourney: (Journey) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
     ) {
     var journey by remember { mutableStateOf(
         journeySelected?.copy()
@@ -76,6 +80,8 @@ fun JourneyEdit(
             updateJourney,
             journeyPanelHeightState,
             setJourneyPanelHeightState,
+            setIsDragging = setIsDragging,
+            onDragDelta = onDragDelta,
         )
         // 可滚动内容
         JourneyContent(
@@ -101,6 +107,8 @@ fun JourneyHead(
     updateJourney: (Journey) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -128,6 +136,13 @@ fun JourneyHead(
             modifier = Modifier
                 .weight(1f)
                 .padding(vertical = 5.dp, horizontal = 3.dp)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { setIsDragging(true) },
+                        onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                        onDragEnd = { setIsDragging(false) }
+                    )
+                },
         )
 
         ButtonSave(

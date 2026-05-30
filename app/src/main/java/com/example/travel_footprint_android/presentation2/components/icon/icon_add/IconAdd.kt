@@ -9,11 +9,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.FontDark6
 
 @Composable
@@ -21,12 +23,19 @@ fun IconAdd(
     modifier: Modifier = Modifier.fillMaxSize(),
     clickable: () -> Unit = {},
     iconSize: Float = .4f,
+    elevation: Dp = 1.dp, // 阴影大小
+    shape: RoundedCornerShape = RoundedCornerShape(5.dp), // 圆角
+    bgColor: Color = Color(0xFFFDF8F5),
 ) {
     Box(
         modifier = modifier
+            .shadow(
+                elevation = elevation,                 // 阴影高度
+                shape = shape, // 圆角
+                clip = true                        // 同时按照该形状裁剪内容
+            )
             .background(
-                color = BGLight0,
-                shape = RoundedCornerShape(5.dp)
+                color = bgColor,
             )
             .clickable(onClick = { clickable() })
     ) {

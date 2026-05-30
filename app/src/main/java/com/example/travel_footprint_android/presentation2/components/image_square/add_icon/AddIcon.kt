@@ -32,7 +32,7 @@ fun AddIcon(
                 .align(Alignment.Center)
                 .fillMaxSize(iconSize),
             painter = painterResource(id = R.drawable.ic_add),
-            contentDescription = "删除图标",
+            contentDescription = "添加图标",
             colorFilter = ColorFilter.tint(FontDark6),
         )
     }

@@ -12,7 +12,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -27,9 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
@@ -50,7 +47,6 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.FOOTPRINT_LIST
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.JOURNEY_EDIT
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State.JOURNEY_LIST
-import com.example.travel_footprint_android.ui.theme.SecondColor2
 
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -59,7 +55,7 @@ fun JourneyPanel7(
     modifier: Modifier = Modifier,
     journeyList: List<Journey>,
     aniTime: Int,
-    journeyViewModel: JourneyViewModel = hiltViewModel(),
+    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
 ) {
     val journeyPanel2State = JourneyNavController.journeyNavController.value
     val journeySelected = JourneyNavController.journeyData.value
@@ -109,10 +105,35 @@ fun JourneyPanel7(
                 }
             }
     ) {
+        // 控制面板高度组件
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp)
+                .align(Alignment.TopCenter)
+                .offset(y = (-28).dp)
+                .background(Color.Transparent)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { isDragging = true },
+                        onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                        onDragEnd = { isDragging = false }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(28.dp)
+                    .height(4.dp)
+                    .background(Color.Black.copy(alpha = 0.35f), RoundedCornerShape(5.dp))
+            )
+        }
+
         LocationButton(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(y = (-70).dp)
+                .offset(y = (-50).dp)
         )
 
         Box(
@@ -125,44 +146,13 @@ fun JourneyPanel7(
                 )
         ) {
             BGImgBox(listOf(R.drawable.bg_rectangular_1__3__0)) {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(configuration.screenHeightDp.dp * aniJourneyHeight)
                 ) {
-                    // 控制面板高度组件
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(24.dp)
-                            .pointerInput(Unit) {
-                                detectVerticalDragGestures(
-                                    onDragStart = { isDragging = true },
-                                    onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
-                                    onDragEnd = { isDragging = false }
-                                )
-                            }
-                            .drawBehind {
-                                // 在绘制区域底部画一条线
-                                drawLine(
-                                    color = SecondColor2,
-                                    start = Offset(0f, size.height),
-                                    end = Offset(size.width, size.height),
-                                    strokeWidth = 1.dp.toPx()
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(48.dp)
-                                .height(2.dp)
-                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(5.dp))
-                        )
-                    }
-
                     AnimatedContent(
-                        modifier = Modifier.clip(shape = RoundedCornerShape(0.dp)),
+                        modifier = Modifier.clip(shape = RoundedCornerShape(0.dp)).align(Alignment.BottomCenter),
                         targetState = journeyPanel2State,
                         transitionSpec = {
                             (fadeIn(animationSpec = tween(durationMillis = aniTime)) +
@@ -186,18 +176,22 @@ fun JourneyPanel7(
                                     journeySelected = journeySelected,
                                     currentHeightRatio > 0.5f,
                                     togglePanelHeight,
+                                    { b -> isDragging = b},
+                                    onDragDelta
                                 )
                             }
                             JOURNEY_EDIT -> {
                                 JourneyEdit(
-                                    modifier = Modifier.weight(1f),
+//                                    modifier = Modifier.weight(1f),
                                     journeySelected = journeySelected,
                                     navigate = { state, journey -> JourneyNavController.navigate(state, journey)},
                                     addJourney = { j -> journeyViewModel.createJourney(j) },
                                     updateJourney = { j -> journeyViewModel.updateJourney(j) },
                                     deleteJourney = { j -> journeyViewModel.deleteJourney(j) },
-                                    currentHeightRatio > 0.5f,
-                                    togglePanelHeight,
+                                    journeyPanelHeightState = currentHeightRatio > 0.5f,
+                                    setJourneyPanelHeightState = togglePanelHeight,
+                                    setIsDragging =  { b -> isDragging = b},
+                                    onDragDelta = onDragDelta,
                                 )
                             }
 
@@ -207,6 +201,8 @@ fun JourneyPanel7(
                                         it,
                                         currentHeightRatio > 0.5f,
                                         togglePanelHeight,
+                                        setIsDragging =  { b -> isDragging = b},
+                                        onDragDelta = onDragDelta,
                                     )
                                 }
                             }
@@ -229,6 +225,8 @@ fun JourneyPanel7(
                                         },
                                         currentHeightRatio > 0.5f,
                                         togglePanelHeight,
+                                        setIsDragging =  { b -> isDragging = b},
+                                        onDragDelta = onDragDelta,
                                     )
                                 }
                             }

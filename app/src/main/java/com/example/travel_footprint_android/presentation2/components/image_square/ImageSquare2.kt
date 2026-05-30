@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.travel_footprint_android.presentation2.components.image_square.add_icon.AddIcon
+import com.example.travel_footprint_android.presentation2.components.icon.icon_add.IconAdd
 import com.example.travel_footprint_android.presentation2.components.image_square.delete_icon.DeleteIcon
 import com.example.travel_footprint_android.presentation2.components.image_square.image1.Image1
 import kotlinx.coroutines.CoroutineScope
@@ -157,10 +157,15 @@ fun ImageSquare2(
             } else if (isLazyLoading) {
                 // 加载中不显示内容
             } else {
-                AddIcon(
-                    modifierImg,
+                IconAdd(
+                    modifier = modifierImg,
                     iconSize = addIconSize,
-                    { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
+                    clickable = { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+                )
+//                AddIcon(
+//                    modifierImg,
+//                    iconSize = addIconSize,
+//                    { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
             }
         }
     }

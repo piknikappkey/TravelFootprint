@@ -2,8 +2,16 @@
 package com.example.travel_footprint_android.data.repository
 
 import android.util.Log
-import com.example.travel_footprint_android.data.dao.*
-import com.example.travel_footprint_android.data.entity.*
+import com.example.travel_footprint_android.data.dao.FootprintDao
+import com.example.travel_footprint_android.data.dao.FootprintWithLocation
+import com.example.travel_footprint_android.data.dao.LocationDao
+import com.example.travel_footprint_android.data.dao.MediaDao
+import com.example.travel_footprint_android.data.dao.TagDao
+import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.data.entity.FootprintTagCrossRef
+import com.example.travel_footprint_android.data.entity.Location
+import com.example.travel_footprint_android.data.entity.MediaAttachment
+import com.example.travel_footprint_android.data.entity.Tag
 import com.example.travel_footprint_android.domain.service.LocationService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -84,7 +92,8 @@ class FootprintRepository @Inject constructor(
             description = footprint.description,
             createTime = Date(),
             address = address,
-            rating = footprint.rating
+            rating = footprint.rating,
+            startTime = footprint.startTime
         )
         val footprintId = footprintDao.insertFootprint(footprint)
 

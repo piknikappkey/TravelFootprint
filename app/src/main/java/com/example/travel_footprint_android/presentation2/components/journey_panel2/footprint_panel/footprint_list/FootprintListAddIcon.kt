@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.icon.icon_add.IconAdd
 
 @Composable
@@ -19,13 +18,11 @@ fun FootprintListAddIcon(
         modifier = modifier
             .padding(10.dp)
     ) {
-        BGBox {
-            IconAdd(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(48.dp),
-                clickable = clickable,
-            )
-        }
+        IconAdd(
+            modifier = Modifier
+                .width(48.dp)
+                .height(48.dp),
+            clickable = clickable,
+        )
     }
 }

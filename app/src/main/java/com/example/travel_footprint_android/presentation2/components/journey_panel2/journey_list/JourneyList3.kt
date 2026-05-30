@@ -10,6 +10,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +53,8 @@ fun JourneyList3(
     journeySelected: Journey?,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
     ) {
     val starTime = System.currentTimeMillis()
 
@@ -82,6 +86,13 @@ fun JourneyList3(
                 modifier = Modifier
                     .weight(1f)
                     .padding(vertical = 5.dp, horizontal = 10.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = { setIsDragging(true) },
+                            onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                            onDragEnd = { setIsDragging(false) }
+                        )
+                    },
             )
 
             Column(
@@ -140,20 +151,19 @@ fun JourneyList3(
                         enter = fadeIn() + scaleIn(initialScale = 0.8f),
                         exit = fadeOut() + scaleOut(targetScale = 0.8f)
                     ) {
-                        BGBox {
-                            IconAdd(
-                                modifier = Modifier
-                                    .width(48.dp)
-                                    .height(48.dp),
-                                clickable = {
-                                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, null)
-                                },
-                            )
-                        }
+                        IconAdd(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(48.dp),
+                            clickable = {
+                                JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, null)
+                            },
+                        )
                     }
                 }
             }
 
+            // 前往足迹按钮
             Box(
                 modifier = Modifier
                     .padding(10.dp)

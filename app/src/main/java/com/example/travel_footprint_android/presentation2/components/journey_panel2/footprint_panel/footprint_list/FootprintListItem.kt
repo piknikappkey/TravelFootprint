@@ -92,7 +92,7 @@ fun Content(
         Spacer(Modifier.height(10.dp))
         // 足迹状态面板
         if(isClicked) {
-            FootprintListPanel()
+            FootprintListPanel(footprint)
         }
         // 底部信息（足迹创建时间、足迹开始地址）
         BottomContent(footprint, isClicked)

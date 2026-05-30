@@ -78,7 +78,7 @@ private fun createLocationClient(
         // 设置定位模式为高精度模式
         locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
         // 设置连续定位间隔（毫秒）
-        interval = 3000 // 每3秒获取一次定位
+        interval = 2000 // 每3秒获取一次定位
         // 设置是否返回地址信息
         isNeedAddress = true
         // 设置是否单次定位

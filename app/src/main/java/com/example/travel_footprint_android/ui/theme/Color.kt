@@ -78,7 +78,7 @@ val BtnBgColorSecond3 = Color(0xFFFDD37A)
  * 用户位置图标样式
   */
 // 用户位置图标颜色
-val LocationIconColor = color.argb(100, 255, 0, 0)
+//val LocationIconColor = color.argb(0, 255, 0, 0)
 // 用户位置可能范围边框颜色
 val LocationStrokeColor = color.argb(100, 100, 200, 255)
 // 用户位置可能范围填充颜色

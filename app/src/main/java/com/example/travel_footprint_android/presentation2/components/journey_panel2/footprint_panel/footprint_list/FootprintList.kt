@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.presentation2.components.journey_pa
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.viewmodel.MapViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
@@ -46,16 +48,18 @@ fun FootprintList(
     journeySelected: Journey,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
-    mapViewModel: MapViewModel = hiltViewModel(),
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
+    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
 ) {
-    // 足迹数据
-    val footprintUiState by mapViewModel.uiState.collectAsState()
+    // 旅程数据
+    val journeyUiState by journeyViewModel.uiState.collectAsState()
 
     // 读取足迹数据
-    val footprints = footprintUiState.footprints
+    val footprints = journeyUiState.footprints
 
-    LaunchedEffect(Unit) {
-        mapViewModel.loadJourneyFootprints(journeySelected.id)
+    LaunchedEffect(journeySelected) {
+        journeyViewModel.loadFootprintsForJourney(journeyId = journeySelected.id)
     }
 
     var clickItemIndex by remember { mutableStateOf(-1) }
@@ -64,7 +68,13 @@ fun FootprintList(
 
     Column {
         Spacer(Modifier.height(10.dp))
-        HeadRow(journeySelected, journeyPanelHeightState, setJourneyPanelHeightState)
+        HeadRow(
+            journeySelected,
+            journeyPanelHeightState,
+            setJourneyPanelHeightState,
+            setIsDragging = setIsDragging,
+            onDragDelta = onDragDelta,
+        )
         LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
         Content(
             footprints,
@@ -80,8 +90,12 @@ private fun HeadRow(
     journeySelected: Journey,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
+    setIsDragging: (Boolean) -> Unit,
+    onDragDelta: (Float) -> Unit,
 ) {
-    Row {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         // 返回按钮
         Image(
             modifier = Modifier
@@ -96,11 +110,18 @@ private fun HeadRow(
         )
         Spacer(Modifier.width(5.dp))
         Headline(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { setIsDragging(true) },
+                        onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                        onDragEnd = { setIsDragging(false) }
+                    )
+                },
             text = "${journeySelected.title}——足迹",
             fontSize = 18.sp
         )
-        Spacer(Modifier.weight(1f))
-
         IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
         Spacer(Modifier.width(10.dp))
     }

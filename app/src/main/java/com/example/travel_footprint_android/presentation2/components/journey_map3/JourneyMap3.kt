@@ -21,14 +21,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.amap.api.location.AMapLocationListener
 import com.amap.api.maps.MapView
-import com.amap.api.maps.model.LatLng
+import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 
 @Composable
 fun JourneyMap3(
     modifier: Modifier = Modifier,
+    locationList: List<Location> = emptyList(),
     journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3"),
 ) {
     val isInitialized by journeyMap3ViewModel.isInitialized.collectAsState()
@@ -50,20 +50,22 @@ fun JourneyMap3(
                 mapView ?: MapView(ctx)
             },
             modifier = Modifier.fillMaxSize()
-        ) { view ->
-            // 设置定位监听器来获取当前位置
-            val locationListener = AMapLocationListener { location ->
-                if (location.errorCode == 0) {
-                    journeyMap3ViewModel.setCurrentLocation(LatLng(location.latitude, location.longitude))
-                }
-            }
-            journeyMap3ViewModel.getLocationClient()?.setLocationListener(locationListener)
-        }
+        )
     }
 
     LaunchedEffect(isInitialized) {
         if (isInitialized) {
             journeyMap3ViewModel.startLocation()
+        }
+    }
+
+    LaunchedEffect(isInitialized, locationList) {
+        if (isInitialized) {
+            if (locationList.isNotEmpty()) {
+                journeyMap3ViewModel.updateRoutesWithAnimation(locationList)
+            } else {
+                journeyMap3ViewModel.clearAllRoutes()
+            }
         }
     }
 }
