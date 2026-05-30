@@ -3,12 +3,10 @@ package com.example.travel_footprint_android.presentation2.screen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2
+import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
 import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
 import com.example.travel_footprint_android.R
 
@@ -33,9 +32,20 @@ fun LightenScreen2(
     val uiState by lightenViewModel.uiState.collectAsState()
     val lightedProvinces = uiState.lightedProvinces
     val lightedCity = uiState.lightedCities
-    var panelIsExpanded by remember { mutableStateOf(false) }
     var lightenCityMode by remember { mutableStateOf(LightenCityMode.PROVINCE) }
+    var navigateRequest by remember { mutableStateOf<LightenCityMode?>(null) }
 
+    val showMapMode: ShowMapMode? = when (lightenCityMode) {
+        LightenCityMode.PROVINCE -> ShowMapMode.CITY
+        LightenCityMode.CITY -> ShowMapMode.PROVINCE
+    }
+
+    val onBackButtonClick: () -> Unit = {
+        navigateRequest = when (lightenCityMode) {
+            LightenCityMode.PROVINCE -> LightenCityMode.CITY
+            LightenCityMode.CITY -> LightenCityMode.PROVINCE
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -60,28 +70,23 @@ fun LightenScreen2(
             },
             lightedProvinces = lightedProvinces,
             lightedCity = lightedCity,
-            panelIsExpanded=panelIsExpanded,
             onModeChange = { newMode ->
                 lightenCityMode = newMode
                 Log.d("显示模式", "$newMode")
-            }
+            },
+            navigateRequest = navigateRequest,
         )
 
         // 底部可拖拽面板（覆盖在地图之上）
-        Box(
+        LightPanel2(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        ) {
-            LightPanel2(
-                modifier = Modifier,
-                lightenCityMode = lightenCityMode,
-                lightenViewModel = lightenViewModel,
-                onExpandedChanged = {isExpanded->
-                    panelIsExpanded=isExpanded
-                }
-            )
-        }
+                .fillMaxWidth(),
+            lightenCityMode = lightenCityMode,
+            lightenViewModel = lightenViewModel,
+            showMapMode = showMapMode,
+            onBackButtonClick = onBackButtonClick,
+        )
     }
 }
 

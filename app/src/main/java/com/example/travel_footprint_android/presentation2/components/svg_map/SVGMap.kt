@@ -3,19 +3,15 @@ package com.example.travel_footprint_android.presentation2.components.svg_map
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
-import com.example.travel_footprint_android.presentation2.components.back_buttom.city_province_backButtom
 import com.example.travel_footprint_android.presentation2.components.svg_map.city_box.CityBox
 import com.example.travel_footprint_android.presentation2.components.svg_map.city_box.SelectedCityInfo
 import com.example.travel_footprint_android.presentation2.components.svg_map.interactive_china_map.InteractiveChinaCityMap
@@ -28,8 +24,8 @@ fun SVGMap(
     onLightCityClick: (adcode: String, name: String) -> Unit,
     lightedProvinces: List<LightedProvince>,
     lightedCity: List<LightedCity>,
-    panelIsExpanded: Boolean,
-    onModeChange: (LightenCityMode) -> Unit = {}
+    onModeChange: (LightenCityMode) -> Unit = {},
+    navigateRequest: LightenCityMode? = null,
 ) {
     var selectedCityInfo by remember { mutableStateOf<SelectedCityInfo?>(null) }
     //
@@ -43,10 +39,32 @@ fun SVGMap(
     var currentScale by remember { mutableStateOf(1f) }
 
     val ZOOM_THRESHOLD = 3.6f  // 缩放阈值，超过此值切换到城市地图
-    Log.d("缩放阈值", "当前缩放阈值为：${currentScale}")
 
     //当前点亮模式
     var currentMode by remember { mutableStateOf(LightenCityMode.PROVINCE) }
+
+    // 监听外部导航请求
+    LaunchedEffect(navigateRequest) {
+        when (navigateRequest) {
+            LightenCityMode.CITY -> {
+                showProvinceMap = false
+                showCityMap = true
+                cityState = false
+                selectedCityInfo = null
+                currentMode = LightenCityMode.CITY
+                onModeChange(LightenCityMode.CITY)
+            }
+            LightenCityMode.PROVINCE -> {
+                showProvinceMap = true
+                showCityMap = false
+                cityState = false
+                selectedCityInfo = null
+                currentMode = LightenCityMode.PROVINCE
+                onModeChange(LightenCityMode.PROVINCE)
+            }
+            null -> { }
+        }
+    }
 
     // 监听缩放变化，自动切换地图
     LaunchedEffect(currentScale) {
@@ -55,9 +73,8 @@ fun SVGMap(
                 Log.d("SVGMap", "Switching to city map, scale=$currentScale")
                 showProvinceMap = false
                 currentMode=LightenCityMode.CITY
-                onModeChange(LightenCityMode.CITY)         // 显示城市
+                onModeChange(LightenCityMode.CITY)
                 showCityMap=true
-                // 切换时关闭城市信息框
                 cityState = false
                 selectedCityInfo = null
             }
@@ -65,28 +82,12 @@ fun SVGMap(
                 Log.d("SVGMap", "Switching to province map, scale=$currentScale")
                 showProvinceMap = true
                 currentMode=LightenCityMode.PROVINCE
-                onModeChange(LightenCityMode.PROVINCE)         // 显示省份
+                onModeChange(LightenCityMode.PROVINCE)
                 showCityMap=false
-                // 切换时关闭城市信息框
                 cityState = false
                 selectedCityInfo = null
             }
         }
-    }
-    // 专门用于返回省份地图的函数
-    fun backToProvinceMap() {
-        showProvinceMap = true
-        showCityMap = false
-        cityState = false
-        selectedCityInfo = null
-    }
-
-    // 专门用于跳转城市地图的函数
-    fun NavigateToCityMap() {
-        showCityMap = true
-        showProvinceMap = false
-        cityState = false
-        selectedCityInfo = null
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -106,22 +107,6 @@ fun SVGMap(
                 lightedProvinces = lightedProvinces,
                 onZoomChange = { scale -> currentScale = scale }
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp), // 添加边距，避免贴边
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                city_province_backButtom(
-                    ShowMapMode.CITY,
-                    panelIsExpanded,
-                    onClick = {
-                        onModeChange(LightenCityMode.CITY)
-                        NavigateToCityMap()
-                        currentMode= LightenCityMode.CITY
-                    }
-                )
-            }
         } else if(showCityMap){
             InteractiveChinaCityMap(
                 onCityClick = { cityName, adcode, parentAdcode ->
@@ -137,28 +122,9 @@ fun SVGMap(
                 },
                 lightedProvinces = lightedProvinces,
                 lightedCity =lightedCity ,
-//                onZoomChange = { scale -> currentScale = scale }
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp), // 添加边距，避免贴边
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                city_province_backButtom(
-                    ShowMapMode.PROVINCE,
-                    panelIsExpanded,
-                    onClick = {
-                        onModeChange(LightenCityMode.PROVINCE)
-                        backToProvinceMap()
-                        currentMode= LightenCityMode.PROVINCE
-                    }
-                )
-            }
-
         }
 
-    //头顶显示盒子
         CityBox(
             selectedCityInfo = selectedCityInfo,
             cityState = cityState,
