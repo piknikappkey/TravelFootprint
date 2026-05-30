@@ -4,6 +4,8 @@ import android.Manifest
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -35,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation2.components.button.button_draggable.ButtonDraggable
+import com.example.travel_footprint_android.presentation2.components.button.button_draggable.RainSettingDialog
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
@@ -55,6 +60,8 @@ fun JourneyScreen2(
 
     val aniTime = 400
     var sizeChange by remember { mutableStateOf(false) }
+    var rainEnabled by remember { mutableStateOf(true) }
+    var showRainDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val locationPermissions = arrayOf(
@@ -109,8 +116,36 @@ fun JourneyScreen2(
             )
         }
 
+        val aniImgRainAlpha by animateFloatAsState(
+            targetValue = if (rainEnabled) 1f else 0f,
+            animationSpec = tween(durationMillis = 200),
+            label = "aniImgRainAlpha"
+        )
+
         ImageRain(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(aniImgRainAlpha),
+        )
+
+        ButtonDraggable(
+            modifier = Modifier.fillMaxSize(),
+            onClick = { showRainDialog = true }
+        ) {
+            Headline(
+                text = "\u2699",
+                fontSize = 24.sp,
+                color = Color.White,
+                letterSpacing = 0.sp,
+            )
+        }
+    }
+
+    if (showRainDialog) {
+        RainSettingDialog(
+            rainEnabled = rainEnabled,
+            onRainEnabledChange = { rainEnabled = it },
+            onDismiss = { showRainDialog = false }
         )
     }
 }

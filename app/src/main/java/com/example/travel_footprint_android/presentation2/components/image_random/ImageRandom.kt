@@ -1,19 +1,29 @@
 package com.example.travel_footprint_android.presentation2.components.image_random
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @Composable
@@ -31,6 +41,7 @@ fun ImageRandom(
     minExistenceTime: Int = 10000,
     maxExistenceTime: Int = 20000,
     onRemove: (() -> Unit)? = null,
+    isChaos: Boolean = false,
 ) {
     val drawableResId = remember {
         if (img == 0) {
@@ -77,6 +88,12 @@ fun ImageRandom(
         }
     }
 
+    val density = LocalDensity.current
+    val initialMarginPxX = with(density) { offsetX.dp.toPx() }
+    val initialMarginPxY = with(density) { offsetY.dp.toPx() }
+    var offsetRealX by remember { mutableStateOf(initialMarginPxX) }
+    var offsetRealY by remember { mutableStateOf(initialMarginPxY) }
+
     if (existenceMs >= 0L && onRemove != null) {
         LaunchedEffect(Unit) {
             delay(existenceMs)
@@ -84,14 +101,46 @@ fun ImageRandom(
         }
     }
 
+    val dragModifier = if (isChaos) {
+        Modifier
+            .rotate(angle)
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    offsetRealX += dragAmount.x
+                    offsetRealY += dragAmount.y
+                }
+            }
+    } else {
+        Modifier
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    offsetRealX += dragAmount.x
+                    offsetRealY += dragAmount.y
+                }
+            }
+            .rotate(angle)
+    }
+
+    val imgModifier = Modifier
+        .offset { IntOffset(offsetRealX.roundToInt(), offsetRealY.roundToInt()) }
+        .size(width = imgSize.dp, height = imgSize.dp)
+        .alpha(alpha)
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = {
+                if (onRemove != null) {
+                    onRemove()
+                }
+            })
+        .then(dragModifier)
+
     Image(
         painter = painterResource(id = drawableResId),
         contentDescription = null,
-        modifier = Modifier
-            .offset(x = offsetX.dp, y = offsetY.dp)
-            .size(width = imgSize.dp, height = imgSize.dp)
-            .rotate(angle)
-            .alpha(alpha),
+        modifier = imgModifier,
         contentScale = ContentScale.Fit,
     )
 }

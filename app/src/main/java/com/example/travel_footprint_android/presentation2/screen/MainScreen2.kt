@@ -24,26 +24,26 @@ fun MainScreen2(
     var showSplash by remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CustomNavHost2(modifier = Modifier.weight(1f))
-                Navigation2(modifier = Modifier.wrapContentHeight())
-            }
-            if (debugHelper != null) {
-                DebugOverlay(
-                    debugHelper = debugHelper,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-
         if (showSplash) {
             SplashScreen(onFinished = { showSplash = false })
+        } else {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    CustomNavHost2(modifier = Modifier.weight(1f))
+                    Navigation2(modifier = Modifier.wrapContentHeight())
+                }
+                if (debugHelper != null) {
+                    DebugOverlay(
+                        debugHelper = debugHelper,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
         }
     }
 }

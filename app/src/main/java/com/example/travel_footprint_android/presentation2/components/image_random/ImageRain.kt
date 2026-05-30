@@ -73,14 +73,9 @@ fun ImageRain(
                 var show by remember { mutableStateOf(true) }
                 LaunchedEffect(show) {
                     if(show) {
-                        Log.d("ImageRain", "data = ${data}")
-                        Log.d("ImageRain", "alpha.value = ${alpha.value}")
                         alpha.animateTo(1f, animationSpec = tween(fadeInMs))
-                        Log.d("ImageRain", "alpha.value = ${alpha.value}")
                     } else {
-                        Log.d("ImageRain", "alpha.value2 = ${alpha.value}")
                         alpha.animateTo(0f, animationSpec = tween(fadeInMs))
-                        Log.d("ImageRain", "alpha.value2 = ${alpha.value}")
                         images.remove(data)
                     }
                 }
