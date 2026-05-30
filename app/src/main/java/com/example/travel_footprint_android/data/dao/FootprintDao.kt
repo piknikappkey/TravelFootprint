@@ -36,6 +36,10 @@ interface FootprintDao {
     @Query("SELECT * FROM footprints WHERE journeyId = :journeyId ORDER BY createTime")
     fun getFootprintsByJourney(journeyId: Long): Flow<List<Footprint>>
 
+    //获取所有足迹（按创建时间排序）
+    @Query("SELECT * FROM footprints ORDER BY createTime")
+    fun getAllFootprints(): Flow<List<Footprint>>
+
     //查询足迹通过日期
     @Query("SELECT * FROM footprints WHERE createTime BETWEEN :start AND :end ORDER BY createTime")
     suspend fun getFootprintsByDateRange(start: Date, end: Date): List<Footprint>

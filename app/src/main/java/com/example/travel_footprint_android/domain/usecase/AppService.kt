@@ -148,6 +148,9 @@ class AppService @Inject constructor(
     fun getFootprintsForMap(journeyId: Long): Flow<List<Footprint>> =
         footprintRepository.getFootprintsForMap(journeyId)
 
+    fun getAllFootprints(): Flow<List<Footprint>> =
+        footprintRepository.getAllFootprints()
+
     suspend fun addFootprint(
         journeyId: Long,
         lat: Double,

@@ -8,6 +8,7 @@ import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.dao.ProvinceCityCount
 import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
 import com.example.travel_footprint_android.data.entity.City
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.domain.usecase.AppService
@@ -74,6 +75,10 @@ class LightenViewModel @Inject constructor(
     // 已点亮省份代码集合
     private val _lightedProvinceCodes = MutableStateFlow<Set<String>>(emptySet())
     val lightedProvinceCodes: StateFlow<Set<String>> = _lightedProvinceCodes.asStateFlow()
+
+    // 所有足迹
+    private val _allFootprints = MutableStateFlow<List<Footprint>>(emptyList())
+    val allFootprints: StateFlow<List<Footprint>> = _allFootprints.asStateFlow()
 
 
     private val _uiState = MutableStateFlow(LightenUiState())
@@ -147,6 +152,13 @@ class LightenViewModel @Inject constructor(
                         lightedProvinceCount = provinces.size
                     )
                 }
+            }
+        }
+        // 所有足迹 - 实时响应
+        viewModelScope.launch {
+            appService.getAllFootprints().collect { footprints ->
+                Log.d("LightenVM", "allFootprints collected: ${footprints.size} items, totalDist=${footprints.sumOf { it.distance }}m")
+                _allFootprints.value = footprints
             }
         }
     }
