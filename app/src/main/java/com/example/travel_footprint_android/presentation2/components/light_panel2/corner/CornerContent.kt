@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -78,7 +80,7 @@ private enum class ProvinceRegion(val label: String, val adcodePrefixes: List<St
     HKMT("港澳台", listOf("71", "81", "82"))
 }
 
-private data class ProvinceDetail(
+data class ProvinceDetail(
     val provinceName: String,
     val provinceAdcode: String,
     val cityCount: Int,
@@ -93,6 +95,7 @@ private data class BucketListItem(
 )
 
 private const val EARTH_RADIUS_KM = 6371.0
+
 
 @Composable
 fun CornerContent(
@@ -242,15 +245,17 @@ private fun Module1TopDashboard(
                 valueUnit = "个",
                 subtitle = "覆盖全国${coveragePercent}%版图",
                 label = "已点亮省份",
-                gradientColors = listOf(Color(0xFF2193B0), Color(0xFF6DD5ED))
             )
             DashboardCard(
                 modifier = Modifier.weight(1f),
                 value = "$remainingProvinces",
                 valueUnit = "个",
-                subtitle = "西藏+港澳台等",
+                subtitle = if (remainingProvinces > 17) {
+            "继续加油"
+        } else {
+            "即将全部点亮"
+        },
                 label = "待解锁省份",
-                gradientColors = listOf(Color(0xFF667eea), Color(0xFF764ba2))
             )
             DashboardCard(
                 modifier = Modifier.weight(1f),
@@ -258,7 +263,6 @@ private fun Module1TopDashboard(
                 valueUnit = "个",
                 subtitle = "累计旅行${totalMileage}km",
                 label = "打卡城市数",
-                gradientColors = listOf(Color(0xFF11998e), Color(0xFF38ef7d))
             )
         }
 
@@ -279,16 +283,16 @@ private fun DashboardCard(
     valueUnit: String,
     subtitle: String,
     label: String,
-    gradientColors: List<Color>
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(
                 Brush.linearGradient(
-                    colors = gradientColors,
-                    start = Offset(0f, 0f),
-                    end = Offset(1000f, 1000f)
+                 colors =  listOf(
+                     Color(0xFF3B82F6),
+                     Color(0xFF3B82F6)
+                 )
                 )
             )
             .padding(12.dp)
@@ -362,7 +366,10 @@ private fun GradientProgressBar(
                 .height(28.dp)
                 .background(
                     Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF3B82F6), Color(0xFF8B5CF6), Color(0xFF06B6D4))
+                        colors = listOf(
+                            Color(0xFF60A5FA), // 柔和蓝
+                            Color(0xFF93C5FD)  // 浅蓝
+                        )
                     )
                 )
         )
@@ -742,16 +749,6 @@ private fun Module3TravelCorner(lightCityList: List<LightedCity>) {
         }
 
         Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = "待打卡清单",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF4B5563)
-        )
-        Spacer(Modifier.height(8.dp))
-
-        BucketListSection()
     }
 }
 

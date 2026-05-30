@@ -80,13 +80,21 @@ fun CheckInContent(
     lightCityList: List<LightedCity>,
     checkInRecords: List<CheckInRecord>,
     currentCityAdcode: String? = null,
+    currentProvinceAdcode: String? = null,
     onAddCheckIn: (String, String, String) -> Unit,
     onAddCheckInRich: ((String, String, String, List<String>) -> Unit)? = null,
-    onCityClick: ((String) -> Unit)? = null
+    onCityClick: ((String) -> Unit)? = null,
+    onProvinceFilterCleared: (() -> Unit)? = null
 ) {
     var activeFilter by remember { mutableStateOf(CheckInFilter.ALL) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     var highlightedCity by remember { mutableStateOf<String?>(null) }
+
+    val filteredProvinceName = remember(currentProvinceAdcode, lightCityList) {
+        currentProvinceAdcode?.let { adcode ->
+            lightCityList.firstOrNull { it.provinceAdcode == adcode }?.provinceName
+        }
+    }
 
     val groupedCities = remember(lightCityList, currentCityAdcode) {
         val sorted = lightCityList.sortedByDescending { city ->
@@ -126,8 +134,13 @@ fun CheckInContent(
         }
     }
 
-    val filteredGrouped = remember(activeFilter, groupedCities, checkInRecords) {
-        groupedCities.mapValues { (_, cities) ->
+    val filteredGrouped = remember(activeFilter, groupedCities, checkInRecords, filteredProvinceName) {
+        val provinceFiltered = if (filteredProvinceName != null) {
+            groupedCities.filterKeys { it == filteredProvinceName }
+        } else {
+            groupedCities
+        }
+        provinceFiltered.mapValues { (_, cities) ->
             when (activeFilter) {
                 CheckInFilter.ALL -> cities
                 CheckInFilter.CHECKED_IN -> cities.filter { c ->
@@ -159,6 +172,41 @@ fun CheckInContent(
             }
 
             Spacer(Modifier.height(8.dp))
+
+            if (filteredProvinceName != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFEFF6FF))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = filteredProvinceName,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1F2937),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "返回全部",
+                        fontSize = 12.sp,
+                        color = Color(0xFF3B82F6),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { onProvinceFilterCleared?.invoke() }
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+            }
 
             if (lightCityList.isEmpty()) {
                 Box(

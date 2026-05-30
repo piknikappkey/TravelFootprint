@@ -30,6 +30,7 @@ import com.example.travel_footprint_android.presentation2.components.light_panel
 
 @Composable
 fun PanelTitle(
+    modifier: Modifier,
     selectedTab: LightPanel2Tab,
     onTabSelected: (LightPanel2Tab) -> Unit,
 ) {
@@ -69,7 +70,9 @@ private fun TabItem(
     onClick: () -> Unit
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFFEFF6FF) else Color.Transparent,
+        targetValue = if (isSelected) Color(0xFFEFF6FF) else {
+            Color(0xFFEFF6FF).copy(alpha = 0f)  // 带透明度的目标色
+        },
         animationSpec = tween(200),
         label = "tabBg"
     )

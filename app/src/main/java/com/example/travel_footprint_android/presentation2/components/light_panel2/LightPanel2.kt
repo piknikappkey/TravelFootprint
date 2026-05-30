@@ -100,6 +100,11 @@ fun LightPanel2(
         mutableStateOf(LightPanel2Tab.LIGHT_UP)
     }
 
+    // 从角落页签跳转到打卡页签时，记录省份 adcode
+    var selectedProvinceAdcode by remember {
+        mutableStateOf<String?>(null)
+    }
+
     // 打卡记录（已持久化到数据库）
     val dbCheckInRecords by lightenViewModel.checkInRecords.collectAsState()
     val checkInRecords = remember(dbCheckInRecords) {
@@ -192,29 +197,63 @@ fun LightPanel2(
             )
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
-                    clip = true
-                )
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
-                )
-        ) {
-            Column(
+
+        Column {
+            // ================= 拖拽区域 =================
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(configuration.screenHeightDp.dp * aniPanelHeight)
+                    .height(10.dp)  // 拖拽触控区域
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = { isDragging = true },
+                            onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
+                            onDragEnd = { isDragging = false }
+                        )
+                    },
+                contentAlignment = Alignment.TopCenter
             ) {
-                // ================= 拖拽区域 =================
+                // 视觉上的浮动指示器 - 与面板分离
                 Box(
                     modifier = Modifier
+                        .width(40.dp)
+                        .height(4.dp)
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(2.dp),
+                            ambientColor = Color.Black.copy(alpha = 0.1f),
+                            spotColor = Color.Black.copy(alpha = 0.1f)
+                        )
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFFE2E8F0).copy(alpha = 0.9f),
+                                    Color(0xFF94A3B8).copy(alpha = 0.9f),
+                                    Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                                )
+                            )
+                        )
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                        clip = true
+                    )
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .height(24.dp)  // 拖拽触控区域
+                        .height(configuration.screenHeightDp.dp * aniPanelHeight)
                         .pointerInput(Unit) {
                             detectVerticalDragGestures(
                                 onDragStart = { isDragging = true },
@@ -222,163 +261,162 @@ fun LightPanel2(
                                 onDragEnd = { isDragging = false }
                             )
                         },
-                    contentAlignment = Alignment.TopCenter
                 ) {
-                    // 视觉上的浮动指示器 - 与面板分离
+
+                    // ================= Tab 标题 =================
+
+                    PanelTitle(
+                        modifier= Modifier,
+                        selectedTab = selectedTab, onTabSelected = { tab ->
+                            selectedTab = tab
+                            selectedProvinceAdcode = null
+                            if (!isExpanded) {
+                                currentHeightRatio = 0.6f
+                            }
+                        }
+                    )
+
+                    // ================= 内容区域 =================
+
                     Box(
                         modifier = Modifier
-                            .padding(top = 8.dp)  // 与面板顶部产生间距
-                            .width(40.dp)
-                            .height(4.dp)
-                            .shadow(
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(2.dp),
-                                ambientColor = Color.Black.copy(alpha = 0.1f),
-                                spotColor = Color.Black.copy(alpha = 0.1f)
-                            )
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFFE2E8F0).copy(alpha = 0.9f),
-                                        Color(0xFF94A3B8).copy(alpha = 0.9f),
-                                        Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
+
+                        if (true) {
+
+                            when (selectedTab) {
+
+                                LightPanel2Tab.LIGHT_UP -> {
+
+                                    LightUpContentOnly(
+                                        lightPanel2State = lightPanel2State,
+                                        lightCityList = lightCityList,
+                                        lightedCityCount = lightedCityCount,
+                                        lightedProvinces = lightedProvinces,
+                                        lightedProvinceCount = lightedProvinceCount,
+                                        lightenCityMode = lightenCityMode,
+                                        isDeleteMode = isDeleteMode,
+                                        scrollableMaxHeight = scrollableMaxHeight,
+
+                                        onStateChange = {
+                                            lightPanel2State = it
+                                        },
+
+                                        onDeleteModeChange = {
+                                            isDeleteMode = it
+                                        },
+
+                                        onLightenViewModel = lightenViewModel,
+
+                                        onSelectionChanged = { sCities, uCities, sProvinces, uProvinces ->
+
+                                            selectedCityCodes = sCities
+                                            unselectedCityCodes = uCities
+                                            selectedProvinceCodes = sProvinces
+                                            unselectedProvinceCodes = uProvinces
+                                        })
+                                }
+
+                                LightPanel2Tab.CORNER -> {
+
+                                    CornerContent(
+                                        lightedProvinceCount = lightedProvinceCount,
+                                        lightCityList = lightCityList,
+                                        onGoCheckIn = { provinceAdcode ->
+                                            selectedProvinceAdcode = provinceAdcode
+                                            selectedTab = LightPanel2Tab.CHECK_IN
+                                            if (!isExpanded) {
+                                                currentHeightRatio = 0.6f
+                                            }
+                                        }
                                     )
-                                )
-                            )
-                    )
-                }
+                                }
 
-                // ================= Tab 标题 =================
+                                LightPanel2Tab.CHECK_IN -> {
 
-                PanelTitle(
-                    selectedTab = selectedTab, onTabSelected = { tab ->
-                        selectedTab = tab
-                        if (!isExpanded) {
-                            currentHeightRatio = 0.6f
-                        }
-                    })
+                                    CheckInContent(
+                                        lightCityList = lightCityList,
+                                        checkInRecords = checkInRecords,
+                                        currentProvinceAdcode = selectedProvinceAdcode,
+                                        onAddCheckIn = { adcode, cityName, note ->
+                                            lightenViewModel.addCheckInRecord(
+                                                adcode,
+                                                cityName,
+                                                note
+                                            )
+                                        },
+                                        onAddCheckInRich = { adcode, cityName, note, tags ->
+                                            lightenViewModel.addCheckInRecord(
+                                                adcode,
+                                                cityName,
+                                                note,
+                                                tags
+                                            )
+                                        },
+                                        onProvinceFilterCleared = {
+                                            selectedProvinceAdcode = null
+                                        })
+                                }
 
-                // ================= 内容区域 =================
+                                LightPanel2Tab.MILESTONE -> {
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                ) {
-
-                    if (true) {
-
-                        when (selectedTab) {
-
-                            LightPanel2Tab.LIGHT_UP -> {
-
-                                LightUpContentOnly(
-                                    lightPanel2State = lightPanel2State,
-                                    lightCityList = lightCityList,
-                                    lightedCityCount = lightedCityCount,
-                                    lightedProvinces = lightedProvinces,
-                                    lightedProvinceCount = lightedProvinceCount,
-                                    lightenCityMode = lightenCityMode,
-                                    isDeleteMode = isDeleteMode,
-                                    scrollableMaxHeight = scrollableMaxHeight,
-
-                                    onStateChange = {
-                                        lightPanel2State = it
-                                    },
-
-                                    onDeleteModeChange = {
-                                        isDeleteMode = it
-                                    },
-
-                                    onLightenViewModel = lightenViewModel,
-
-                                    onSelectionChanged = { sCities, uCities, sProvinces, uProvinces ->
-
-                                        selectedCityCodes = sCities
-                                        unselectedCityCodes = uCities
-                                        selectedProvinceCodes = sProvinces
-                                        unselectedProvinceCodes = uProvinces
-                                    })
-                            }
-
-                            LightPanel2Tab.CORNER -> {
-
-                                CornerContent(
-                                    lightedProvinceCount = lightedProvinceCount,
-                                    lightCityList = lightCityList
-                                )
-                            }
-
-                            LightPanel2Tab.CHECK_IN -> {
-
-                                CheckInContent(
-                                    lightCityList = lightCityList,
-                                    checkInRecords = checkInRecords,
-                                    onAddCheckIn = { adcode, cityName, note ->
-                                        lightenViewModel.addCheckInRecord(adcode, cityName, note)
-                                    },
-                                    onAddCheckInRich = { adcode, cityName, note, tags ->
-                                        lightenViewModel.addCheckInRecord(adcode, cityName, note, tags)
-                                    })
-                            }
-
-                            LightPanel2Tab.MILESTONE -> {
-
-                                MilestoneContent(
-                                    lightCityList = lightCityList,
-                                    lightedProvinceCount = lightedProvinceCount
-                                )
+                                    MilestoneContent(
+                                        lightCityList = lightCityList,
+                                        lightedProvinceCount = lightedProvinceCount
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                // ================= 底部按钮 =================
+                    // ================= 底部按钮 =================
 
-                if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
+                    if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
 
-                    BottomActionButtons(
+                        BottomActionButtons(
 
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
 
-                        lightPanel2State = lightPanel2State,
+                            lightPanel2State = lightPanel2State,
 
-                        isDeleteMode = isDeleteMode,
+                            isDeleteMode = isDeleteMode,
 
-                        lightCityList = lightCityList,
+                            lightCityList = lightCityList,
 
-                        lightedProvinces = lightedProvinces,
+                            lightedProvinces = lightedProvinces,
 
-                        lightenCityMode = lightenCityMode,
+                            lightenCityMode = lightenCityMode,
 
-                        selectedCityCodes = selectedCityCodes,
+                            selectedCityCodes = selectedCityCodes,
 
-                        unselectedCityCodes = unselectedCityCodes,
+                            unselectedCityCodes = unselectedCityCodes,
 
-                        selectedProvinceCodes = selectedProvinceCodes,
+                            selectedProvinceCodes = selectedProvinceCodes,
 
-                        unselectedProvinceCodes = unselectedProvinceCodes,
+                            unselectedProvinceCodes = unselectedProvinceCodes,
 
-                        onStateChange = {
-                            lightPanel2State = it
-                        },
+                            onStateChange = {
+                                lightPanel2State = it
+                            },
 
-                        onDeleteModeChange = {
-                            isDeleteMode = it
-                        },
+                            onDeleteModeChange = {
+                                isDeleteMode = it
+                            },
 
-                        onLightenViewModel = lightenViewModel,
+                            onLightenViewModel = lightenViewModel,
 
-                        onSelectionReset = {
+                            onSelectionReset = {
 
-                            selectedCityCodes = emptySet()
-                            unselectedCityCodes = emptySet()
-                            selectedProvinceCodes = emptySet()
-                            unselectedProvinceCodes = emptySet()
-                        })
+                                selectedCityCodes = emptySet()
+                                unselectedCityCodes = emptySet()
+                                selectedProvinceCodes = emptySet()
+                                unselectedProvinceCodes = emptySet()
+                            })
+                    }
                 }
             }
         }
@@ -439,7 +477,7 @@ private fun LightUpContentOnly(
                     .height(0.5.dp)
                     .background(Color(0xFFE5E7EB))
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height( 12.dp))
 
             Text(
                 text = "点亮记录",
