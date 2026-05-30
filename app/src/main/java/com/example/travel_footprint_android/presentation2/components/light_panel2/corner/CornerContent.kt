@@ -252,9 +252,11 @@ private fun Module1TopDashboard(
                 valueUnit = "个",
                 subtitle = if (remainingProvinces > 17) {
             "继续加油"
-        } else {
+        } else if(0<remainingProvinces&&remainingProvinces<=17){
             "即将全部点亮"
-        },
+        } else {
+            "已全部点亮！"
+                },
                 label = "待解锁省份",
             )
             DashboardCard(
