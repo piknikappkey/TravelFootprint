@@ -44,8 +44,13 @@ fun TravelFootprintTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            val insetsController = WindowCompat.getInsetsController(window, view)
+
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 

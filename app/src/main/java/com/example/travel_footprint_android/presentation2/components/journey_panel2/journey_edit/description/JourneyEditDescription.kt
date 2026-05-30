@@ -23,6 +23,7 @@ fun JourneyEditDescription(
     InputText3(
         value = journey.description,
         onValueChange = onValueChange,
-        tipText = "请填写旅程描述"
+        tipText = "请填写旅程描述",
+        maxLength = 1024
     )
 }

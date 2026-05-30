@@ -1,5 +1,6 @@
 package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
@@ -29,6 +31,7 @@ import com.example.travel_footprint_android.presentation2.components.bg_box.BGBo
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.confirm_delete_dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.cover.JourneyEditCover
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.description.JourneyEditDescription
@@ -58,8 +61,8 @@ fun JourneyEdit(
     var journey by remember { mutableStateOf(
         journeySelected?.copy()
             ?: Journey(
-                title = "新的开始",
-                description = "这是一段新的旅程",
+                title = "",
+                description = "",
                 startDate = Date(),
                 endDate = Date(),
                 coverStyle = "",
@@ -68,6 +71,7 @@ fun JourneyEdit(
             )
         )
     }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
 
     Column {
@@ -89,11 +93,21 @@ fun JourneyEdit(
             journey,
             journeySelected,
             { j -> journey = j.copy() },
-            { j ->
-                deleteJourney(j)
-                JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
-            },
+            { showDeleteDialog = true },
         )
+
+        if (showDeleteDialog && journeySelected != null) {
+            ConfirmDeleteDialog(
+                title = "删除旅程",
+                message = "确定要删除「${journeySelected.title}」吗？此操作不可撤销。",
+                onConfirm = {
+                    deleteJourney(journeySelected)
+                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    showDeleteDialog = false
+                },
+                onDismiss = { showDeleteDialog = false }
+            )
+        }
     }
 }
 
@@ -110,6 +124,8 @@ fun JourneyHead(
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
 ) {
+    val context = LocalContext.current
+
     Row(
         verticalAlignment = Alignment.CenterVertically
     ){
@@ -147,12 +163,23 @@ fun JourneyHead(
 
         ButtonSave(
             onClick = {
-                if (journeySelected == null) {
-                    addJourney(journey)
-                } else {
-                    updateJourney(journey)
+                val titleValid = journey.title.isNotBlank() && journey.title != "新的开始"
+                val coverValid = journey.coverImagePath.isNotBlank()
+                val descValid = journey.description.isNotBlank() && journey.description != "这是一段新的旅程"
+
+                when {
+                    !titleValid -> Toast.makeText(context, "请输入有效的旅程标题", Toast.LENGTH_SHORT).show()
+                    !coverValid -> Toast.makeText(context, "请选择封面图片", Toast.LENGTH_SHORT).show()
+                    !descValid -> Toast.makeText(context, "请输入有效的旅程描述", Toast.LENGTH_SHORT).show()
+                    else -> {
+                        if (journeySelected == null) {
+                            addJourney(journey)
+                        } else {
+                            updateJourney(journey)
+                        }
+                        navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    }
                 }
-                navigate(JourneyPanel2State.JOURNEY_LIST, null)
             }
         )
 

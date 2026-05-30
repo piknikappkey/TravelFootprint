@@ -33,12 +33,6 @@ fun FootprintEditLocation(
 
     var address by remember { mutableStateOf(if(footprint.address != "") footprint.address.split("\n").last() else "") }
 
-//    var latitude by remember { mutableStateOf(if(footprint.address != "") footprint.latitude else 0.0) }
-    var latitude by remember { mutableStateOf(if(footprint.address != "") 0.0 else 0.0) }
-
-//    var longitude by remember { mutableStateOf(if(footprint.address != "") footprint.longitude else 0.0) }
-    var longitude by remember { mutableStateOf(if(footprint.address != "") 0.0 else 0.0) }
-
 
     var showButton by remember { mutableStateOf(false) }
 
@@ -60,14 +54,10 @@ fun FootprintEditLocation(
         locationSearchViewModel = locationSearchViewModel,
         onLocationSelected = { location ->
             Log.d("FootprintEditLocation", "location = $location")
-//            if (location.latitude != latitude || location.longitude != longitude) {
                 isSelectedLocation = true
                 showButton = true
                 name = location.name
                 address = location.address
-                latitude = location.latitude
-                longitude = location.longitude
-//            }
         }
     )
 
@@ -76,15 +66,12 @@ fun FootprintEditLocation(
         LocationPanel(
             name = name,
             address = address,
-            latitude = latitude,
-            longitude = longitude,
             showButton = showButton,
             submit = {
                 Log.d("FootprintEditLocation", "submit")
                 Log.d("FootprintEditLocation", "showButton = $showButton")
                 setFootprint(
                     footprint.copy(address = "${address}\n${name}")
-                    /////////////////////////////////////////////////////////////
                 )
                 showButton = false
                 Log.d("FootprintEditLocation", "showButton = $showButton")
@@ -96,19 +83,13 @@ fun FootprintEditLocation(
                     Log.d("FootprintEditLocation", "footprint.address != \"\"")
                     name = footprint.address.split("\n")[0]
                     address = footprint.address.split("\n").last()
-//                    latitude = footprint.latitude
-//                    longitude = footprint.longitude
                     isSelectedLocation = true
                     Log.d("FootprintEditLocation", "name = $name")
                     Log.d("FootprintEditLocation", "address = $address")
-                    Log.d("FootprintEditLocation", "latitude = $latitude")
-                    Log.d("FootprintEditLocation", "longitude = $longitude")
                 } else {
                     Log.d("FootprintEditLocation", "footprint.address == \"\"")
                     name = ""
                     address = ""
-                    latitude = 0.0
-                    longitude = 0.0
                     isSelectedLocation = false
                 }
                 showButton = false
@@ -118,117 +99,12 @@ fun FootprintEditLocation(
                 isSelectedLocation = false
                 name = ""
                 address = ""
-                latitude = 0.0
-                longitude = 0.0
                 setFootprint(
                     footprint.copy(address = "")
                 )
-            }
+            },
+            latitude = 0.0,
+            longitude = 0.0
         )
     }
 }
-
-//@Composable
-//fun LocationPanel(
-//    name: String,
-//    address: String,
-//    latitude: Double,
-//    longitude: Double,
-//    showButton: Boolean,
-//    submit: () -> Unit,
-//    cancel: () -> Unit,
-//    delete: () -> Unit,
-//) {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(horizontal = 16.dp, vertical = 16.dp)
-//            .background(BGLight2, RoundedCornerShape(12.dp))
-//            .padding(16.dp)
-//    ) {
-//        Row {
-//            Text(
-//                text = "已选择位置",
-//                color = FontDark6,
-//                style = TextStyle(fontSize = 14.sp),
-//                modifier = Modifier.padding(bottom = 8.dp)
-//            )
-//            Spacer(Modifier.weight(1f))
-//            Image(
-//                modifier = Modifier
-//                    .size(24.dp)
-//                    .clickable(onClick = delete),
-//                painter = painterResource(R.drawable.ic_delete_trash),
-//                contentDescription = "修改图标",
-//                colorFilter = ColorFilter.tint(Color(0xFFFF0000)),
-//            )
-//            Spacer(Modifier.width(10.dp))
-//        }
-//
-//        // 位置名称
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(vertical = 8.dp)
-//        ) {
-//            Icon(
-//                imageVector = Icons.Default.LocationOn,
-//                contentDescription = "位置图标",
-//                tint = MainColor3,
-//                modifier = Modifier.size(20.dp)
-//            )
-//            Text(
-//                text = name,
-//                color = FontDark2,
-//                style = TextStyle(fontSize = 16.sp),
-//                modifier = Modifier.padding(start = 28.dp)
-//            )
-//        }
-//
-//        // 详细地址
-//        if (address.isNotEmpty()) {
-//            Text(
-//                text = address,
-//                color = FontDark6,
-//                style = TextStyle(fontSize = 14.sp),
-//                modifier = Modifier.padding(bottom = 8.dp)
-//            )
-//        }
-//
-//        // 经纬度信息
-//        Text(
-//            text = "纬度: ${String.format("%.6f", latitude)}",
-//            color = FontDark6,
-//            style = TextStyle(fontSize = 14.sp),
-//            modifier = Modifier.padding(bottom = 4.dp)
-//        )
-//        Text(
-//            text = "经度: ${String.format("%.6f", longitude)}",
-//            color = FontDark6,
-//            style = TextStyle(fontSize = 14.sp),
-//            modifier = Modifier.padding(bottom = 12.dp)
-//        )
-//        if(showButton) {
-//            Row {
-//                Spacer(
-//                    modifier = Modifier
-//                        .weight(1f),
-//                )
-//                ButtonMain(
-//                    title = "取消"
-//                ) {
-//                    cancel()
-//                }
-//                Spacer(
-//                    modifier = Modifier
-//                        .width(10.dp),
-//                )
-//                ButtonMain(
-//                    title = "确定"
-//                ) {
-//                    submit()
-//                }
-//            }
-//        }
-//    }
-//}

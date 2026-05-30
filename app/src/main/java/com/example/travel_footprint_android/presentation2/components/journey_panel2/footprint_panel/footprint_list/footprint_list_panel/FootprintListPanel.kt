@@ -54,13 +54,25 @@ fun FootprintListPanel(
     // 地址数据
     val locationList = journeyUiState.LocationList
 
+    LaunchedEffect(locationList) {
+        if(locationList.size == 0) {
+            Log.d("FootprintListPanel", "locationList = ${locationList}")
+        } else {
+            Log.d("FootprintListPanel", "locationList = ${locationList.first()}, size = ${locationList.size}")
+        }
+    }
+
+    LaunchedEffect(footprint) {
+        Log.d("FootprintListPanel", "footprint = ${footprint}")
+    }
+
     // 路线索引（用于标记Location属于哪段路线，最小值为1）
     var locationIndex by remember { mutableStateOf(1) }
 
     var panelState by remember { mutableStateOf(FootprintListPanelState.STOP) }
     var panelStateOld by remember { mutableStateOf(FootprintListPanelState.STOP) }
 
-    var startTime by remember { mutableStateOf<Long>(footprint.startTime.time) }
+    var startTime by remember { mutableStateOf<Long>(0) }
 
     var durationTime by remember { mutableStateOf<Long>(footprint.duration) }
 
@@ -104,20 +116,32 @@ fun FootprintListPanel(
 
                 while (panelState == FootprintListPanelState.START) {
                     val currentTime = System.currentTimeMillis()
-                    durationTime = currentTime - startTime - pausedDuration
+                    durationTime = currentTime - startTime - pausedDuration + footprint.duration
                     if (durationTime > 0) {
                         speed = (displacementDistance / (durationTime / 1000.0))
                     }
                     // 保存数据
-                    journeyViewModel.updateFootprint(
-                        footprint.copy(
-                            startTime = Date(startTime),
-                            duration = durationTime,
-                            distance = displacementDistance,
-                            speed = speed,
-                            calories = calories
+                    if(footprint.startTime.time == 0L) {
+                        journeyViewModel.updateFootprint(
+                            footprint.copy(
+                                startTime = Date(startTime),
+                                duration = durationTime,
+                                distance = displacementDistance,
+                                speed = speed,
+                                calories = calories
+                            )
                         )
-                    )
+                    } else {
+                        journeyViewModel.updateFootprint(
+                            footprint.copy(
+                                duration = durationTime,
+                                distance = displacementDistance,
+                                speed = speed,
+                                calories = calories
+                            )
+                        )
+                    }
+
 
                     delay(1000)
                 }
@@ -143,6 +167,7 @@ fun FootprintListPanel(
 
     DisposableEffect(Unit) {
         onDispose {
+            Log.d("FootprintListPanel", "onDispose")
             isRecord = false
             journeyMap3ViewModel.clearAllRoutes()
             journeyViewModel.getLocation(footprint.copy(id = 0))
@@ -206,7 +231,7 @@ fun FootprintListPanel(
 
             DataRow2(
                 "开始时间：",
-                if (startTime > 0) formatDateTime(startTime) else "未开始",
+                if (footprint.startTime.time > 0) formatDateTime(footprint.startTime.time) else "未开始",
                 "持续时间：",
                 formatDuration(durationTime)
             )
@@ -253,7 +278,7 @@ fun FootprintListPanel(
                     ButtonMain(
                         onClick = {
                             panelState = FootprintListPanelState.STOP
-                            startTime = footprint.startTime.time
+                            startTime = 0
                             durationTime = footprint.duration
                             displacementDistance = footprint.distance
                             speed = footprint.speed

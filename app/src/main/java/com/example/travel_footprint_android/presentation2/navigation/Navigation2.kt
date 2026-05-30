@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,8 +43,9 @@ fun Navigation2(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = BGLight0),
-        contentAlignment = Alignment.Center // 水平据中
+            .background(color = BGLight0)
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.Center // 水平居中
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(.8f),

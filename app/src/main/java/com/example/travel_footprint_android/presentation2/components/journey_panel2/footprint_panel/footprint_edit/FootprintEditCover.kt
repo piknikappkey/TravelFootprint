@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
@@ -26,6 +25,7 @@ fun FootprintEditCover(
     InputText3(
         value = footprint.title,
         onValueChange = onValueChange,
-        tipText = "请填写足迹标题"
+        tipText = "请填写足迹标题",
+        maxLength = 20
     )
 }

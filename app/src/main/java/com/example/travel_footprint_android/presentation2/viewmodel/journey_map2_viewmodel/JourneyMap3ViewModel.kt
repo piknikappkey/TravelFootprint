@@ -15,6 +15,7 @@ import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -59,6 +60,8 @@ class JourneyMap3ViewModel @Inject constructor(
 
     private val _routePolylines = mutableMapOf<Int, Polyline>()
 
+    private var _routeAnimationPlayed = false // 用于标记路线动画是否已播放
+
     private var animationJob: Job? = null
 
     val aMap: StateFlow<AMap?> = _aMap.asStateFlow()
@@ -67,30 +70,22 @@ class JourneyMap3ViewModel @Inject constructor(
 
     val currentLocation: StateFlow<LatLng?> = _currentLocation.asStateFlow()
 
-    init {
-        initializeMapIfNeeded(application)
-    }
+    /** 初始化地图（由 Compose 层在 MapView.onCreate() 之后调用） */
+    fun initializeMap(mapView: MapView) {
+        if (_mapView.value != null) return
 
-    /** 初始化地图（仅首次调用时执行） */
-    private fun initializeMapIfNeeded(context: android.content.Context) {
-        if (_mapView.value == null) {
+        _mapView.value = mapView
+        val aMap = mapView.map
+        _aMap.value = aMap
 
-            // 异步初始化地图
-            viewModelScope.launch {
-                val mapView = MapView(context)
-                _mapView.value = mapView
-                val aMap = mapView.map
-                _aMap.value = aMap
-                delay(50)  // 让 UI 先渲染
-                val locationClient = AMapLocationClient(context)
-                _locationClient.value = locationClient
-                delay(50)
-                setupMap(aMap, locationClient)
-                setLocationIcon(aMap, context)
-                setupMapClickListener(aMap)
-
-                _isInitialized.value = true
-            }
+        val context = getApplication<Application>()
+        viewModelScope.launch {
+            val locationClient = AMapLocationClient(context)
+            _locationClient.value = locationClient
+            setupMap(aMap, locationClient)
+            setLocationIcon(aMap, context)
+            setupMapClickListener(aMap)
+            _isInitialized.value = true
         }
     }
 
@@ -180,7 +175,7 @@ class JourneyMap3ViewModel @Inject constructor(
     /** 设置地图点击监听，点击地图时清除选中标记 */
     private fun setupMapClickListener(aMap: AMap) {
         aMap.setOnMapClickListener {
-//            clearSelectedMarker()
+            clearSelectedMarker()
         }
     }
 
@@ -268,8 +263,18 @@ class JourneyMap3ViewModel @Inject constructor(
     ) {
         val aMap = _aMap.value ?: return
 
+        Log.d("JourneyMap3ViewModel", "_routeAnimationPlayed = $_routeAnimationPlayed")
+
+        if (_routeAnimationPlayed) {
+            // 首次动画已播放过 → 后续增量更新不走动画
+            updateRoutes(locations)
+            return
+        }
+
         animationJob?.cancel()
         clearAllRoutes()
+
+        _routeAnimationPlayed = true
 
         val groups = locations
             .filter { it.index >= 1 }
@@ -307,6 +312,7 @@ class JourneyMap3ViewModel @Inject constructor(
         animationJob = null
         _routePolylines.values.forEach { it.remove() }
         _routePolylines.clear()
+        _routeAnimationPlayed = false  // 重置标志
     }
 
     private fun getRouteColor(index: Int): Int {
@@ -323,16 +329,31 @@ class JourneyMap3ViewModel @Inject constructor(
         return colors[(index - 1) % colors.size]
     }
 
+    fun getCurrentLatLngPair(): Pair<Double, Double>? {
+        return _currentLocation.value?.let { Pair(it.latitude, it.longitude) }
+    }
+
     fun getMapView(): MapView? = _mapView.value
 
     fun getAMap(): AMap? = _aMap.value
 
     fun getLocationClient(): AMapLocationClient? = _locationClient.value
 
+    /** 重置状态（页面离开时调用，以便重新进入时重新初始化） */
+    fun reset() {
+        _isInitialized.value = false
+        clearAllRoutes()
+        _locationClient.value?.onDestroy()
+        _locationClient.value = null
+        clearSelectedMarker()
+        _currentLocation.value = null
+        _aMap.value = null
+        _mapView.value = null
+    }
+
     override fun onCleared() {
         super.onCleared()
         clearAllRoutes()
         _locationClient.value?.onDestroy()
-        _mapView.value?.onDestroy()
     }
 }

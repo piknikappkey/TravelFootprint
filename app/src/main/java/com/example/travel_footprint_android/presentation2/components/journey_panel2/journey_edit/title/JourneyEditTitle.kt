@@ -24,6 +24,7 @@ fun JourneyEditTitle(
     InputText3(
         value = journey.title,
         onValueChange = onValueChange,
-        tipText = "请填写旅程标题"
+        tipText = "请填写旅程标题",
+        maxLength = 20,
     )
 }

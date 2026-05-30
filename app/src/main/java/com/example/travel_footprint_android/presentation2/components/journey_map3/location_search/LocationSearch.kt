@@ -66,6 +66,10 @@ fun LocationSearch(
     var selectedLocaltionOld by remember { mutableStateOf(selectedLocation) }
     val isSearching by locationSearchViewModel.isSearching.collectAsState()
 
+    LaunchedEffect(Unit) {
+        locationSearchViewModel.clearSelection()
+    }
+
     Column(modifier = modifier) {
         // 搜索输入框
         InputText3(

@@ -1,8 +1,8 @@
 package com.example.travel_footprint_android.data.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -25,6 +25,8 @@ data class Footprint(
     val description: String,                      // 描述
     val createTime: Date,                         // 创建时间
     val address: String,                          // 地址
+    val longitude: Double = 0.0,                  // 经度
+    val latitude: Double = 0.0,                   // 纬度
     val rating: Int,                              // 个人评分（1-5）
     val startTime: Date = Date(),                 // 活动开始时间
     val duration: Long = 0L,                      // 持续时间（毫秒）

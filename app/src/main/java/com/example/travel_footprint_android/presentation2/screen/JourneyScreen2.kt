@@ -9,13 +9,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,16 +29,18 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
-import com.example.travel_footprint_android.presentation2.components.ani_shade.AniShade
+import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel7
+import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
+import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import com.example.travel_footprint_android.utils.PermissionUtils
@@ -70,38 +71,46 @@ fun JourneyScreen2(
         hasLocationPermission = granted.values.all { it }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(0.dp))
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier.weight(1f),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(0.dp))
         ) {
-            if (hasLocationPermission) {
-                JourneyMap3(
-                    locationList = journeyUiState.LocationList
-                )
-            } else {
-                PermissionRequestContent(
-                    onRequestPermission = {
-                        permissionLauncher.launch(locationPermissions)
-                    }
-                )
+            Box(
+                modifier = Modifier.weight(1f),
+            ) {
+                if (hasLocationPermission) {
+                    JourneyMap3(
+                        locationList = journeyUiState.LocationList
+                    )
+                } else {
+                    PermissionRequestContent(
+                        onRequestPermission = {
+                            permissionLauncher.launch(locationPermissions)
+                        }
+                    )
+                }
             }
+
+            JourneyPanel7(
+                modifier = Modifier
+                    .onSizeChanged { newSize ->
+                        if (!sizeChange) {
+                            sizeChange = true
+                            Log.d("JourneyScreen2", "新的组件尺寸: 宽度 = ${newSize.width}, 高度 = ${newSize.height}")
+                        }
+                    },
+                aniTime = aniTime,
+                journeyList = journeys,
+                journeyViewModel = journeyViewModel,
+            )
         }
 
-        JourneyPanel7(
-            modifier = Modifier
-                .onSizeChanged { newSize ->
-                    if (!sizeChange) {
-                        sizeChange = true
-                        Log.d("JourneyScreen2", "新的组件尺寸: 宽度 = ${newSize.width}, 高度 = ${newSize.height}")
-                    }
-                },
-            aniTime = aniTime,
-            journeyList = journeys,
-            journeyViewModel = journeyViewModel,
+        ImageRain(
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
@@ -115,6 +124,7 @@ fun PermissionRequestContent(onRequestPermission: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier.offset(y = (-50).dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -124,64 +134,28 @@ fun PermissionRequestContent(onRequestPermission: () -> Unit) {
                 contentDescription = "地图图标",
                 colorFilter = ColorFilter.tint(SecondColor3),
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "需要位置权限",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333)
-            )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
+            Headline(
+                text = "需要位置权限",
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            TextMedium(
                 text = "为了在地图上显示你的位置，\n需要获取设备的位置信息权限",
                 fontSize = 14.sp,
-                color = Color(0xFF666666),
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(
+            Spacer(modifier = Modifier.height(12.dp))
+            ButtonMain(
                 onClick = onRequestPermission,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = SecondColor3
-                )
+                bgColor = SecondColor3,
+                paddingValues = PaddingValues(vertical = 5.dp, horizontal = 10.dp)
             ) {
-                Text("授予位置权限", color = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-fun JourneyShade(
-    aniTime: Int,
-    sizeChange: Boolean,
-    setSizeChange: (Boolean) -> Unit,
-) {
-    AniShade(
-        aniStart = sizeChange,
-        aniOverFunc = {
-            setSizeChange(false)
-        },
-        aniTime = aniTime.toLong() + 200,
-        shadeShowTime = 0,
-        shadeStopTime = aniTime.toLong(),
-        shadeHideTime = 100
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    color = BGLight0,
+                Headline(
+                    text = "授予位置权限",
+                    fontSize = 18.sp,
+                    color = Color.White
                 )
-        ) {
-            Image(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize(.4f),
-                painter = painterResource(id = R.drawable.ic_map),
-                contentDescription = "地图图标",
-                colorFilter = ColorFilter.tint(SecondColor3),
-            )
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ import com.example.travel_footprint_android.data.entity.Tag
         City::class,
         CheckInRecordEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -139,6 +139,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // 版本 6 到 7 的迁移：足迹表新增经度纬度字段
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `longitude` REAL NOT NULL DEFAULT 0.0")
+                database.execSQL("ALTER TABLE `footprints` ADD COLUMN `latitude` REAL NOT NULL DEFAULT 0.0")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -146,7 +154,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "travel_journal.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

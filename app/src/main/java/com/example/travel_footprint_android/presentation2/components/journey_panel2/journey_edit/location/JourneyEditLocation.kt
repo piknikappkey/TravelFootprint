@@ -229,17 +229,19 @@ fun LocationPanel(
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                if(latitude != 0.0 && longitude != 0.0) {
+                    Spacer(Modifier.height(8.dp))
 
-                // 经纬度信息
-                Row {
-                    Spacer(Modifier.weight(1f))
-                    TextSmall(
-                        text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
-                        color = FontDark8,
-                        fontSize = 12.sp
+                    // 经纬度信息
+                    Row {
+                        Spacer(Modifier.weight(1f))
+                        TextSmall(
+                            text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
+                            color = FontDark8,
+                            fontSize = 12.sp
 
-                    )
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(8.dp))

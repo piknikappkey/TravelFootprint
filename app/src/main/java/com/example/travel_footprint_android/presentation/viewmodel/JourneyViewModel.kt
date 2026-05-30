@@ -2,6 +2,7 @@
 package com.example.travel_footprint_android.presentation.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travel_footprint_android.data.dao.FootprintDao
@@ -15,11 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import okhttp3.Address
 import java.util.Date
 import javax.inject.Inject
-import kotlin.String
 
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
@@ -51,6 +51,9 @@ class JourneyViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(JourneyUiState())
     val uiState: StateFlow<JourneyUiState> = _uiState.asStateFlow()
+
+    private var getLocationJob: Job? = null
+    private var loadFootprintsJob: Job? = null
 
     init {
         loadData()
@@ -635,7 +638,8 @@ class JourneyViewModel @Inject constructor(
      * @param journeyId 旅程 ID
      */
     fun loadFootprintsForJourney(journeyId: Long) {
-        viewModelScope.launch {
+        loadFootprintsJob?.cancel()
+        loadFootprintsJob = viewModelScope.launch {
             try {
                 appService.getFootprintsForMap(journeyId).collect { footprintList ->
                     _uiState.update { state ->
@@ -740,7 +744,6 @@ class JourneyViewModel @Inject constructor(
                 appService.updateFootprint(footprint)
 
                 refreshFootprintCounts()
-                _uiState.value.currentJourneyId?.let { loadFootprintsForJourney(it) }
                 hideEditFootprintDialog()
             } catch (e: Exception) {
                 _uiState.update { state ->
@@ -842,9 +845,15 @@ class JourneyViewModel @Inject constructor(
      * @return 该足迹关联的所有位置地址列表
      */
     fun getLocation(footprint: Footprint) {
-        viewModelScope.launch {
+        getLocationJob?.cancel()
+        getLocationJob = viewModelScope.launch {
             try {
                 appService.getAddressesByFootprint(footprint.id).collect { LocationList ->
+                    if(LocationList.size == 0) {
+                        Log.d("JourneyViewModelGetLocation", "LocationList = ${LocationList}")
+                    } else {
+                        Log.d("JourneyViewModelGetLocation", "LocationList = ${LocationList.first()}, size = ${LocationList.size}")
+                    }
                     _uiState.update { state ->
                         state.copy(
                             LocationList = LocationList
