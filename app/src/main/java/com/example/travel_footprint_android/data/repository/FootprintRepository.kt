@@ -31,6 +31,9 @@ class FootprintRepository @Inject constructor(
     fun getFootprintsForMap(journeyId: Long): Flow<List<Footprint>> =
         footprintDao.getFootprintsByJourney(journeyId)
 
+    fun getAllFootprints(): Flow<List<Footprint>> =
+        footprintDao.getAllFootprints()
+
     suspend fun addFootprint(
         journeyId: Long,
         lat: Double,
