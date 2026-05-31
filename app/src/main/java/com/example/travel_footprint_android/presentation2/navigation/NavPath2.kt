@@ -53,9 +53,11 @@ data class NavPath2(
 // 预定义底部导航栏的所有导航项及其列表
 object NavPathObj2 {
     // "点亮"页面导航项，使用旅程图标（ic_journey_nav_item）
-    val lighten = NavPath2("点亮", R.drawable.ic_journey_nav_item)
+    val lighten = NavPath2("点亮", R.drawable.ic_light_nav_item)
     // "旅程"页面导航项，使用点亮图标（ic_light_nav_item）
-    val journey = NavPath2("旅程", R.drawable.ic_light_nav_item)
+    val journey = NavPath2("旅程", R.drawable.ic_journey_nav_item)
+    // "我的"页面导航项
+    val my = NavPath2("我的", R.drawable.ic_my)
     // 导航项列表，按显示顺序排列，供 Navigation2 遍历渲染
-    val list = listOf(lighten, journey)
+    val list = listOf(lighten, journey, my)
 }
