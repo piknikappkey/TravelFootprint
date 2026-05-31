@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -24,6 +25,10 @@ import com.example.travel_footprint_android.presentation2.components.light_panel
 import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
 import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
 import com.example.travel_footprint_android.R
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
+
+import com.example.travel_footprint_android.presentation2.components.bg_animotion.IllustrationRain
+import com.example.travel_footprint_android.presentation2.components.bg_animotion.RainEffect
 
 @Composable
 fun LightenScreen2(
@@ -47,48 +52,71 @@ fun LightenScreen2(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(0.dp))
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.bg_svg_water_color_blue),
-            contentDescription = "背景图片",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
 
-        // 地图区域（填充整个屏幕）
-        SVGMap(
-            modifier = Modifier.fillMaxSize(),
-            onLightCityClick = { adcode, name ->
-                lightenViewModel.LightedRecord(
-                    adcode = adcode,
-                    name = name
-                )
-            },
-            lightedProvinces = lightedProvinces,
-            lightedCity = lightedCity,
-            onModeChange = { newMode ->
-                lightenCityMode = newMode
-                Log.d("显示模式", "$newMode")
-            },
-            navigateRequest = navigateRequest,
-        )
-
-        // 底部可拖拽面板（覆盖在地图之上）
-        LightPanel2(
+        Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
-            lightenCityMode = lightenCityMode,
-            lightenViewModel = lightenViewModel,
-            showMapMode = showMapMode,
-            onBackButtonClick = onBackButtonClick,
-        )
+                .fillMaxSize()
+                .clip(RoundedCornerShape(0.dp))
+        ) {
+            //背景图片
+            Image(
+                painter = painterResource(id = R.drawable.bg_svg_water_color_blue),
+                contentDescription = "背景图片",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+
+            // 地图区域（填充整个屏幕）
+            SVGMap(
+                modifier = Modifier.fillMaxSize(),
+                onLightCityClick = { adcode, name ->
+                    lightenViewModel.LightedRecord(
+                        adcode = adcode,
+                        name = name
+                    )
+                },
+                lightedProvinces = lightedProvinces,
+                lightedCity = lightedCity,
+                onModeChange = { newMode ->
+                    lightenCityMode = newMode
+                    Log.d("显示模式", "$newMode")
+                },
+                navigateRequest = navigateRequest,
+            )
+
+// 前景雨（带溅射效果，性能优化版）
+//        IllustrationRain(
+//            count = 150,           // 雨滴数量（可根据性能调整）
+//            intensity = 1.2f,      // 雨势强度
+//            enableSplash = true    // 启用溅射效果
+//        )
+            //外层天气动效
+            RainEffect(
+                isRaining=true
+            )
+
+            // 底部可拖拽面板（覆盖在地图之上）
+            LightPanel2(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                lightenCityMode = lightenCityMode,
+                lightenViewModel = lightenViewModel,
+                showMapMode = showMapMode,
+                onBackButtonClick = onBackButtonClick,
+            )
+
+            //插花雨效果
+            ImageRain(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(1f),
+            )
+
+        }
     }
-}
+
 
 enum class LightenCityMode {
     PROVINCE, CITY;

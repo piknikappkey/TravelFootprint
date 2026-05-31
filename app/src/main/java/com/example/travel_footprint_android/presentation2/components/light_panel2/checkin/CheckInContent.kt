@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +57,24 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import java.io.File
 
 data class CheckInRecord(
     val cityAdcode: String,
@@ -82,7 +102,7 @@ fun CheckInContent(
     currentCityAdcode: String? = null,
     currentProvinceAdcode: String? = null,
     onAddCheckIn: (String, String, String) -> Unit,
-    onAddCheckInRich: ((String, String, String, List<String>) -> Unit)? = null,
+    onAddCheckInRich: ((String, String, String, List<String>, List<String>) -> Unit)? = null,
     onCityClick: ((String) -> Unit)? = null,
     onProvinceFilterCleared: (() -> Unit)? = null
 ) {
@@ -245,20 +265,14 @@ fun CheckInContent(
                                 existingRecord = checkInRecords.find { it.cityAdcode == city.cityAdcode },
                                 isHighlighted = highlightedCity == city.cityAdcode,
                                 isCurrentLocation = city.cityAdcode == currentCityAdcode,
-                                onCheckIn = { note, tags ->
+                                onCheckIn = { note, tags, photoPaths ->
                                     if (onAddCheckInRich != null) {
-                                        onAddCheckInRich(city.cityAdcode, city.cityName, note, tags)
+                                        onAddCheckInRich(city.cityAdcode, city.cityName, note, tags, photoPaths)
                                     } else {
                                         onAddCheckIn(city.cityAdcode, city.cityName, note)
                                     }
                                     highlightedCity = city.cityAdcode
                                     successMessage = "${city.cityName} 打卡成功"
-                                },
-                                onClick = {
-                                    val record = checkInRecords.find { it.cityAdcode == city.cityAdcode }
-                                    if (record != null) {
-                                        onCityClick?.invoke(city.cityAdcode)
-                                    }
                                 }
                             )
                         }
@@ -290,6 +304,26 @@ fun CheckInContent(
             }
         }
     }
+}
+
+private fun copyUriToFile(context: Context, uri: Uri, fileName: String): String? {
+    return try {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            val dir = File(context.filesDir, "checkin_photos")
+            if (!dir.exists()) dir.mkdirs()
+            val file = File(dir, fileName)
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+            file.absolutePath
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun generatePhotoFileName(): String {
+    return "photo_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg"
 }
 
 @Composable
@@ -359,15 +393,38 @@ private fun CheckInCityItem(
     existingRecord: CheckInRecord?,
     isHighlighted: Boolean,
     isCurrentLocation: Boolean,
-    onCheckIn: (String, List<String>) -> Unit,
-    onClick: () -> Unit
+    onCheckIn: (String, List<String>, List<String>) -> Unit
 ) {
     var showInput by remember { mutableStateOf(false) }
+    var showDetail by remember { mutableStateOf(false) }
     var noteText by remember { mutableStateOf("") }
     val selectedTags = remember { mutableStateListOf<String>() }
     var isSubmitting by remember { mutableStateOf(false) }
     val submitScale = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var selectedPhotoPaths by remember(existingRecord) { mutableStateOf(existingRecord?.photoPaths ?: emptyList()) }
+    var viewingPhotoPath by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(showInput) {
+        if (showInput && existingRecord != null) {
+            noteText = existingRecord.note
+            selectedTags.clear()
+            selectedTags.addAll(existingRecord.tags)
+        }
+    }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        val remaining = 9 - selectedPhotoPaths.size
+        uris.take(remaining).forEach { uri ->
+            val path = copyUriToFile(context, uri, generatePhotoFileName())
+            if (path != null) {
+                selectedPhotoPaths = selectedPhotoPaths + path
+            }
+        }
+    }
 
     val bgColor = when {
         isHighlighted -> Color(0xFFDCFCE7)
@@ -393,7 +450,14 @@ private fun CheckInCityItem(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = onClick
+                onClick = {
+                    if (existingRecord != null) {
+                        showDetail = !showDetail
+                        if (showDetail) showInput = false
+                    } else if (!showInput) {
+                        showInput = true
+                    }
+                }
             )
             .padding(12.dp)
     ) {
@@ -527,18 +591,86 @@ private fun CheckInCityItem(
                         color = Color(0xFF9CA3AF)
                     )
                 }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "修改打卡",
-                    fontSize = 12.sp,
-                    color = Color(0xFF3B82F6),
-                    modifier = Modifier
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { showInput = true }
+                if (showDetail) {
+                    Spacer(Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "🕐 ",
+                            fontSize = 11.sp,
+                            color = Color(0xFF9CA3AF)
                         )
-                )
+                        Text(
+                            text = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(existingRecord.time),
+                            fontSize = 11.sp,
+                            color = Color(0xFF9CA3AF)
+                        )
+                    }
+                    if (existingRecord.note.isNotBlank()) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = existingRecord.note,
+                            fontSize = 13.sp,
+                            color = Color(0xFF4B5563)
+                        )
+                    }
+                    if (existingRecord.photoPaths.isNotEmpty()) {
+                         Spacer(Modifier.height(8.dp))
+                         Box(
+                             modifier = Modifier.clickable(
+                                 interactionSource = remember { MutableInteractionSource() },
+                                 indication = null,
+                                 onClick = { /* 拦截点击，防止收起详情 */ }
+                             )
+                         ) {
+                             Row(
+                                 modifier = Modifier
+                                     .fillMaxWidth()
+                                     .horizontalScroll(rememberScrollState()),
+                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
+                             ) {
+                                 existingRecord.photoPaths.forEach { path ->
+                                     Box(
+                                         modifier = Modifier
+                                             .size(80.dp)
+                                             .clip(RoundedCornerShape(6.dp))
+                                             .clickable(
+                                                 interactionSource = remember { MutableInteractionSource() },
+                                                 indication = null,
+                                                 onClick = { viewingPhotoPath = path }
+                                             )
+                                     ) {
+                                         AsyncImage(
+                                             model = ImageRequest.Builder(LocalContext.current)
+                                                 .data(File(path))
+                                                 .crossfade(true)
+                                                 .size(200)
+                                                 .build(),
+                                             contentDescription = "打卡照片",
+                                             modifier = Modifier
+                                                 .fillMaxSize()
+                                                 .clipToBounds(),
+                                             contentScale = ContentScale.Crop
+                                         )
+                                     }
+                                 }
+                             }
+                         }
+                     }
+                }
+                Spacer(Modifier.height(6.dp))
+                if (!showDetail) {
+                    Text(
+                        text = "修改打卡",
+                        fontSize = 12.sp,
+                        color = Color(0xFF3B82F6),
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { showInput = true }
+                            )
+                    )
+                }
             }
 
             if (showInput && existingRecord == null) {
@@ -551,7 +683,13 @@ private fun CheckInCityItem(
                         if (tag in selectedTags) selectedTags.remove(tag)
                         else selectedTags.add(tag)
                     },
-                    isSubmitting = isSubmitting
+                    isSubmitting = isSubmitting,
+                    selectedPhotoPaths = selectedPhotoPaths,
+                    onAddPhoto = { photoPickerLauncher.launch("image/*") },
+                    onRemovePhoto = { path ->
+                        selectedPhotoPaths = selectedPhotoPaths - path
+                    },
+                    maxPhotoCount = 9
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(
@@ -565,14 +703,14 @@ private fun CheckInCityItem(
                             .clip(CircleShape)
                             .background(
                                 if (isSubmitting) Color(0xFF93C5FD)
-                                else if (noteText.isNotBlank() || selectedTags.isNotEmpty()) Color(0xFF3B82F6)
+                                else if (noteText.isNotBlank() || selectedTags.isNotEmpty() || selectedPhotoPaths.isNotEmpty()) Color(0xFF3B82F6)
                                 else Color(0xFFD1D5DB)
                             )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = {
-                                    if ((noteText.isNotBlank() || selectedTags.isNotEmpty()) && !isSubmitting) {
+                                    if ((noteText.isNotBlank() || selectedTags.isNotEmpty() || selectedPhotoPaths.isNotEmpty()) && !isSubmitting) {
                                         scope.launch {
                                             isSubmitting = true
                                             submitScale.animateTo(
@@ -584,10 +722,11 @@ private fun CheckInCityItem(
                                                 tween(150, easing = LinearEasing)
                                             )
                                             delay(200)
-                                            onCheckIn(noteText.trim(), selectedTags.toList())
+                                            onCheckIn(noteText.trim(), selectedTags.toList(), selectedPhotoPaths)
                                             isSubmitting = false
                                             noteText = ""
                                             selectedTags.clear()
+                                            selectedPhotoPaths = emptyList()
                                             showInput = false
                                         }
                                     }
@@ -624,7 +763,13 @@ private fun CheckInCityItem(
                         if (tag in selectedTags) selectedTags.remove(tag)
                         else selectedTags.add(tag)
                     },
-                    isSubmitting = isSubmitting
+                    isSubmitting = isSubmitting,
+                    selectedPhotoPaths = selectedPhotoPaths,
+                    onAddPhoto = { photoPickerLauncher.launch("image/*") },
+                    onRemovePhoto = { path ->
+                        selectedPhotoPaths = selectedPhotoPaths - path
+                    },
+                    maxPhotoCount = 9
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(
@@ -655,10 +800,11 @@ private fun CheckInCityItem(
                                             tween(150, easing = LinearEasing)
                                         )
                                         delay(200)
-                                        onCheckIn(noteText.trim(), selectedTags.toList())
+                                        onCheckIn(noteText.trim(), selectedTags.toList(), selectedPhotoPaths)
                                         isSubmitting = false
                                         noteText = ""
                                         selectedTags.clear()
+                                        selectedPhotoPaths = emptyList()
                                         showInput = false
                                     }
                                 }
@@ -685,6 +831,100 @@ private fun CheckInCityItem(
             }
         }
     }
+
+    if (viewingPhotoPath != null && existingRecord != null) {
+        val photoPaths = existingRecord.photoPaths
+        var currentIdx by remember(viewingPhotoPath) {
+            mutableIntStateOf(photoPaths.indexOf(viewingPhotoPath).coerceAtLeast(0))
+        }
+
+        Dialog(
+            onDismissRequest = { viewingPhotoPath = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { viewingPhotoPath = null }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.8f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { /* 拦截点击，防止收起 */ }
+                        )
+                        .pointerInput(currentIdx, photoPaths.size) {
+                            if (photoPaths.size <= 1) return@pointerInput
+                            var totalDrag = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { totalDrag = 0f },
+                                onDragEnd = {
+                                    if (totalDrag > 100 && currentIdx > 0) {
+                                        currentIdx--
+                                    } else if (totalDrag < -100 && currentIdx < photoPaths.size - 1) {
+                                        currentIdx++
+                                    }
+                                },
+                                onHorizontalDrag = { _, dragAmount ->
+                                    totalDrag += dragAmount
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data(File(photoPaths[currentIdx]))
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "照片大图",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+
+                Text(
+                    text = "✕",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(24.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { viewingPhotoPath = null }
+                        )
+                )
+
+                if (photoPaths.size > 1) {
+                    Text(
+                        text = "${currentIdx + 1} / ${photoPaths.size}",
+                        fontSize = 14.sp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 48.dp)
+                            .background(
+                                Color.Black.copy(alpha = 0.4f),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -693,7 +933,11 @@ private fun NoteInputSection(
     onNoteChange: (String) -> Unit,
     selectedTags: List<String>,
     onTagToggle: (String) -> Unit,
-    isSubmitting: Boolean
+    isSubmitting: Boolean,
+    selectedPhotoPaths: List<String>,
+    onAddPhoto: () -> Unit,
+    onRemovePhoto: (String) -> Unit,
+    maxPhotoCount: Int = 9
 ) {
     Column {
         Box(
@@ -770,6 +1014,88 @@ private fun NoteInputSection(
                         fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                         color = if (isSelected) Color(0xFF3B82F6) else Color(0xFF6B7280)
                     )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        if (selectedPhotoPaths.isNotEmpty() || selectedPhotoPaths.size < maxPhotoCount) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (selectedPhotoPaths.size < maxPhotoCount) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFF3F4F6))
+                            .border(1.dp, Color(0xFFD1D5DB), RoundedCornerShape(8.dp))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                enabled = !isSubmitting,
+                                onClick = onAddPhoto
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "+",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Light,
+                                color = Color(0xFF6B7280)
+                            )
+                            Text(
+                                text = "${selectedPhotoPaths.size}/$maxPhotoCount",
+                                fontSize = 9.sp,
+                                color = Color(0xFF9CA3AF)
+                            )
+                        }
+                    }
+                }
+
+                selectedPhotoPaths.forEach { path ->
+                    Box(modifier = Modifier.size(60.dp)) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(File(path))
+                                .crossfade(true)
+                                .size(120)
+                                .build(),
+                            contentDescription = "照片预览",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clipToBounds()
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEF4444).copy(alpha = 0.9f))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    enabled = !isSubmitting,
+                                    onClick = { onRemovePhoto(path) }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "×",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }

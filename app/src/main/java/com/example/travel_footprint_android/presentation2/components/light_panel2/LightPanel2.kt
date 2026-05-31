@@ -349,12 +349,13 @@ fun LightPanel2(
                                                 note
                                             )
                                         },
-                                        onAddCheckInRich = { adcode, cityName, note, tags ->
+                                        onAddCheckInRich = { adcode, cityName, note, tags, photoPaths ->
                                             lightenViewModel.addCheckInRecord(
                                                 adcode,
                                                 cityName,
                                                 note,
-                                                tags
+                                                tags,
+                                                photoPaths
                                             )
                                         },
                                         onProvinceFilterCleared = {

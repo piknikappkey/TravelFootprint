@@ -869,10 +869,10 @@ class LightenViewModel @Inject constructor(
     private val _checkInRecords = MutableStateFlow<List<CheckInRecordEntity>>(emptyList())
     val checkInRecords: StateFlow<List<CheckInRecordEntity>> = _checkInRecords.asStateFlow()
 
-    fun addCheckInRecord(cityAdcode: String, cityName: String, note: String, tags: List<String> = emptyList()) {
+    fun addCheckInRecord(cityAdcode: String, cityName: String, note: String, tags: List<String> = emptyList(), photoPaths: List<String> = emptyList()) {
         viewModelScope.launch {
             try {
-                appService.addCheckInRecord(cityAdcode, cityName, note, tags)
+                appService.addCheckInRecord(cityAdcode, cityName, note, tags, photoPaths)
                 // 数据会自动通过 Flow 更新，无需手动刷新
             } catch (e: Exception) {
                 Log.e("LightenViewModel", "添加打卡记录失败", e)
