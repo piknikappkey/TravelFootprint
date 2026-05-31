@@ -1,13 +1,15 @@
 package com.example.travel_footprint_android.presentation2.components.button.button_draggable
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -17,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -25,16 +26,18 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.example.travel_footprint_android.ui.theme.MainColor3
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRandomButton
+import com.example.travel_footprint_android.ui.theme.SecondColor1
+import com.example.travel_footprint_android.ui.theme.SecondColor3
 import kotlin.math.roundToInt
 
 @Composable
 fun ButtonDraggable(
     modifier: Modifier = Modifier,
-    bgColor: Color = MainColor3,
+    bgColor: Color = SecondColor1,
+    borderColor: Color = SecondColor3,
     onClick: () -> Unit = {},
     showRainDialog: Boolean,
-    content: @Composable () -> Unit,
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
@@ -44,8 +47,11 @@ fun ButtonDraggable(
 
     val buttonSizePx = with(density) { 48.dp.toPx() }
 
-    val aniAngle by animateFloatAsState(
-        targetValue = if (showRainDialog) 360f else 0f,
+    val maxSize = remember { 50 }
+    val minSize = remember { 40 }
+
+    val aniSize by animateIntAsState(
+        targetValue = if (showRainDialog) maxSize else minSize,
         animationSpec = tween(durationMillis = 300),
     )
 
@@ -61,21 +67,10 @@ fun ButtonDraggable(
                 }
             }
     ) {
-        val shape = RoundedCornerShape(16.dp)
-
         Box(
             modifier = Modifier
+                .size(maxSize.dp)
                 .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-                .size(36.dp)
-                .shadow(
-                    elevation = 4.dp,
-                    shape = shape,
-                    clip = false
-                )
-                .background(
-                    color = bgColor,
-                    shape = shape
-                )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -92,11 +87,35 @@ fun ButtonDraggable(
                         offsetX = offsetX.coerceIn(0f, maxX)
                         offsetY = offsetY.coerceIn(0f, maxY)
                     }
-                }
-                .rotate(aniAngle),
+                },
             contentAlignment = Alignment.Center
         ) {
-            content()
+            val shape = RoundedCornerShape(8.dp)
+            Box(
+                modifier = Modifier
+                    .size(minSize.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = shape,
+                        clip = false
+                    )
+                    .background(
+                        color = bgColor,
+                        shape = shape
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = borderColor,
+                        shape = shape
+                    )
+                    .padding(5.dp)
+            ) {  }
+            ImageRandomButton(
+                size = aniSize,
+                autoSwitchIntervalMs = 5000L,
+                fadeInOutMs = 300,
+                onClick = onClick,
+            )
         }
     }
 }

@@ -30,7 +30,7 @@ fun JourneyList(
     BGImgBox(
         listOf(R.drawable.bg_rectangular_1__3__0, R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
     ) {
-        Column{
+        Column {
             // 固定标题
             Headline(
                 text = "我的旅程",
@@ -58,7 +58,14 @@ fun JourneyList(
                     }
                 } else {
                     // 旅程列表
-                    JourneyListView2(Modifier.padding(start = 20.dp, top = 0.dp, end = 20.dp, bottom = 70.dp), journeyList, navigate)
+                    JourneyListView2(
+                        Modifier.padding(
+                            start = 20.dp,
+                            top = 0.dp,
+                            end = 20.dp,
+                            bottom = 70.dp
+                        ), journeyList, navigate
+                    )
                 }
                 Box(
                     modifier = Modifier

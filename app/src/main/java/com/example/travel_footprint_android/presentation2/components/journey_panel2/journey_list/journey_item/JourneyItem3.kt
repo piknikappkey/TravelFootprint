@@ -43,7 +43,7 @@ fun JourneyItem3(
             .clickable(onClick = { journeyClick(journey) })
     ) {
         BGImgBox(
-            listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3)
+            listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3),
         ) {
             Row(
                 modifier = Modifier

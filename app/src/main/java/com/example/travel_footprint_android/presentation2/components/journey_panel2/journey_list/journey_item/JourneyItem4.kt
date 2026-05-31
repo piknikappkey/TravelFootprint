@@ -55,15 +55,15 @@ fun JourneyItem4(
             )
     ) {
         BGImgBox(
-            listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2)
+            listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2),
         ) {
-            val modifier = if(showDetail) Modifier else Modifier.clickable(onClick = journeyClick)
+            val modifier = if (showDetail) Modifier else Modifier.clickable(onClick = journeyClick)
             Row(
                 modifier = modifier
                     .padding(vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if(!showDetail) {
+                if (!showDetail) {
                     Spacer(Modifier.width(3.dp))
                     ImageSquare2(
                         imgPath = journey.coverImagePath,
@@ -239,7 +239,7 @@ private fun RightContent(
                 ) {
                     BGBox {
                         BGImgBox(
-                            listOf(R.drawable.bg_simple_hor_small_small)
+                            listOf(R.drawable.bg_simple_hor_small_small),
                         ) {
                             Box(
                                 modifier = Modifier

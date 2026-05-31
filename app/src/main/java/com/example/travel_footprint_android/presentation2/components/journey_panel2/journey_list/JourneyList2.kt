@@ -41,12 +41,12 @@ fun JourneyList2(
     BGImgBox(
         listOf(R.drawable.bg_rectangular_1__3__0),
     ) {
-        Column{
+        Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 返回按钮
-                if(journeySelected != null) {
+                if (journeySelected != null) {
                     Image(
                         modifier = Modifier
                             .size(26.dp)
@@ -67,9 +67,12 @@ fun JourneyList2(
                         .padding(vertical = 5.dp, horizontal = 10.dp)
                 )
 
-                if(journeySelected != null) {
+                if (journeySelected != null) {
                     IconEdit() {
-                        JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, journeySelected)
+                        JourneyNavController.navigate(
+                            JourneyPanel2State.JOURNEY_EDIT,
+                            journeySelected
+                        )
                     }
                 }
                 Spacer(Modifier.width(10.dp))
@@ -95,9 +98,13 @@ fun JourneyList2(
                     }
                 } else {
                     // 旅程列表
-                    JourneyListView3(journeyList = journeyList, journeySelected =  journeySelected, updateJourney =  updateJourney)
+                    JourneyListView3(
+                        journeyList = journeyList,
+                        journeySelected = journeySelected,
+                        updateJourney = updateJourney
+                    )
                 }
-                if(journeySelected == null) {
+                if (journeySelected == null) {
                     Box(
                         modifier = Modifier
                             .padding(10.dp)
@@ -109,7 +116,10 @@ fun JourneyList2(
                                     .width(48.dp)
                                     .height(48.dp),
                                 clickable = {
-                                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_EDIT, null)
+                                    JourneyNavController.navigate(
+                                        JourneyPanel2State.JOURNEY_EDIT,
+                                        null
+                                    )
                                 },
                             )
                         }

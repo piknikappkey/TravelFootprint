@@ -1,3 +1,27 @@
+/**
+ * 自定义底部导航栏组件
+ * 
+ * 用途：
+ * - 提供应用底部导航功能，包含"点亮"和"旅程"两个导航项
+ * - 根据选中状态展示平滑的视觉动画效果
+ * 
+ * 功能：
+ * - 导航项图标和文字展示
+ * - 选中/未选中状态的平滑过渡动画（透明度、字体大小、图标大小、背景色）
+ * - 点击切换导航页面
+ * 
+ * 关联组件：
+ * - CustomNavController: 管理导航状态，记录当前选中的导航项，处理页面切换（含200ms防抖）
+ * - NavPath2: 导航项数据类，包含名称和图标资源ID
+ * - NavPathObj2: 导航项常量对象，定义"点亮"和"旅程"两个预设导航项
+ * - 主题颜色系统: BGLight0(导航栏背景色)、FontDark4(文字颜色)、Purple40(图标颜色)、Purple80(选中背景色)
+ * 
+ * 实现逻辑：
+ * - Navigation2: 使用 Box + Row 构建水平居中的导航栏容器，遍历 NavPathObj2.list 创建等宽的 NavItem
+ * - NavItem: 接收 NavPath2 配置，通过比较当前路径与传入路径判断是否选中
+ *           使用 animateFloatAsState 实现4个属性的 200ms 缓动动画
+ *           点击时调用 CustomNavController.navigate() 切换导航状态
+ */
 package com.example.travel_footprint_android.presentation2.navigation
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -33,6 +57,7 @@ import com.example.travel_footprint_android.ui.theme.FontDark4
 import com.example.travel_footprint_android.ui.theme.Purple40
 import com.example.travel_footprint_android.ui.theme.Purple80
 
+// 自定义底部导航栏容器：Box 填充宽度并设置背景，Row 内等分布局导航项
 @Composable
 fun Navigation2(
     modifier: Modifier = Modifier
@@ -47,19 +72,23 @@ fun Navigation2(
             .navigationBarsPadding(),
         contentAlignment = Alignment.Center // 水平居中
     ) {
+        // Row 占 80% 宽度，内部导航项等分空间
         Row(
             modifier = Modifier.fillMaxWidth(.8f),
         ) {
+            // 遍历导航项列表，为每个项创建 NavItem 组件
             NavPathObj2.list.forEach {
                 NavItem(
                     it,
-                    Modifier.weight(1f),
-                    { CustomNavController.navigate(it) },
-                    CustomNavController.currentDestination.value)
+                    Modifier.weight(1f), // 等权重平分宽度
+                    { CustomNavController.navigate(it) }, // 点击时切换导航
+                    CustomNavController.currentDestination.value) // 传入当前选中导航项
             }
         }
     }
 }
+
+// 单个导航项组件：根据选中状态展示不同样式，点击触发导航切换
 @Composable
 fun NavItem(
     navPath: NavPath2,
@@ -67,47 +96,49 @@ fun NavItem(
     navChange: () -> Unit,
     navPathNow: NavPath2
 ) {
+    // 判断当前项是否被选中
     val isSelected = navPathNow == navPath
 
-    // 文字透明度动画
+    // 文字透明度动画：选中时完全不透明(1f)，未选中时半透明(0.6f)，200ms过渡
     val animatedAlpha by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0.6f,
         animationSpec = tween(durationMillis = 200),
         label = "navItemAlpha"
     )
 
-    // 文字大小动画
+    // 文字大小动画：选中时缩小(.9f)，未选中时正常(1f)，200ms过渡
     val animatedFontSize by animateFloatAsState(
         targetValue = if (isSelected) .9f else 1f,
         animationSpec = tween(durationMillis = 200),
         label = "navItemFontSize"
     )
 
-    // 图标大小动画
+    // 图标大小动画：选中时正常(1f)，未选中时缩小(.8f)，200ms过渡
     val animateIconSize by animateFloatAsState(
         targetValue = if (isSelected) 1f else .8f,
         animationSpec = tween(durationMillis = 200),
         label = "navItemSize"
     )
 
-    // 背景色动画：选中时渐变为带透明度的紫色，未选中时完全透明
+    // 背景色动画：选中时渐变为30%透明度紫色(.3f)，未选中时完全透明(0f)，200ms过渡
     val backgroundAlpht by animateFloatAsState(
         targetValue = if (isSelected) .3f else 0f,
         animationSpec = tween(durationMillis = 200),
         label = "navItemAlpha"
     )
 
-
+    // 垂直布局：图标在上，文字在下，居中对齐，点击无涟漪效果
     Column(
         modifier = modifier
             .padding(10.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = null, // 禁用点击涟漪反馈
                 onClick = navChange
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // 导航图标：尺寸和透明度随选中状态动画变化，统一使用紫色染色
         Image(
             modifier = Modifier
                 .size(18.dp * animateIconSize)
@@ -117,12 +148,13 @@ fun NavItem(
             colorFilter = ColorFilter.tint(Purple40.copy(alpha = 0.8f)),
         )
 
+        // 图标与文字之间的间距
         Spacer(Modifier.padding(2.dp))
 
-        // 用 Box 包裹 Text 以添加背景，同时保持内容居中
+        // 用 Box 包裹 Text 以添加圆角背景，同时保持内容居中
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(25.dp)) // 圆角
+                .clip(RoundedCornerShape(25.dp)) // 圆角背景
                 .background(Purple80.copy(backgroundAlpht)) // 动画背景色
                 .padding(horizontal = 10.dp, vertical = 0.dp) // 内边距让背景更自然
         ) {

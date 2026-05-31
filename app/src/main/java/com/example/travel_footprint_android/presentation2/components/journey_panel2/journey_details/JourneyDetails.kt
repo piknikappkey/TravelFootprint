@@ -52,7 +52,7 @@ fun JourneyDetails(
 ) {
 
     BGImgBox(
-        listOf(R.drawable.bg_simple_ver_small)
+        listOf(R.drawable.bg_simple_ver_small),
     ) {
         Column {
             // 标题
@@ -279,7 +279,7 @@ private fun FootprintButton(
         ) {
             BGBox {
                 BGImgBox(
-                    listOf(R.drawable.bg_simple_hor_small_small)
+                    listOf(R.drawable.bg_simple_hor_small_small),
                 ) {
                     Box(
                         modifier = Modifier
