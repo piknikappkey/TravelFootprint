@@ -10,7 +10,6 @@ import android.location.Location
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.example.travel_footprint_android.utils.LocationUtils
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import javax.inject.Inject
@@ -229,13 +228,6 @@ class LocationService @Inject constructor(
         if (!address.subLocality.isNullOrBlank()) parts.add(address.subLocality)
         if (!address.thoroughfare.isNullOrBlank()) parts.add(address.thoroughfare)
         return if (parts.isNotEmpty()) parts.joinToString(" ") else "${address.latitude}, ${address.longitude}"
-    }
-
-    /**
-     * 计算两点距离
-     */
-    fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
-        return LocationUtils.calculateDistance(lat1, lon1, lat2, lon2)
     }
 
     /**

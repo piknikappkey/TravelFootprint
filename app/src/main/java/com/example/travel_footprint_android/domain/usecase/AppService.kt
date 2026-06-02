@@ -10,8 +10,8 @@ import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
 import com.example.travel_footprint_android.data.entity.City
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.data.entity.MediaAttachment
 import com.example.travel_footprint_android.data.entity.Province
 import com.example.travel_footprint_android.data.repository.CheckInRecordRepository
@@ -266,10 +266,6 @@ class AppService @Inject constructor(
         return withContext(Dispatchers.IO) {
             locationService.reverseGeocode(lat, lng)
         }
-    }
-
-    fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Float {
-        return locationService.calculateDistance(lat1, lng1, lat2, lng2)
     }
 
     fun hasLocationPermission(): Boolean = locationService.hasLocationPermission()

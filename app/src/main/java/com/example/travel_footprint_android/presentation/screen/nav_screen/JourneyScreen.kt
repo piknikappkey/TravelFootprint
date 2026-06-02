@@ -33,6 +33,7 @@ package com.example.travel_footprint_android.presentation.screen.nav_screen
  */
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -68,11 +69,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
@@ -84,9 +85,9 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.SecondColor3
-import com.example.travel_footprint_android.utils.PermissionUtils
 
 // 旅程主界面 Composable 函数，通过 Hilt 注入 JourneyViewModel
 @Composable
@@ -117,13 +118,19 @@ fun JourneyScreen(
 
     // 获取上下文和位置权限数组
     val context = LocalContext.current
-    val locationPermissions = arrayOf(
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    )
+    val locationPermissions = remember {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
     // 检查初始权限状态
     var hasLocationPermission by remember {
-        mutableStateOf(PermissionUtils.hasPermissions(context, locationPermissions))
+        mutableStateOf(locationPermissions.all { locationPermission ->
+            ContextCompat
+                .checkSelfPermission(context, locationPermission) ==
+                    PackageManager.PERMISSION_GRANTED
+        })
     }
 
     // 创建权限请求启动器，处理权限请求结果
