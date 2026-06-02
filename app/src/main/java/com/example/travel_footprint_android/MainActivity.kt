@@ -34,7 +34,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.travel_footprint_android.presentation2.screen.MainScreen3
+import com.example.travel_footprint_android.presentation.screen.MainScreen3
 import com.example.travel_footprint_android.utils.DebugHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

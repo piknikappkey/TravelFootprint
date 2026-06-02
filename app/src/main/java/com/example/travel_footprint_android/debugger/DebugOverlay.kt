@@ -1,5 +1,5 @@
 // app/src/main/java/com/example/travel_footprint_android/presentation2/components/debug/DebugOverlay.kt
-package com.example.travel_footprint_android.presentation2.components.debug
+package com.example.travel_footprint_android.presentation.components.debug
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
