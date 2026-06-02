@@ -104,6 +104,7 @@ data class ForecastData(
 // 天气 UI 状态容器：封装所有天气相关的 UI 状态，供界面层观察
 data class WeatherUiState(
     val isLoading: Boolean = false, // 是否正在加载（定位/天气查询进行中）
+    val showWeatherCard: Boolean = true, // 是否显示天气卡片（外部可控制显隐）
     val liveWeather: LiveWeatherData? = null, // 实况天气数据（null 表示未加载或失败）
     val forecast: List<ForecastData>? = null, // 天气预报数据列表（null 表示未加载或失败）
     val cityName: String? = null, // 当前城市名称（如"北京市"）
@@ -212,6 +213,13 @@ class WeatherViewModel @Inject constructor(
         } catch (e: AMapException) {
             Log.e("WeatherViewModel", "WeatherSearch forecast init failed: ${e.errorCode}")
         }
+    }
+
+    // 切换天气卡片的显示/隐藏状态
+    fun toggleWeatherCard() {
+        _weatherState.value = _weatherState.value.copy(
+            showWeatherCard = !_weatherState.value.showWeatherCard
+        )
     }
 
     // 对外入口：加载当前定位城市的天气数据（定位 → 实况查询 → 预报查询）
