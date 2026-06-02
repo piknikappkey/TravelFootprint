@@ -454,8 +454,8 @@ private fun CheckInCityItem(
                     if (existingRecord != null) {
                         showDetail = !showDetail
                         if (showDetail) showInput = false
-                    } else if (!showInput) {
-                        showInput = true
+                    } else {
+                        showInput = !showInput
                     }
                 }
             )

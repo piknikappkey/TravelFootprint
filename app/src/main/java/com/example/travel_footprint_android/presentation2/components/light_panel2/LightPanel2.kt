@@ -9,20 +9,20 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
@@ -39,9 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -53,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.back_buttom.city_province_backButtom
@@ -83,7 +83,6 @@ fun LightPanel2(
     val uiState by lightenViewModel.uiState.collectAsState()
 
     val lightCityList = uiState.lightedCities
-    val lightedCityCount = uiState.lightedCityCount
     val lightedProvinces = uiState.lightedProvinces
     val lightedProvinceCount = uiState.lightedProvinceCount
 
@@ -124,8 +123,10 @@ fun LightPanel2(
     val allFootprints by lightenViewModel.allFootprints.collectAsState()
 
     val configuration = LocalConfiguration.current
-    val density = configuration.densityDpi.toFloat() / 160f
-    val screenHeightPixels = configuration.screenHeightDp * density
+    val screenHeightPixels = remember(configuration) {
+        val density = configuration.densityDpi.toFloat() / 160f
+        configuration.screenHeightDp * density
+    }
 
     var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
     var isDragging by remember { mutableStateOf(false) }
@@ -140,43 +141,81 @@ fun LightPanel2(
         ).value
     }
 
-    val isExpanded = currentHeightRatio > 0.5f
+    val isExpanded by remember {
+        derivedStateOf { currentHeightRatio > 0.5f }
+    }
 
     LaunchedEffect(isExpanded) {
         onExpandedChanged?.invoke(isExpanded)
     }
 
-    val togglePanelHeight = { _: Boolean ->
-        if (!isDragging) {
-            currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
+    val togglePanelHeight = remember {
+        { _: Boolean ->
+            if (!isDragging) {
+                currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
+            }
         }
     }
 
-    val onDragDelta = { deltaY: Float ->
-        val ratioDelta = -deltaY / screenHeightPixels
-        currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+    val onDragDelta = remember {
+        { deltaY: Float ->
+            val ratioDelta = -deltaY / screenHeightPixels
+            currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+        }
     }
 
-    // 编辑模式下的选择状态
-    var selectedCityCodes by remember {
-        mutableStateOf<Set<String>>(emptySet())
+    var selectionState by remember {
+        mutableStateOf(SelectionState())
     }
 
-    var unselectedCityCodes by remember {
-        mutableStateOf<Set<String>>(emptySet())
+    val onSelectionChanged = remember {
+        { sCities: Set<String>, uCities: Set<String>, sProvinces: Set<String>, uProvinces: Set<String> ->
+            selectionState = SelectionState(
+                selectedCityCodes = sCities,
+                unselectedCityCodes = uCities,
+                selectedProvinceCodes = sProvinces,
+                unselectedProvinceCodes = uProvinces
+            )
+        }
     }
 
-    var selectedProvinceCodes by remember {
-        mutableStateOf<Set<String>>(emptySet())
+    val onAddCheckIn = remember {
+        { adcode: String, cityName: String, note: String ->
+            lightenViewModel.addCheckInRecord(adcode, cityName, note)
+        }
     }
 
-    var unselectedProvinceCodes by remember {
-        mutableStateOf<Set<String>>(emptySet())
+    val onAddCheckInRich = remember {
+        { adcode: String, cityName: String, note: String, tags: List<String>, photoPaths: List<String> ->
+            lightenViewModel.addCheckInRecord(adcode, cityName, note, tags, photoPaths)
+        }
     }
 
-    // 内容最大高度
-    val scrollableMaxHeight =
-        (configuration.screenHeightDp.dp * currentHeightRatio - 60.dp).coerceAtLeast(0.dp)
+    val onProvinceFilterCleared = remember {
+        { selectedProvinceAdcode = null }
+    }
+
+    val onGoCheckIn = remember {
+        { provinceAdcode: String ->
+            selectedProvinceAdcode = provinceAdcode
+            selectedTab = LightPanel2Tab.CHECK_IN
+            if (!isExpanded) {
+                currentHeightRatio = 0.6f
+            }
+        }
+    }
+
+    val onStateChange = remember {
+        { state: LightPanel2State -> lightPanel2State = state }
+    }
+
+    val onDeleteModeChange = remember {
+        { mode: Boolean -> isDeleteMode = mode }
+    }
+
+    val onSelectionReset = remember {
+        { selectionState = SelectionState() }
+    }
 
     Box(
         modifier = modifier
@@ -201,7 +240,7 @@ fun LightPanel2(
         }
 
 
-        Column {
+         Column {
             // ================= 拖拽区域 =================
             Box(
                 modifier = Modifier
@@ -267,162 +306,45 @@ fun LightPanel2(
 
                     // ================= Tab 标题 =================
 
-                    PanelTitle(
-                        modifier = Modifier,
-                        selectedTab = selectedTab, onTabSelected = { tab ->
+                    val onTabSelected: (LightPanel2Tab) -> Unit = remember {
+                        { tab ->
                             selectedTab = tab
                             selectedProvinceAdcode = null
                             if (!isExpanded) {
                                 currentHeightRatio = 0.6f
                             }
                         }
+                    }
+
+                    PanelTitle(
+                        modifier = Modifier,
+                        selectedTab = selectedTab,
+                        onTabSelected = onTabSelected
                     )
 
-                    // ================= 内容区域 =================
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                    ) {
-
-                        if (true) {
-
-                            when (selectedTab) {
-
-                                LightPanel2Tab.LIGHT_UP -> {
-
-                                    LightUpContentOnly(
-                                        lightPanel2State = lightPanel2State,
-                                        lightCityList = lightCityList,
-                                        lightedCityCount = lightedCityCount,
-                                        lightedProvinces = lightedProvinces,
-                                        lightedProvinceCount = lightedProvinceCount,
-                                        lightenCityMode = lightenCityMode,
-                                        isDeleteMode = isDeleteMode,
-                                        scrollableMaxHeight = scrollableMaxHeight,
-
-                                        onStateChange = {
-                                            lightPanel2State = it
-                                        },
-
-                                        onDeleteModeChange = {
-                                            isDeleteMode = it
-                                        },
-
-                                        onLightenViewModel = lightenViewModel,
-
-                                        onSelectionChanged = { sCities, uCities, sProvinces, uProvinces ->
-
-                                            selectedCityCodes = sCities
-                                            unselectedCityCodes = uCities
-                                            selectedProvinceCodes = sProvinces
-                                            unselectedProvinceCodes = uProvinces
-                                        })
-                                }
-
-                                LightPanel2Tab.CORNER -> {
-
-                                    CornerContent(
-                                        lightedProvinceCount = lightedProvinceCount,
-                                        lightCityList = lightCityList,
-                                        onGoCheckIn = { provinceAdcode ->
-                                            selectedProvinceAdcode = provinceAdcode
-                                            selectedTab = LightPanel2Tab.CHECK_IN
-                                            if (!isExpanded) {
-                                                currentHeightRatio = 0.6f
-                                            }
-                                        }
-                                    )
-                                }
-
-                                LightPanel2Tab.CHECK_IN -> {
-
-                                    CheckInContent(
-                                        lightCityList = lightCityList,
-                                        checkInRecords = checkInRecords,
-                                        currentProvinceAdcode = selectedProvinceAdcode,
-                                        onAddCheckIn = { adcode, cityName, note ->
-                                            lightenViewModel.addCheckInRecord(
-                                                adcode,
-                                                cityName,
-                                                note
-                                            )
-                                        },
-                                        onAddCheckInRich = { adcode, cityName, note, tags, photoPaths ->
-                                            lightenViewModel.addCheckInRecord(
-                                                adcode,
-                                                cityName,
-                                                note,
-                                                tags,
-                                                photoPaths
-                                            )
-                                        },
-                                        onProvinceFilterCleared = {
-                                            selectedProvinceAdcode = null
-                                        })
-                                }
-
-                                LightPanel2Tab.MILESTONE ->
-
-                                    MilestoneContent(
-                                        lightCityList = lightCityList,
-                                        lightedProvinceCount = lightedProvinceCount,
-                                        allFootprints = allFootprints
-                                    )
-                            }
-                        }
-                    }
-
-
-                    // ================= 底部按钮 =================
-
-                    if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
-
-
-                        BottomActionButtons(
-
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-
-                            lightPanel2State = lightPanel2State,
-
-                            isDeleteMode = isDeleteMode,
-
-                            lightCityList = lightCityList,
-
-                            lightedProvinces = lightedProvinces,
-
-                            lightenCityMode = lightenCityMode,
-
-                            selectedCityCodes = selectedCityCodes,
-
-                            unselectedCityCodes = unselectedCityCodes,
-
-                            selectedProvinceCodes = selectedProvinceCodes,
-
-                            unselectedProvinceCodes = unselectedProvinceCodes,
-
-                            onStateChange = {
-                                lightPanel2State = it
-                            },
-
-                            onDeleteModeChange = {
-                                isDeleteMode = it
-                            },
-
-                            onLightenViewModel = lightenViewModel,
-
-                            onSelectionReset = {
-
-                                selectedCityCodes = emptySet()
-                                unselectedCityCodes = emptySet()
-                                selectedProvinceCodes = emptySet()
-                                unselectedProvinceCodes = emptySet()
-                            })
-
-                    }
+                    LightPanelBody(
+                        selectedTab = selectedTab,
+                        lightPanel2State = lightPanel2State,
+                        isDeleteMode = isDeleteMode,
+                        isExpanded = isExpanded,
+                        lightCityList = lightCityList,
+                        lightedProvinces = lightedProvinces,
+                        lightedProvinceCount = lightedProvinceCount,
+                        lightenCityMode = lightenCityMode,
+                        checkInRecords = checkInRecords,
+                        selectedProvinceAdcode = selectedProvinceAdcode,
+                        allFootprints = allFootprints,
+                        selectionState = selectionState,
+                        onSelectionChanged = onSelectionChanged,
+                        onAddCheckIn = onAddCheckIn,
+                        onAddCheckInRich = onAddCheckInRich,
+                        onProvinceFilterCleared = onProvinceFilterCleared,
+                        onGoCheckIn = onGoCheckIn,
+                        lightenViewModel = lightenViewModel,
+                        onStateChange = onStateChange,
+                        onDeleteModeChange = onDeleteModeChange,
+                        onSelectionReset = onSelectionReset
+                    )
 
                 }
             }
@@ -436,25 +358,30 @@ fun LightPanel2(
 private fun LightUpContentOnly(
     lightPanel2State: LightPanel2State,
     lightCityList: List<LightedCity>,
-    lightedCityCount: Int,
     lightedProvinces: List<LightedProvince>,
-    lightedProvinceCount: Int,
     lightenCityMode: LightenCityMode,
     isDeleteMode: Boolean,
-    scrollableMaxHeight: androidx.compose.ui.unit.Dp,
-    onStateChange: (LightPanel2State) -> Unit,
-    onDeleteModeChange: (Boolean) -> Unit,
     onLightenViewModel: LightenViewModel,
     onSelectionChanged: (Set<String>, Set<String>, Set<String>, Set<String>) -> Unit
 ) {
-    Column(
+    val provinceTimeline = remember(lightCityList) {
+        lightCityList.groupBy { it.provinceAdcode }.map { (_, cities) ->
+            val latest = cities.maxByOrNull { it.lightedTime }
+            ProvinceTimelineItem(
+                provinceName = cities.first().provinceName,
+                provinceAdcode = cities.first().provinceAdcode,
+                cityCount = cities.size,
+                latestLightTime = latest?.lightedTime ?: Date(0)
+            )
+        }.sortedByDescending { it.latestLightTime }
+    }
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(max = scrollableMaxHeight)
-            .verticalScroll(rememberScrollState())
             .padding(6.dp)
     ) {
-        LightCityScreenWithState(
+        item { LightCityScreenWithState(
             lightPanel2State = lightPanel2State,
             lightCityList = lightCityList,
             lightedProvinces = lightedProvinces,
@@ -467,51 +394,45 @@ private fun LightUpContentOnly(
                 onLightenViewModel.unlightCity(cityCode)
             })
 
-        if (lightPanel2State == LightPanel2State.EDIT) {
-            LightCityEditScreen(
-                lightPanel2State = lightPanel2State,
-                lightenCityMode = lightenCityMode,
-                initialSelectedCityCodes = emptySet(),
-                initialSelectedProvinceCodes = emptySet(),
-                onSelectionChanged = onSelectionChanged
-            )
         }
 
-        if (lightPanel2State != LightPanel2State.EDIT) {
-            Spacer(Modifier.height(6.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(0.5.dp)
-                    .background(Color(0xFFE5E7EB))
-            )
-            Spacer(Modifier.height( 12.dp))
-
-            Text(
-                text = "点亮记录",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937),
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
-            Spacer(Modifier.height(6.dp))
-
-            val provinceTimeline = remember(lightCityList) {
-                lightCityList.groupBy { it.provinceAdcode }.map { (_, cities) ->
-                    val latest = cities.maxByOrNull { it.lightedTime }
-                    ProvinceTimelineItem(
-                        provinceName = cities.first().provinceName,
-                        provinceAdcode = cities.first().provinceAdcode,
-                        cityCount = cities.size,
-                        latestLightTime = latest?.lightedTime ?: Date(0)
-                    )
-                }.sortedByDescending { it.latestLightTime }
+        item {
+            if (lightPanel2State == LightPanel2State.EDIT) {
+                LightCityEditScreen(
+                    lightPanel2State = lightPanel2State,
+                    lightenCityMode = lightenCityMode,
+                    initialSelectedCityCodes = emptySet(),
+                    initialSelectedProvinceCodes = emptySet(),
+                    onSelectionChanged = onSelectionChanged
+                )
             }
+        }
 
-            provinceTimeline.forEach { item ->
-                ProvinceTimelineRow(item = item)
-                Spacer(Modifier.height(8.dp))
+        item {
+            if (lightPanel2State != LightPanel2State.EDIT) {
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
+                        .background(Color(0xFFE5E7EB))
+                )
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "点亮记录",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                Spacer(Modifier.height(6.dp))
             }
+        }
+
+        items(provinceTimeline,key={it.provinceAdcode}){ item ->
+            ProvinceTimelineRow(item = item)
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
@@ -522,8 +443,6 @@ private fun BottomActionButtons(
     modifier: Modifier = Modifier,
     lightPanel2State: LightPanel2State,
     isDeleteMode: Boolean,
-    lightCityList: List<LightedCity>,
-    lightedProvinces: List<LightedProvince>,
     lightenCityMode: LightenCityMode,
     selectedCityCodes: Set<String>,
     unselectedCityCodes: Set<String>,
@@ -729,3 +648,103 @@ fun LightCityScreenWithState(
         )
     }
 }
+
+// ========== 面板主体内容（提取为独立 Composable 以优化重组性能） ==========
+@Composable
+private fun ColumnScope.LightPanelBody(
+    selectedTab: LightPanel2Tab,
+    lightPanel2State: LightPanel2State,
+    isDeleteMode: Boolean,
+    isExpanded: Boolean,
+    lightCityList: List<LightedCity>,
+    lightedProvinces: List<LightedProvince>,
+    lightedProvinceCount: Int,
+    lightenCityMode: LightenCityMode,
+    checkInRecords: List<CheckInRecord>,
+    selectedProvinceAdcode: String?,
+    allFootprints: List<Footprint>,
+    selectionState: SelectionState,
+    onSelectionChanged: (Set<String>, Set<String>, Set<String>, Set<String>) -> Unit,
+    onAddCheckIn: (String, String, String) -> Unit,
+    onAddCheckInRich: (String, String, String, List<String>, List<String>) -> Unit,
+    onProvinceFilterCleared: () -> Unit,
+    onGoCheckIn: (String) -> Unit,
+    lightenViewModel: LightenViewModel,
+    onStateChange: (LightPanel2State) -> Unit,
+    onDeleteModeChange: (Boolean) -> Unit,
+    onSelectionReset: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+    ) {
+        when (selectedTab) {
+            LightPanel2Tab.LIGHT_UP -> {
+                LightUpContentOnly(
+                    lightPanel2State = lightPanel2State,
+                    lightCityList = lightCityList,
+                    lightedProvinces = lightedProvinces,
+                    lightenCityMode = lightenCityMode,
+                    isDeleteMode = isDeleteMode,
+                    onLightenViewModel = lightenViewModel,
+                    onSelectionChanged = onSelectionChanged
+                )
+            }
+
+            LightPanel2Tab.CORNER -> {
+                CornerContent(
+                    lightedProvinceCount = lightedProvinceCount,
+                    lightCityList = lightCityList,
+                    onGoCheckIn = onGoCheckIn
+                )
+            }
+
+            LightPanel2Tab.CHECK_IN -> {
+                CheckInContent(
+                    lightCityList = lightCityList,
+                    checkInRecords = checkInRecords,
+                    currentProvinceAdcode = selectedProvinceAdcode,
+                    onAddCheckIn = onAddCheckIn,
+                    onAddCheckInRich = onAddCheckInRich,
+                    onProvinceFilterCleared = onProvinceFilterCleared
+                )
+            }
+
+            LightPanel2Tab.MILESTONE -> {
+                MilestoneContent(
+                    lightCityList = lightCityList,
+                    lightedProvinceCount = lightedProvinceCount,
+                    allFootprints = allFootprints
+                )
+            }
+        }
+    }
+
+    if (isExpanded && selectedTab == LightPanel2Tab.LIGHT_UP) {
+        BottomActionButtons(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            lightPanel2State = lightPanel2State,
+            isDeleteMode = isDeleteMode,
+            lightenCityMode = lightenCityMode,
+            selectedCityCodes = selectionState.selectedCityCodes,
+            unselectedCityCodes = selectionState.unselectedCityCodes,
+            selectedProvinceCodes = selectionState.selectedProvinceCodes,
+            unselectedProvinceCodes = selectionState.unselectedProvinceCodes,
+            onStateChange = onStateChange,
+            onDeleteModeChange = onDeleteModeChange,
+            onLightenViewModel = lightenViewModel,
+            onSelectionReset = onSelectionReset
+        )
+    }
+}
+
+// ========== 编辑模式选中状态 ==========
+data class SelectionState(
+    val selectedCityCodes: Set<String> = emptySet(),
+    val unselectedCityCodes: Set<String> = emptySet(),
+    val selectedProvinceCodes: Set<String> = emptySet(),
+    val unselectedProvinceCodes: Set<String> = emptySet()
+)

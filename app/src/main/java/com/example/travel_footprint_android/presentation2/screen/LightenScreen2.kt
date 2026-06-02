@@ -29,6 +29,7 @@ import com.example.travel_footprint_android.presentation2.components.image_rando
 
 import com.example.travel_footprint_android.presentation2.components.bg_animotion.IllustrationRain
 import com.example.travel_footprint_android.presentation2.components.bg_animotion.RainEffect
+import com.example.travel_footprint_android.presentation2.components.bg_animotion.opengl_rain.OpenGLRainBackground
 
 @Composable
 fun LightenScreen2(
@@ -85,16 +86,9 @@ fun LightenScreen2(
                 navigateRequest = navigateRequest,
             )
 
-// 前景雨（带溅射效果，性能优化版）
-//        IllustrationRain(
-//            count = 150,           // 雨滴数量（可根据性能调整）
-//            intensity = 1.2f,      // 雨势强度
-//            enableSplash = true    // 启用溅射效果
-//        )
-            //外层天气动效
-            RainEffect(
-                isRaining=true
-            )
+            // 雨滴叠加在内容上层
+//            OpenGLRainBackground(show = true)
+
 
             // 底部可拖拽面板（覆盖在地图之上）
             LightPanel2(

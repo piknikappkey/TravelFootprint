@@ -9,7 +9,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,11 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
@@ -173,46 +174,59 @@ fun CornerContent(
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Module1TopDashboard(
-            lightedProvinceCount = lightedProvinceCount,
-            totalProvinces = totalProvinces,
-            coveragePercent = coveragePercent,
-            remainingProvinces = remainingProvinces,
-            totalCities = totalCities,
-            totalMileage = totalMileage
-        )
+        item {
+            Module1TopDashboard(
+                lightedProvinceCount = lightedProvinceCount,
+                totalProvinces = totalProvinces,
+                coveragePercent = coveragePercent,
+                remainingProvinces = remainingProvinces,
+                totalCities = totalCities,
+                totalMileage = totalMileage
+            )
+        }
 
-        Spacer(Modifier.height(20.dp))
+        item { Spacer(Modifier.height(20.dp)) }
 
-        Module2ProvinceDetails(
-            provincesData = filteredProvinces,
-            selectedRegion = selectedRegion,
-            onRegionSelected = { selectedRegion = it },
-            sortByCount = sortByCount,
-            onSortToggle = { sortByCount = !sortByCount },
-            onViewFootprint = onViewFootprint,
-            onGoCheckIn = onGoCheckIn
-        )
+        item {
+            Module2Header(
+                selectedRegion = selectedRegion,
+                onRegionSelected = { selectedRegion = it },
+                sortByCount = sortByCount,
+                onSortToggle = { sortByCount = !sortByCount }
+            )
+        }
 
-        Spacer(Modifier.height(20.dp))
+        items(filteredProvinces, key = { it.provinceAdcode }) { data ->
+            ProvinceCard(
+                data = data,
+                onViewFootprint = onViewFootprint,
+                onGoCheckIn = onGoCheckIn
+            )
+            Spacer(Modifier.height(8.dp))
+        }
 
-        Module3TravelCorner(lightCityList = lightCityList)
+        item { Spacer(Modifier.height(20.dp)) }
 
-        Spacer(Modifier.height(20.dp))
+        item {
+            Module3TravelCorner(lightCityList = lightCityList)
+        }
 
-        Module4BottomActions(
-            showMapView = showMapView,
-            onToggleView = { showMapView = !showMapView },
-            onExport = onExportFootprint
-        )
+        item { Spacer(Modifier.height(20.dp)) }
 
-        Spacer(Modifier.height(16.dp))
+        item {
+            Module4BottomActions(
+                showMapView = showMapView,
+                onToggleView = { showMapView = !showMapView },
+                onExport = onExportFootprint
+            )
+        }
+
+        item { Spacer(Modifier.height(16.dp)) }
     }
 }
 
@@ -421,14 +435,11 @@ private fun GradientProgressBar(
 }
 
 @Composable
-private fun Module2ProvinceDetails(
-    provincesData: List<ProvinceDetail>,
+private fun Module2Header(
     selectedRegion: ProvinceRegion,
     onRegionSelected: (ProvinceRegion) -> Unit,
     sortByCount: Boolean,
-    onSortToggle: () -> Unit,
-    onViewFootprint: ((LightedCity) -> Unit)?,
-    onGoCheckIn: ((String) -> Unit)?
+    onSortToggle: () -> Unit
 ) {
     Column {
         Row(
@@ -488,15 +499,6 @@ private fun Module2ProvinceDetails(
         }
 
         Spacer(Modifier.height(12.dp))
-
-        provincesData.forEach { data ->
-            ProvinceCard(
-                data = data,
-                onViewFootprint = onViewFootprint,
-                onGoCheckIn = onGoCheckIn
-            )
-            Spacer(Modifier.height(8.dp))
-        }
     }
 }
 
@@ -533,8 +535,24 @@ private fun ProvinceCard(
     onGoCheckIn: ((String) -> Unit)?
 ) {
     var isPressed by remember { mutableStateOf(false) }
-
     val scaleValue = if (isPressed) 0.97f else 1f
+
+    val iconBrush = remember(data.isLighted) {
+        if (data.isLighted) {
+            Brush.linearGradient(colors = listOf(Color(0xFF3B82F6), Color(0xFF60A5FA)))
+        } else {
+            Brush.linearGradient(colors = listOf(Color(0xFFD1D5DB), Color(0xFFD1D5DB)))
+        }
+    }
+    val provinceNamePrefix = remember(data.provinceName) { data.provinceName.take(1) }
+    val citySummary = remember(data.isLighted, data.cityCount, data.cityNames) {
+        if (data.isLighted && data.cityNames.isNotEmpty()) {
+            "已点亮${data.cityCount}个城市"
+        } else null
+    }
+    val cityNamesPreview = remember(data.cityNames) {
+        if (data.cityNames.isNotEmpty()) data.cityNames.take(3).joinToString("、") else ""
+    }
 
     Box(
         modifier = Modifier
@@ -566,21 +584,11 @@ private fun ProvinceCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        if (data.isLighted) {
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF3B82F6), Color(0xFF60A5FA))
-                            )
-                        } else {
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFFD1D5DB), Color(0xFFD1D5DB))
-                            )
-                        }
-                    ),
+                    .background(iconBrush),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = data.provinceName.take(1),
+                    text = provinceNamePrefix,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (data.isLighted) Color.White else Color(0xFF9CA3AF)
@@ -615,16 +623,16 @@ private fun ProvinceCard(
                     }
                 }
                 Spacer(Modifier.height(3.dp))
-                if (data.isLighted && data.cityNames.isNotEmpty()) {
+                if (citySummary != null) {
                     Text(
-                        text = "已点亮${data.cityCount}个城市",
+                        text = citySummary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF3B82F6)
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        text = data.cityNames.take(3).joinToString("、"),
+                        text = cityNamesPreview,
                         fontSize = 10.sp,
                         color = Color(0xFF9CA3AF),
                         maxLines = 1,
