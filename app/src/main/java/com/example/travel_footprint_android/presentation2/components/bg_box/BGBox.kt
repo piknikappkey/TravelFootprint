@@ -33,6 +33,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -54,6 +55,7 @@ fun BGBox(
     elevation: Dp = 1.dp, // 阴影大小
     shape: RoundedCornerShape = RoundedCornerShape(8.dp), // 圆角
     bgColor: Color = Color(0xFFFCF1EB),
+    contentAlignment: Alignment = Alignment.TopStart,
     composable: @Composable () -> Unit,
 ) {
     // 使用 Box 作为容器，按顺序叠加：外部 modifier → shadow（阴影 + 按形状裁剪） → background（纯色圆角色块）
@@ -66,7 +68,8 @@ fun BGBox(
             )
             .background(
                 color = bgColor,
-            )
+            ),
+        contentAlignment = contentAlignment
     ) {
         // 调用传入的 composable lambda，渲染子内容
         composable()

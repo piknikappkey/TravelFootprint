@@ -25,7 +25,6 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.SecondColor3
@@ -37,6 +36,7 @@ fun FootprintEditCopy(
     journeySelect: Journey,
     addFootprint: (Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     var footprint by remember { mutableStateOf(
         footprintSelect?.copy()
@@ -59,7 +59,7 @@ fun FootprintEditCopy(
                     .size(26.dp)
                     .padding(start = 5.dp)
                     .clickable(onClick = {
-                        JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST)
+                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelect, null)
                     }),
                 painter = painterResource(id = R.drawable.ic_left2),
                 contentDescription = "返回图标",
@@ -77,7 +77,7 @@ fun FootprintEditCopy(
                     } else {
                         updateFootprint(footprint)
                     }
-                    JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST)
+                    onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelect, null)
                 }
             )
             Spacer(Modifier.width(10.dp))

@@ -39,7 +39,6 @@ import com.example.travel_footprint_android.presentation2.components.button.butt
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.confirm_delete_dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
@@ -59,6 +58,7 @@ fun FootprintEdit(
     setJourneyPanelHeightState: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     val journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3")
     val currentLatLng by journeyMap3ViewModel.currentLocation.collectAsState()
@@ -110,6 +110,7 @@ fun FootprintEdit(
             setJourneyPanelHeightState,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
+            onPanelNavigate = onPanelNavigate,
         )
         Spacer(Modifier.height(10.dp))
 
@@ -129,7 +130,7 @@ fun FootprintEdit(
                 message = "确定要删除「${footprintSelected.title}」吗？此操作不可撤销。",
                 onConfirm = {
                     deleteFootprint(footprintSelected)
-                    JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected)
+                    onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
                     showDeleteDialog = false
                 },
                 onDismiss = { showDeleteDialog = false }
@@ -149,6 +150,7 @@ private fun HeadRow(
     setJourneyPanelHeightState: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -161,10 +163,7 @@ private fun HeadRow(
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    JourneyNavController.navigate(
-                        JourneyPanel2State.FOOTPRINT_LIST,
-                        journeyData = journeySelected
-                    )
+                    onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
                 }),
             painter = painterResource(id = R.drawable.ic_left2),
             contentDescription = "返回图标",
@@ -199,7 +198,7 @@ private fun HeadRow(
                         } else {
                             updateFootprint(footprint.copy())
                         }
-                        JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_LIST, journeyData = journeySelected)
+                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
                     }
                 }
             }

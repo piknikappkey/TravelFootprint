@@ -45,8 +45,18 @@ package com.example.travel_footprint_android.presentation2.components.journey_ma
  */
 
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -55,21 +65,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.amap.api.maps.MapView
 import com.example.travel_footprint_android.data.entity.Location
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.location_button.LocationButton
+import com.example.travel_footprint_android.presentation2.components.journey_map3.location_button.LocationButton
+import com.example.travel_footprint_android.presentation2.components.journey_map3.weather.WeatherUiState
+import com.example.travel_footprint_android.presentation2.components.journey_map3.weather.WeatherViewModel
 import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 
 @Composable
 fun JourneyMap3(
     modifier: Modifier = Modifier,
     locationList: List<Location> = emptyList(), // 足迹位置点列表，按 index 分组形成轨迹路线
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3"), // Hilt 注入地图 ViewModel
+    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity,
+        key = "JourneyMap3"
+    ), // Hilt 注入地图 ViewModel（Activity 级作用域，页面切换时不销毁）
+    weatherViewModel: WeatherViewModel = hiltViewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity,
+    ), // Hilt 注入天气 ViewModel（Activity 级作用域）
 ) {
     // 监听地图初始化状态（ViewModel 中 initializeMap 完成后设为 true）
     val isInitialized by journeyMap3ViewModel.isInitialized.collectAsState()
@@ -78,16 +101,20 @@ fun JourneyMap3(
     // 标记容器尺寸是否已就绪，确保尺寸有效后才 onResume 地图
     var mapSizeReady by remember { mutableStateOf(false) }
 
-    // 创建高德 MapView 实例并执行 onCreate（使用 remember 确保重组时不重建）
+    // 创建高德 MapView 实例并执行 onCreate
+    // 优先复用 ViewModel 中已有的 MapView，避免二次进入时重建
     val mapView = remember {
-        MapView(context).apply {
+        journeyMap3ViewModel.getMapView() ?: MapView(context).apply {
             onCreate(null)
         }
     }
 
-    // MapView 创建后 → 调用 ViewModel 初始化地图、定位客户端和地图样式
+    // MapView 创建/复用后 → 仅在首次初始化时调用 ViewModel 初始化地图
+    // 二次进入时 ViewModel 已初始化，跳过以节省资源
     LaunchedEffect(mapView) {
-        journeyMap3ViewModel.initializeMap(mapView)
+        if (!journeyMap3ViewModel.isInitialized.value) {
+            journeyMap3ViewModel.initializeMap(mapView)
+        }
     }
 
     // 容器尺寸就绪后 → 恢复地图渲染（onResume + requestLayout + invalidate 确保正确显示）
@@ -99,14 +126,17 @@ fun JourneyMap3(
         }
     }
 
-    // 组件销毁时 → 暂停并销毁 MapView，同时重置 ViewModel 状态（清空路线、定位等）
+    // 页面离开时 → 仅暂停 MapView（保留瓦片缓存和地图状态）
+    // 不再调用 onDestroy() 和 reset()，让 ViewModel 中的 MapView 实例保持存活
+    // 真正的销毁延后到 Activity 销毁时，在 ViewModel.onCleared() 中执行
     DisposableEffect(mapView) {
         onDispose {
             mapView.onPause()
-            mapView.onDestroy()
-            journeyMap3ViewModel.reset()
         }
     }
+
+    // ========== 天气状态（在初始化之后自动加载） ==========
+    val weatherState by weatherViewModel.weatherState.collectAsState()
 
     // 外层容器：填满父组件
     Box(modifier = modifier.fillMaxSize()) {
@@ -125,8 +155,19 @@ fun JourneyMap3(
         // 浮动定位按钮：覆盖在地图上方，matchParentSize 使其与地图容器等大
         // 支持拖拽和点击定位，拖拽范围受容器边界约束
         LocationButton(
-            modifier = Modifier.matchParentSize()
+            modifier = Modifier.matchParentSize().statusBarsPadding()
         )
+        // 天气卡片：左上角显示当前天气
+        if (weatherState.liveWeather != null) {
+            Log.d("JourneyMap3", "weatherState.liveWeather = ${weatherState.liveWeather}")
+            WeatherCard(
+                weatherState = weatherState,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(12.dp)
+            )
+        }
     }
 
     // 地图初始化完成后 → 启动定位服务（aniMoveTime=2000 为相机移动动画时长）
@@ -137,7 +178,6 @@ fun JourneyMap3(
     }
 
     // 地图初始化完成后 + 位置列表变化时 → 更新路线
-    // 有数据时调用 updateRoutesWithAnimation（首次逐点动画绘制），无数据时调用 clearAllRoutes
     LaunchedEffect(isInitialized, locationList) {
         if (isInitialized) {
             if(locationList.size == 0) {
@@ -151,5 +191,75 @@ fun JourneyMap3(
                 journeyMap3ViewModel.clearAllRoutes()
             }
         }
+    }
+
+    // 地图初始化完成后 → 自动加载当前位置天气
+    LaunchedEffect(isInitialized) {
+        if (isInitialized) {
+            weatherViewModel.loadWeatherForCurrentLocation()
+        }
+    }
+}
+
+@Composable
+private fun WeatherCard(
+    weatherState: WeatherUiState,
+    modifier: Modifier = Modifier,
+) {
+    val live = weatherState.liveWeather ?: return
+
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = weatherIcon(live.weather),
+            fontSize = 24.sp,
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (weatherState.cityName != null) {
+                Text(
+                    text = weatherState.cityName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "${live.temperature}°",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = live.weather,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+            }
+        }
+    }
+}
+
+private fun weatherIcon(weather: String): String {
+    return when {
+        weather.contains("晴") -> "\u2600\uFE0F"
+        weather.contains("云") -> "\u26C5"
+        weather.contains("阴") -> "\u2601\uFE0F"
+        weather.contains("雨") -> "\uD83C\uDF27\uFE0F"
+        weather.contains("雪") -> "\u2744\uFE0F"
+        weather.contains("雾") || weather.contains("霾") -> "\uD83C\uDF2B\uFE0F"
+        weather.contains("风") -> "\uD83D\uDCA8"
+        weather.contains("雷") -> "\u26C8\uFE0F"
+        weather.contains("雹") -> "\uD83C\uDF26\uFE0F"
+        else -> "\u2600\uFE0F"
     }
 }

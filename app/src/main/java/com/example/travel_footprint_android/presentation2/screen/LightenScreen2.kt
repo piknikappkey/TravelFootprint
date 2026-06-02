@@ -20,15 +20,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
-import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2
-import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
 import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
-
-import com.example.travel_footprint_android.presentation2.components.bg_animotion.IllustrationRain
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.components.bg_animotion.RainEffect
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
+import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2
+import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
+import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
 
 @Composable
 fun LightenScreen2(
@@ -58,7 +56,8 @@ fun LightenScreen2(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(0.dp))
         ) {
-            //背景图片
+//            //背景图片
+            /////////////加载流畅//////////////
             Image(
                 painter = painterResource(id = R.drawable.bg_svg_water_color_blue),
                 contentDescription = "背景图片",
@@ -68,6 +67,7 @@ fun LightenScreen2(
 
 
             // 地图区域（填充整个屏幕）
+            /////////////加载流畅//////////////
             SVGMap(
                 modifier = Modifier.fillMaxSize(),
                 onLightCityClick = { adcode, name ->
@@ -85,6 +85,8 @@ fun LightenScreen2(
                 navigateRequest = navigateRequest,
             )
 
+
+            /////////////非常卡顿//////////////
 // 前景雨（带溅射效果，性能优化版）
 //        IllustrationRain(
 //            count = 150,           // 雨滴数量（可根据性能调整）
@@ -95,8 +97,9 @@ fun LightenScreen2(
             RainEffect(
                 isRaining=true
             )
-
-            // 底部可拖拽面板（覆盖在地图之上）
+//
+//            /////////////第二卡顿//////////////
+//            // 底部可拖拽面板（覆盖在地图之上）
             LightPanel2(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -106,8 +109,9 @@ fun LightenScreen2(
                 showMapMode = showMapMode,
                 onBackButtonClick = onBackButtonClick,
             )
-
-            //插花雨效果
+////
+////            //插花雨效果
+////            /////////////加载流畅//////////////
             ImageRain(
                 modifier = Modifier
                     .fillMaxSize()

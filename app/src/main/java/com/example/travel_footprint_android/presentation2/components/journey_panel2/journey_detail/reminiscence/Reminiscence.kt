@@ -30,7 +30,7 @@
  * @param updateJourney 更新旅程数据的回调，用于添加/删除图片后同步状态
  * @param showDelIcon 是否显示删除图标，默认 false
  */
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence
+package com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_detail.reminiscence
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

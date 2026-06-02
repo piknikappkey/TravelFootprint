@@ -35,36 +35,38 @@
 package com.example.travel_footprint_android.presentation2.components.image_random
 
 // Android 注解
-import android.annotation.SuppressLint                     // 抑制特定 Lint 警告
-import android.util.Log                                   // Android 日志工具
 
 // Compose 动画
-import androidx.compose.animation.core.Animatable          // 可手动控制的可变动画值
-import androidx.compose.animation.core.tween               // 线性缓动动画规格
 
 // Compose 布局
-import androidx.compose.foundation.layout.Box              // 层叠布局容器
-import androidx.compose.foundation.layout.BoxWithConstraints // 可获取约束信息的 Box 容器
-import androidx.compose.foundation.layout.fillMaxSize      // 填充父容器全部尺寸
 
 // Compose 运行时
-import androidx.compose.runtime.Composable                 // 声明 Composable 函数
-import androidx.compose.runtime.LaunchedEffect             // 在组合时启动协程
-import androidx.compose.runtime.getValue                   // 读取 State 值
-import androidx.compose.runtime.key                        // 为 Composable 提供稳定 key 标识
-import androidx.compose.runtime.mutableStateListOf         // 创建 Compose 可观察的可变列表
-import androidx.compose.runtime.mutableStateOf             // 创建可变状态
-import androidx.compose.runtime.remember                   // 记住值避免重组时丢失
-import androidx.compose.runtime.setValue                   // 修改 State 值
 
 // Compose UI 修饰符
-import androidx.compose.ui.Modifier                        // UI 修饰符链
-import androidx.compose.ui.unit.Dp                         // 密度无关像素类型
-import androidx.compose.ui.unit.dp                         // dp 扩展属性
 
 // 协程工具
-import kotlinx.coroutines.delay                            // 协程延迟函数
-import kotlin.random.Random                                // Kotlin 随机数工具
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 /**
  * 单张图片雨的数据类
@@ -106,106 +108,36 @@ private data class RainImageData(
 @Composable
 fun ImageRain(
     modifier: Modifier = Modifier,
-    intervalMs: Long = 1000L,
     fadeInMs: Int = 500,
-    maxImages: Int = 10,
     size: Int = 0,
-    minSize: Int = 30,
-    maxSize: Int = 50,
-    minAngle: Int = 0,
-    maxAngle: Int = 360,
-    minExistenceTime: Int = 10000,
-    maxExistenceTime: Int = 20000,
-    isChaos: Boolean = false,
-    pressScale: Float = 20f,
-    rotationSpeed: Float = 30f,
-    clearAllTrigger: Int = 0,
+    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain")
 ) {
     // 活跃图片数据列表（Compose 可观察可变列表，添加/移除自动触发重组）
     val images = remember { mutableStateListOf<RainImageData>() }
     // 自增 ID 计数器，确保每张图片有唯一标识
     var nextId by remember { mutableStateOf(0L) }
 
-    // ==================== 参数变化日志记录 ====================
-    // 每组参数通过保存上一次值（prev*）并与当前值对比，变化时打印 Log
-    var prevIntervalMs by remember { mutableStateOf(intervalMs) }
-    var prevFadeInMs by remember { mutableStateOf(fadeInMs) }
-    var prevMaxImages by remember { mutableStateOf(maxImages) }
-    var prevSize by remember { mutableStateOf(size) }
-    var prevMinSize by remember { mutableStateOf(minSize) }
-    var prevMaxSize by remember { mutableStateOf(maxSize) }
-    var prevMinAngle by remember { mutableStateOf(minAngle) }
-    var prevMaxAngle by remember { mutableStateOf(maxAngle) }
-    var prevMinExistenceTime by remember { mutableStateOf(minExistenceTime) }
-    var prevMaxExistenceTime by remember { mutableStateOf(maxExistenceTime) }
-    var prevIsChaos by remember { mutableStateOf(isChaos) }
-    var prevPressScale by remember { mutableStateOf(pressScale) }
-    var prevRotationSpeed by remember { mutableStateOf(rotationSpeed) }
-    var prevClearAllTrigger by remember { mutableStateOf(clearAllTrigger) }
+    val rainSettings by imageRainViewModel.settings.collectAsState()
+
+    var prevClearAllTrigger by remember { mutableStateOf(rainSettings.clearAllTrigger) }
 
     // 清除回调映射表：key 为图片 id，value 为对应图片的清除回调
     // 用于 clearAllTrigger 触发时一键调用所有图片的淡出移除逻辑
     val clearCallbacks = remember { mutableMapOf<Long, () -> Unit>() }
 
-    // 检测各参数变化并打印 Log 日志
-    if (intervalMs != prevIntervalMs) {
-        Log.d("ImageRain", "intervalMs changed to: $intervalMs")
-        prevIntervalMs = intervalMs
-    }
-    if (fadeInMs != prevFadeInMs) {
-        Log.d("ImageRain", "fadeInMs changed to: $fadeInMs")
-        prevFadeInMs = fadeInMs
-    }
-    if (maxImages != prevMaxImages) {
-        Log.d("ImageRain", "maxImages changed to: $maxImages")
-        prevMaxImages = maxImages
-    }
-    if (size != prevSize) {
-        Log.d("ImageRain", "size changed to: $size")
-        prevSize = size
-    }
-    if (minSize != prevMinSize) {
-        Log.d("ImageRain", "minSize changed to: $minSize")
-        prevMinSize = minSize
-    }
-    if (maxSize != prevMaxSize) {
-        Log.d("ImageRain", "maxSize changed to: $maxSize")
-        prevMaxSize = maxSize
-    }
-    if (minAngle != prevMinAngle) {
-        Log.d("ImageRain", "minAngle changed to: $minAngle")
-        prevMinAngle = minAngle
-    }
-    if (maxAngle != prevMaxAngle) {
-        Log.d("ImageRain", "maxAngle changed to: $maxAngle")
-        prevMaxAngle = maxAngle
-    }
-    if (minExistenceTime != prevMinExistenceTime) {
-        Log.d("ImageRain", "minExistenceTime changed to: $minExistenceTime")
-        prevMinExistenceTime = minExistenceTime
-    }
-    if (maxExistenceTime != prevMaxExistenceTime) {
-        Log.d("ImageRain", "maxExistenceTime changed to: $maxExistenceTime")
-        prevMaxExistenceTime = maxExistenceTime
-    }
-    if (isChaos != prevIsChaos) {
-        Log.d("ImageRain", "isChaos changed to: $isChaos")
-        prevIsChaos = isChaos
-    }
-    if (pressScale != prevPressScale) {
-        Log.d("ImageRain", "pressScale changed to: $pressScale")
-        prevPressScale = pressScale
-    }
-    if (rotationSpeed != prevRotationSpeed) {
-        Log.d("ImageRain", "rotationSpeed changed to: $rotationSpeed")
-        prevRotationSpeed = rotationSpeed
+    // 一键清除触发：clearAllTrigger 变化时遍历执行所有图片的清除回调
+    if (rainSettings.clearAllTrigger != prevClearAllTrigger) {
+        prevClearAllTrigger = rainSettings.clearAllTrigger
+        clearCallbacks.values.forEach { it() }  // 逐个调用淡出移除回调
     }
 
-    // 一键清除触发：clearAllTrigger 变化时遍历执行所有图片的清除回调
-    if (clearAllTrigger != prevClearAllTrigger) {
-        Log.d("ImageRain", "clearAllTrigger triggered")
-        prevClearAllTrigger = clearAllTrigger
-        clearCallbacks.values.forEach { it() }  // 逐个调用淡出移除回调
+    var zIndex by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(rainSettings.rainEnabled) {
+        if(rainSettings.rainEnabled == false) {
+            delay(300)
+            zIndex = -1f
+        }
     }
 
     // 获取容器实际尺寸（由父布局约束决定），用于计算图片随机位置范围
@@ -215,15 +147,15 @@ fun ImageRain(
 
         // 图片生成协程：定时生成新图片数据
         // key 为 maxImages/intervalMs/minSize/maxSize，任一变化时重启协程
-        LaunchedEffect(maxImages, intervalMs, minSize, maxSize) {
+        LaunchedEffect(rainSettings.maxImages, rainSettings.intervalMs, rainSettings.minSize, rainSettings.maxSize) {
             while (true) {
-                delay(intervalMs)  // 等待指定间隔
+                delay(rainSettings.intervalMs)  // 等待指定间隔
 
                 // 数量达上限则跳过本轮生成
-                if (images.size >= maxImages) continue
+                if (images.size >= rainSettings.maxImages) continue
 
                 // 确定图片尺寸：固定 size > 0 时使用固定值，否则在 [minSize, maxSize] 内随机
-                val imgSize = if (size > 0) size else Random.nextInt(minSize, maxSize + 1)
+                val imgSize = if (size > 0) size else Random.nextInt(rainSettings.minSize, rainSettings.maxSize + 1)
                 val imgSizeDp = imgSize.dp
 
                 // 计算有效偏移范围（确保图片完全在容器内）
@@ -274,7 +206,7 @@ fun ImageRain(
 
                 // 全屏 Box 作为每张图片的渲染容器
                 Box(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().zIndex(zIndex = zIndex)
                 ) {
                     // 单张随机涂鸦图片：使用预计算的固定位置和尺寸
                     // minOffsetX == maxOffsetX 确保图片位置由 RainImageData 决定（不自带随机性）
@@ -285,17 +217,17 @@ fun ImageRain(
                         maxOffsetY = data.offsetY,
                         minSize = data.size,
                         maxSize = data.size,
-                        minAngle = minAngle,
-                        maxAngle = maxAngle,
+                        minAngle = rainSettings.minAngle,
+                        maxAngle = rainSettings.maxAngle,
                         alpha = alpha.value,              // 由淡入淡出动画控制
-                        minExistenceTime = minExistenceTime,
-                        maxExistenceTime = maxExistenceTime,
+                        minExistenceTime = rainSettings.minExistenceTime,
+                        maxExistenceTime = rainSettings.maxExistenceTime,
                         onRemove = {
                             show = false                   // 触发淡出移除流程
                         },
-                        isChaos = isChaos,
-                        pressScale = pressScale,
-                        rotationSpeed = rotationSpeed,
+                        isChaos = rainSettings.isChaos,
+                        pressScale = rainSettings.pressScale,
+                        rotationSpeed = rainSettings.rotationSpeed,
                         containerWidth = boxWidth,         // 传递容器尺寸用于边界约束
                         containerHeight = boxHeight,
                     )

@@ -34,6 +34,7 @@ package com.example.travel_footprint_android.presentation2.screen
 
 import android.Manifest
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
@@ -69,15 +70,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
+import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
-import com.example.travel_footprint_android.presentation2.components.button.button_draggable.ButtonDraggable
-import com.example.travel_footprint_android.presentation2.components.button.button_draggable.RainSettingDialog
 import com.example.travel_footprint_android.presentation2.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRainViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3
+import com.example.travel_footprint_android.presentation2.components.journey_map3.JourneyMap3SplashScreen
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.JourneyPanel7
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanelState
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation2.viewmodel.journey_map2_viewmodel.JourneyMap3ViewModel
 import com.example.travel_footprint_android.ui.theme.BGLight0
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import com.example.travel_footprint_android.utils.PermissionUtils
@@ -85,18 +91,29 @@ import com.example.travel_footprint_android.utils.PermissionUtils
 // 旅程主界面 Composable 函数，通过 Hilt 注入 JourneyViewModel
 @Composable
 fun JourneyScreen2(
-    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey")
+    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
+    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(
+        viewModelStoreOwner = LocalContext.current as ComponentActivity,
+        key = "JourneyMap3"
+    ),
+    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain")
 ) {
     // 从 ViewModel 收集 UI 状态，获取旅程列表和足迹计数
     val journeyUiState by journeyViewModel.uiState.collectAsState()
-    val journeys = journeyUiState.journeys
-    val footprintCounts = journeyUiState.footprintCounts
 
     // 定义动画时长和界面状态变量
-    val aniTime = 400
+    val aniTime = remember { 400 }
     var sizeChange by remember { mutableStateOf(false) }
-    var rainEnabled by remember { mutableStateOf(true) }
-    var showRainDialog by remember { mutableStateOf(false) }
+    val rainSettings by imageRainViewModel.settings.collectAsState()
+
+    var panelState by remember { mutableStateOf(JourneyPanelState()) }
+    val onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit = { page, journey, footprint ->
+        panelState = JourneyPanelState(
+            currentPage = page,
+            selectedJourney = journey,
+            selectedFootprint = footprint,
+        )
+    }
 
     // 获取上下文和位置权限数组
     val context = LocalContext.current
@@ -118,23 +135,15 @@ fun JourneyScreen2(
 
     // 图片雨透明度动画：根据 rainEnabled 状态在 1f 和 0f 之间切换
     val aniImgRainAlpha by animateFloatAsState(
-        targetValue = if (rainEnabled) 1f else 0f,
+        targetValue = if (rainSettings.rainEnabled) 1f else 0f,
         animationSpec = tween(durationMillis = 200),
         label = "aniImgRainAlpha"
     )
     // 图片雨参数状态变量：控制图片数量、尺寸、角度、旋转等属性
-    var isChaos by remember { mutableStateOf(false) }
-    var rainMaxImages by remember { mutableStateOf(10) }
-    var rainIntervalMs by remember { mutableStateOf(1000L) }
-    var rainMinExistenceTime by remember { mutableStateOf(10000) }
-    var rainMaxExistenceTime by remember { mutableStateOf(20000) }
-    var rainMinSize by remember { mutableStateOf(30) }
-    var rainMaxSize by remember { mutableStateOf(50) }
-    var rainMinAngle by remember { mutableStateOf(0) }
-    var rainMaxAngle by remember { mutableStateOf(360) }
-    var rainPressScale by remember { mutableStateOf(20f) }
-    var rainRotationSpeed by remember { mutableStateOf(30f) }
-    var rainClearAllTrigger by remember { mutableStateOf(0) }
+
+    // 从 JourneyMap3ViewModel 获取闪屏/地图显示状态（ViewModel 级别持久化，避免 AnimatedContent 切换时丢失）
+    val showSplash by journeyMap3ViewModel.showSplash.collectAsState()
+    val showMapScreen by journeyMap3ViewModel.showMapScreen.collectAsState()
 
     // 主布局容器：使用 Box 实现多层叠加效果
     Box(
@@ -150,34 +159,41 @@ fun JourneyScreen2(
             Box(
                 modifier = Modifier.weight(1f),
             ) {
-                if (hasLocationPermission) {
-                    // 有权限时显示地图组件，传入位置列表用于绘制路线
-                    JourneyMap3(
-                        locationList = journeyUiState.LocationList
-                    )
-                } else {
-                    // 无权限时显示权限请求界面，用户点击按钮触发权限申请
-                    PermissionRequestContent(
-                        onRequestPermission = {
-                            permissionLauncher.launch(locationPermissions)
-                        }
+                if(showMapScreen) {
+                    if (hasLocationPermission) {
+                        // 有权限时显示地图组件，传入位置列表用于绘制路线
+                        JourneyMap3(
+                            locationList = journeyUiState.LocationList
+                        )
+                    } else {
+                        // 无权限时显示权限请求界面，用户点击按钮触发权限申请
+                        PermissionRequestContent(
+                            onRequestPermission = {
+                                permissionLauncher.launch(locationPermissions)
+                            }
+                        )
+                    }
+                }
+                if(showSplash) {
+                    JourneyMap3SplashScreen(
+                        onFinished = { journeyMap3ViewModel.setShowSplash(false) },
+                        onShowScreen = { journeyMap3ViewModel.setShowMapScreen(true) }
                     )
                 }
             }
 
-            // 旅程面板组件：显示旅程列表，支持拖拽调整高度
             JourneyPanel7(
                 modifier = Modifier
                     .onSizeChanged { newSize ->
-                        // 仅记录一次组件尺寸，用于调试
                         if (!sizeChange) {
                             sizeChange = true
                             Log.d("JourneyScreen2", "新的组件尺寸: 宽度 = ${newSize.width}, 高度 = ${newSize.height}")
                         }
                     },
                 aniTime = aniTime,
-                journeyList = journeys,
                 journeyViewModel = journeyViewModel,
+                panelState = panelState,
+                onPanelNavigate = onPanelNavigate,
             )
         }
 
@@ -186,58 +202,7 @@ fun JourneyScreen2(
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(aniImgRainAlpha),
-            isChaos = isChaos,
-            maxImages = rainMaxImages,
-            intervalMs = rainIntervalMs,
-            minExistenceTime = rainMinExistenceTime,
-            maxExistenceTime = rainMaxExistenceTime,
-            minSize = rainMinSize,
-            maxSize = rainMaxSize,
-            minAngle = rainMinAngle,
-            maxAngle = rainMaxAngle,
-            pressScale = rainPressScale,
-            rotationSpeed = rainRotationSpeed,
-            clearAllTrigger = rainClearAllTrigger,
-        )
-
-        // 可拖拽设置按钮：点击打开图片雨设置对话框
-        ButtonDraggable(
-            modifier = Modifier.fillMaxSize(),
-            onClick = { showRainDialog = true },
-            showRainDialog = showRainDialog
-        )
-    }
-
-    // 条件渲染：当 showRainDialog 为 true 时显示设置对话框
-    if (showRainDialog) {
-        RainSettingDialog(
-            rainEnabled = rainEnabled,
-            onRainEnabledChange = { rainEnabled = it },
-            onClearAll = { rainClearAllTrigger++ },
-            onDismiss = { showRainDialog = false },
-            // 双向绑定所有图片雨参数到对话框
-            isChaos = isChaos,
-            onIsChaosChange = { isChaos = it },
-            maxImages = rainMaxImages,
-            onMaxImagesChange = { rainMaxImages = it },
-            intervalMs = rainIntervalMs,
-            onIntervalMsChange = { rainIntervalMs = it },
-            minExistenceTime = rainMinExistenceTime,
-            onMinExistenceTimeChange = { rainMinExistenceTime = it },
-            maxExistenceTime = rainMaxExistenceTime,
-            onMaxExistenceTimeChange = { rainMaxExistenceTime = it },
-            minSize = rainMinSize,
-            onMinSizeChange = { rainMinSize = it },
-            maxSize = rainMaxSize,
-            onMaxSizeChange = { rainMaxSize = it },
-            minAngle = rainMinAngle,
-            onMinAngleChange = { rainMinAngle = it },
-            maxAngle = rainMaxAngle,
-            onMaxAngleChange = { rainMaxAngle = it },
-            pressScale = rainPressScale,
-            onPressScaleChange = { rainPressScale = it },
-            rotationSpeed = rainRotationSpeed,
-            onRotationSpeedChange = { rainRotationSpeed = it },
+            imageRainViewModel = imageRainViewModel,
         )
     }
 }

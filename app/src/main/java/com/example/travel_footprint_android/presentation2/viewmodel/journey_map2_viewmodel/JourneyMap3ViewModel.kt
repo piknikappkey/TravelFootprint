@@ -88,6 +88,13 @@ class JourneyMap3ViewModel @Inject constructor(
     // 当前选中的标记
     private val _selectedMarker = MutableStateFlow<Marker?>(null)
 
+    // ========== 闪屏状态 ==========
+
+    // 是否显示地图闪屏动画（由 JourneyScreen2 使用，避免在 AnimatedContent 切换时丢失状态）
+    private val _showSplash = MutableStateFlow(true)
+    // 是否显示地图主界面
+    private val _showMapScreen = MutableStateFlow(false)
+
     // ========== 路线管理 ==========
 
     // 已绘制的路线集合：key = 路线索引(index)，value = Polyline
@@ -104,6 +111,8 @@ class JourneyMap3ViewModel @Inject constructor(
     val aMap: StateFlow<AMap?> = _aMap.asStateFlow()
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
     val currentLocation: StateFlow<LatLng?> = _currentLocation.asStateFlow()
+    val showSplash: StateFlow<Boolean> = _showSplash.asStateFlow()
+    val showMapScreen: StateFlow<Boolean> = _showMapScreen.asStateFlow()
 
     // ========== 地图初始化 ==========
 
@@ -111,6 +120,8 @@ class JourneyMap3ViewModel @Inject constructor(
     fun initializeMap(mapView: MapView) {
         // 防止重复初始化
         if (_mapView.value != null) return
+
+        Log.d("JourneyMap3ViewModel", "init")
 
         _mapView.value = mapView
         val aMap = mapView.map
@@ -129,6 +140,7 @@ class JourneyMap3ViewModel @Inject constructor(
             setupMapClickListener(aMap)
             // 标记初始化完成
             _isInitialized.value = true
+            Log.d("JourneyMap3ViewModel", "init over!")
         }
     }
 
@@ -272,6 +284,18 @@ class JourneyMap3ViewModel @Inject constructor(
     /** 更新当前定位位置（供外部同步位置数据时调用） */
     fun setCurrentLocation(currentLocation: LatLng?) {
         _currentLocation.value = currentLocation
+    }
+
+    // ========== 闪屏控制 ==========
+
+    /** 设置闪屏显示状态 */
+    fun setShowSplash(show: Boolean) {
+        _showSplash.value = show
+    }
+
+    /** 设置地图屏幕显示状态 */
+    fun setShowMapScreen(show: Boolean) {
+        _showMapScreen.value = show
     }
 
     /** 启动定位服务
@@ -449,12 +473,21 @@ class JourneyMap3ViewModel @Inject constructor(
         _currentLocation.value = null
         _aMap.value = null
         _mapView.value = null
+        _showSplash.value = true
+        _showMapScreen.value = false
     }
 
-    /** ViewModel 清除时释放定位资源 */
+    /** ViewModel 清除时（Activity 销毁）释放所有地图资源 */
     override fun onCleared() {
         super.onCleared()
+        _mapView.value?.onDestroy()
+        _mapView.value = null
         clearAllRoutes()
         _locationClient.value?.onDestroy()
+        _locationClient.value = null
+        clearSelectedMarker()
+        _currentLocation.value = null
+        _aMap.value = null
+        _isInitialized.value = false
     }
 }

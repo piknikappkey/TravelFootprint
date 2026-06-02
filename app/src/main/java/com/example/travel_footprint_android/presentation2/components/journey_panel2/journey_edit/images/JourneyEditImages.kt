@@ -35,7 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_details.reminiscence.Reminiscence
+import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_detail.reminiscence.Reminiscence
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 
 // 旅程编辑页面的图片区域 Composable，组合"标题 + 图片网格"布局

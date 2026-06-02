@@ -23,7 +23,7 @@
  * - 拖拽边界约束：X 方向限制在 [0, 容器宽 - 按钮宽]，Y 方向额外减去 250px 预留底部空间
  * - LaunchedEffect 在容器尺寸首次确定时，将按钮初始位置设置到右下角（带 padding）
  */
-package com.example.travel_footprint_android.presentation2.components.journey_panel2.location_button
+package com.example.travel_footprint_android.presentation2.components.journey_map3.location_button
 
 import android.util.Log
 import androidx.compose.foundation.gestures.detectDragGestures

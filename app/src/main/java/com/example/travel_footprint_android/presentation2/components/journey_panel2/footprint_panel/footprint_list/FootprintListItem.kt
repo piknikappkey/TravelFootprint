@@ -67,7 +67,6 @@ import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.footprint_panel.footprint_list.footprint_list_panel.FootprintListPanel
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
@@ -79,13 +78,13 @@ import java.util.Locale
 // 动画持续时间：展开/收起动画的基础时长（400毫秒）
 private const val ANIMATION_DURATION = 400
 
-// 足迹列表项入口组件：带阴影圆角和随机背景的点击卡片
 @Composable
 fun FootprintListItem(
-    footprint: Footprint,           // 当前展示的足迹数据
-    footprintClick: (Int?) -> Unit, // 点击回调（null=折叠，-1=返回上一级，其他值=选中某足迹）
-    isClicked: Boolean,             // 当前是否为展开状态
-    journeySelected: Journey,       // 当前选中的旅程数据（用于导航到编辑页面时传递）
+    footprint: Footprint,
+    footprintClick: (Int?) -> Unit,
+    isClicked: Boolean,
+    journeySelected: Journey,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -102,18 +101,18 @@ fun FootprintListItem(
         BGImgBox(
             listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3),
         ) {
-            Content(footprint, footprintClick, isClicked, journeySelected)
+            Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
         }
     }
 }
 
-// 内容区组件：垂直排列标题栏、描述、状态面板（展开时）、底部信息
 @Composable
 fun Content(
-    footprint: Footprint,           // 当前足迹数据
-    footprintClick: (Int?) -> Unit, // 点击回调
-    isClicked: Boolean,             // 是否展开
-    journeySelected: Journey,       // 当前旅程数据
+    footprint: Footprint,
+    footprintClick: (Int?) -> Unit,
+    isClicked: Boolean,
+    journeySelected: Journey,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
 
     // 按顺序垂直排列各子模块，animateContentSize 使展开/折叠时高度变化平滑过渡
@@ -121,8 +120,7 @@ fun Content(
         modifier = Modifier.animateContentSize()
     ) {
         Spacer(Modifier.height(10.dp))
-        // 顶部标题及功能栏
-        HeadRow(footprint, footprintClick, isClicked, journeySelected)
+        HeadRow(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
         Spacer(Modifier.height(10.dp))
         // 足迹描述
         Description(footprint, isClicked)
@@ -137,13 +135,13 @@ fun Content(
     }
 }
 
-// 顶部标题及功能栏：左侧返回按钮（展开时显示）、中间标题、右侧编辑图标（展开时显示）
 @Composable
 fun HeadRow(
-    footprint: Footprint,           // 当前足迹数据
-    footprintClick: (Int?) -> Unit, // 点击回调
-    isClicked: Boolean,             // 是否展开
-    journeySelected: Journey,       // 当前旅程数据（编辑时传递）
+    footprint: Footprint,
+    footprintClick: (Int?) -> Unit,
+    isClicked: Boolean,
+    journeySelected: Journey,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -177,8 +175,7 @@ fun HeadRow(
             IconEdit(
                 modifier = Modifier.size(16.dp)
             ) {
-                // 通过导航控制器跳转到足迹编辑页面，携带当前足迹和旅程数据
-                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_EDIT, footprintData = footprint, journeyData = journeySelected)
+                onPanelNavigate(JourneyPanel2State.FOOTPRINT_EDIT, journeySelected, footprint)
             }
         }
         Spacer(Modifier.width(10.dp))

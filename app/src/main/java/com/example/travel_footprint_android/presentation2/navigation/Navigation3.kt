@@ -59,9 +59,10 @@ import com.example.travel_footprint_android.ui.theme.Purple40
 import com.example.travel_footprint_android.ui.theme.Purple80
 
 @Composable
-fun Navigation2(
+fun Navigation3(
     modifier: Modifier = Modifier,
     navigationViewModel: NavigationViewModel,
+    setViewIndex: (Int) -> Unit,
 ) {
     val currentDest by navigationViewModel.currentDestination.collectAsStateWithLifecycle()
 
@@ -75,11 +76,14 @@ fun Navigation2(
         Row(
             modifier = Modifier.fillMaxWidth(.8f),
         ) {
-            NavPathObj2.list.forEach {
+            NavPathObj2.list.forEachIndexed { index, it ->
                 NavItem(
                     it,
                     Modifier.weight(1f),
-                    { navigationViewModel.navigate(it) },
+                    {
+                        navigationViewModel.navigate(it)
+                        setViewIndex(index)
+                    },
                     currentDest)
             }
         }

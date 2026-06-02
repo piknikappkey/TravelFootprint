@@ -72,13 +72,11 @@ import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
-// 足迹列表主组件：接收选中旅程和面板交互回调，显示该旅程的足迹列表
 @Composable
 fun FootprintList(
     journeySelected: Journey,
@@ -86,6 +84,7 @@ fun FootprintList(
     setJourneyPanelHeightState: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
 ) {
     // 从 ViewModel 收集 UI 状态，获取足迹数据
@@ -113,13 +112,15 @@ fun FootprintList(
             setJourneyPanelHeightState,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
+            onPanelNavigate = onPanelNavigate,
         )
         LineBetween(paddingUp = 2.dp, paddingDown = 2.dp, )
         Content(
             footprints,
             journeySelected,
             clickItemIndex,
-            { i -> clickItemIndex = i}
+            { i -> clickItemIndex = i},
+            onPanelNavigate = onPanelNavigate,
         )
     }
 }
@@ -132,17 +133,17 @@ private fun HeadRow(
     setJourneyPanelHeightState: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 返回按钮：点击导航回到旅程列表页（JOURNEY_LIST）
         Image(
             modifier = Modifier
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, journeyData = journeySelected)
+                    onPanelNavigate(JourneyPanel2State.JOURNEY_DETAIL, journeySelected, null)
                 }),
             painter = painterResource(id = R.drawable.ic_left2),
             contentDescription = "返回图标",
@@ -176,6 +177,7 @@ private fun Content(
     journeySelected: Journey,
     clickItemIndex: Int,
     setClickItemIndex: (Int) -> Unit,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
     // Box 容器：最小高度 200dp，叠加列表和添加按钮
     Box(
@@ -206,7 +208,8 @@ private fun Content(
                             setClickItemIndex(i ?: index)
                         },
                         (index == clickItemIndex),
-                        journeySelected
+                        journeySelected,
+                        onPanelNavigate = onPanelNavigate,
                     )
                 }
                 // 列表底部留白，避免被添加按钮遮挡
@@ -216,13 +219,11 @@ private fun Content(
             }
         }
 
-        // 添加足迹按钮：位于右下角，点击导航至足迹编辑页（FOOTPRINT_EDIT）
         FootprintListAddIcon(
             modifier = Modifier
                 .align(Alignment.BottomEnd),
             clickable = {
-                // 跳转到足迹编辑页面
-                JourneyNavController.navigate(JourneyPanel2State.FOOTPRINT_EDIT, journeyData = journeySelected)
+                onPanelNavigate(JourneyPanel2State.FOOTPRINT_EDIT, journeySelected, null)
             }
         )
     }

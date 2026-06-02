@@ -14,6 +14,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,10 +27,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation2.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation2.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation2.components.image_random.ImageRainViewModel
 import com.example.travel_footprint_android.presentation2.components.input.input_text.InputText3
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
@@ -39,33 +42,10 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun RainSettingDialog(
-    rainEnabled: Boolean,
-    onRainEnabledChange: (Boolean) -> Unit,
-    onClearAll: () -> Unit,
-    isChaos: Boolean,
-    onIsChaosChange: (Boolean) -> Unit,
-    maxImages: Int,
-    onMaxImagesChange: (Int) -> Unit,
-    intervalMs: Long,
-    onIntervalMsChange: (Long) -> Unit,
-    minExistenceTime: Int,
-    onMinExistenceTimeChange: (Int) -> Unit,
-    maxExistenceTime: Int,
-    onMaxExistenceTimeChange: (Int) -> Unit,
-    minSize: Int,
-    onMinSizeChange: (Int) -> Unit,
-    maxSize: Int,
-    onMaxSizeChange: (Int) -> Unit,
-    minAngle: Int,
-    onMinAngleChange: (Int) -> Unit,
-    maxAngle: Int,
-    onMaxAngleChange: (Int) -> Unit,
-    pressScale: Float,
-    onPressScaleChange: (Float) -> Unit,
-    rotationSpeed: Float,
-    onRotationSpeedChange: (Float) -> Unit,
+    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain"),
     onDismiss: () -> Unit,
 ) {
+    val settings by imageRainViewModel.settings.collectAsState()
     val screenHeightDp = LocalConfiguration.current.screenHeightDp.dp
     val dialogHeight = screenHeightDp * 0.6f
     var isClearing by remember { mutableStateOf(false) }
@@ -101,8 +81,8 @@ fun RainSettingDialog(
 
                     SwitchRow(
                         label = "显示涂鸦雨",
-                        checked = rainEnabled,
-                        onCheckedChange = onRainEnabledChange
+                        checked = settings.rainEnabled,
+                        onCheckedChange = { imageRainViewModel.updateRainEnabled(it) }
                     )
 
                     Spacer(Modifier.height(8.dp))
@@ -112,7 +92,7 @@ fun RainSettingDialog(
                         checked = isClearing,
                         onCheckedChange = { checked ->
                             if (checked) {
-                                onClearAll()
+                                imageRainViewModel.clearAll()
                                 isClearing = true
                             } else {
                                 isClearing = false
@@ -124,8 +104,8 @@ fun RainSettingDialog(
 
                     InputFieldNumber(
                         label = "涂鸦雨最大数量",
-                        value = maxImages.toString(),
-                        onValueChange = { onMaxImagesChange(it.toIntOrNull() ?: maxImages) },
+                        value = settings.maxImages.toString(),
+                        onValueChange = { imageRainViewModel.updateMaxImages(it.toIntOrNull() ?: settings.maxImages) },
                         tipText = "最大图片数量",
                     )
 
@@ -133,8 +113,8 @@ fun RainSettingDialog(
 
                     InputFieldNumber(
                         label = "涂鸦雨刷新间隔(ms)",
-                        value = intervalMs.toString(),
-                        onValueChange = { onIntervalMsChange(it.toLongOrNull() ?: intervalMs) },
+                        value = settings.intervalMs.toString(),
+                        onValueChange = { imageRainViewModel.updateIntervalMs(it.toLongOrNull() ?: settings.intervalMs) },
                         tipText = "刷新间隔",
                     )
 
@@ -142,23 +122,23 @@ fun RainSettingDialog(
 
                     TwoInputFields(
                         label = "涂鸦雨随机存在时间(ms)",
-                        minVal = minExistenceTime.toString(),
-                        maxVal = maxExistenceTime.toString(),
+                        minVal = settings.minExistenceTime.toString(),
+                        maxVal = settings.maxExistenceTime.toString(),
                         onMinChange = {
-                            val v = it.toIntOrNull() ?: minExistenceTime
+                            val v = it.toIntOrNull() ?: settings.minExistenceTime
                             if (v >= 0) {
-                                onMinExistenceTimeChange(v)
-                                if (v > maxExistenceTime) {
-                                    onMaxExistenceTimeChange(v)
+                                imageRainViewModel.updateMinExistenceTime(v)
+                                if (v > settings.maxExistenceTime) {
+                                    imageRainViewModel.updateMaxExistenceTime(v)
                                 }
                             }
                         },
                         onMaxChange = {
-                            val v = it.toIntOrNull() ?: maxExistenceTime
+                            val v = it.toIntOrNull() ?: settings.maxExistenceTime
                             if (v >= 0) {
-                                onMaxExistenceTimeChange(v)
-                                if (v < minExistenceTime) {
-                                    onMinExistenceTimeChange(v)
+                                imageRainViewModel.updateMaxExistenceTime(v)
+                                if (v < settings.minExistenceTime) {
+                                    imageRainViewModel.updateMinExistenceTime(v)
                                 }
                             }
                         },
@@ -170,23 +150,23 @@ fun RainSettingDialog(
 
                     TwoInputFields(
                         label = "涂鸦雨随机大小(dp)",
-                        minVal = minSize.toString(),
-                        maxVal = maxSize.toString(),
+                        minVal = settings.minSize.toString(),
+                        maxVal = settings.maxSize.toString(),
                         onMinChange = {
-                            val v = it.toIntOrNull() ?: minSize
+                            val v = it.toIntOrNull() ?: settings.minSize
                             if (v >= 0) {
-                                onMinSizeChange(v)
-                                if (v > maxSize) {
-                                    onMaxSizeChange(v)
+                                imageRainViewModel.updateMinSize(v)
+                                if (v > settings.maxSize) {
+                                    imageRainViewModel.updateMaxSize(v)
                                 }
                             }
                         },
                         onMaxChange = {
-                            val v = it.toIntOrNull() ?: maxSize
+                            val v = it.toIntOrNull() ?: settings.maxSize
                             if (v >= 0) {
-                                onMaxSizeChange(v)
-                                if (v < minSize) {
-                                    onMinSizeChange(v)
+                                imageRainViewModel.updateMaxSize(v)
+                                if (v < settings.minSize) {
+                                    imageRainViewModel.updateMinSize(v)
                                 }
                             }
                         },
@@ -198,23 +178,23 @@ fun RainSettingDialog(
 
                     TwoInputFields(
                         label = "涂鸦雨随机角度(°)",
-                        minVal = minAngle.toString(),
-                        maxVal = maxAngle.toString(),
+                        minVal = settings.minAngle.toString(),
+                        maxVal = settings.maxAngle.toString(),
                         onMinChange = {
-                            val v = it.toIntOrNull() ?: minAngle
+                            val v = it.toIntOrNull() ?: settings.minAngle
                             if (v >= 0) {
-                                onMinAngleChange(v)
-                                if (v > maxAngle) {
-                                    onMaxAngleChange(v)
+                                imageRainViewModel.updateMinAngle(v)
+                                if (v > settings.maxAngle) {
+                                    imageRainViewModel.updateMaxAngle(v)
                                 }
                             }
                         },
                         onMaxChange = {
-                            val v = it.toIntOrNull() ?: maxAngle
+                            val v = it.toIntOrNull() ?: settings.maxAngle
                             if (v >= 0) {
-                                onMaxAngleChange(v)
-                                if (v < minAngle) {
-                                    onMinAngleChange(v)
+                                imageRainViewModel.updateMaxAngle(v)
+                                if (v < settings.minAngle) {
+                                    imageRainViewModel.updateMinAngle(v)
                                 }
                             }
                         },
@@ -226,8 +206,8 @@ fun RainSettingDialog(
 
                     InputFieldNumber(
                         label = "按压图片放大值(dp)",
-                        value = pressScale.toString(),
-                        onValueChange = { onPressScaleChange(it.toFloatOrNull() ?: pressScale) },
+                        value = settings.pressScale.toString(),
+                        onValueChange = { imageRainViewModel.updatePressScale(it.toFloatOrNull() ?: settings.pressScale) },
                         tipText = "按压放大值",
                     )
 
@@ -235,10 +215,10 @@ fun RainSettingDialog(
 
                     InputFieldNumber(
                         label = "按压图片旋转速度(°/s)",
-                        value = rotationSpeed.toString(),
+                        value = settings.rotationSpeed.toString(),
                         onValueChange = {
-                            onRotationSpeedChange(
-                                it.toFloatOrNull() ?: rotationSpeed
+                            imageRainViewModel.updateRotationSpeed(
+                                it.toFloatOrNull() ?: settings.rotationSpeed
                             )
                         },
                         tipText = "旋转速度",
@@ -248,8 +228,8 @@ fun RainSettingDialog(
 
                     SwitchRow(
                         label = "开启涂鸦雨混乱拖拽",
-                        checked = isChaos,
-                        onCheckedChange = onIsChaosChange
+                        checked = settings.isChaos,
+                        onCheckedChange = { imageRainViewModel.updateIsChaos(it) }
                     )
 
                     Spacer(Modifier.height(14.dp))

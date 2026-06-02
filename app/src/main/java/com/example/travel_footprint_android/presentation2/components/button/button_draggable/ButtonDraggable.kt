@@ -95,7 +95,7 @@ fun ButtonDraggable(
                 modifier = Modifier
                     .size(minSize.dp)
                     .shadow(
-                        elevation = 4.dp,
+                        elevation = 1.dp,
                         shape = shape,
                         clip = false
                     )

@@ -51,7 +51,7 @@ import com.example.travel_footprint_android.presentation2.navigation.NavPathObj2
 object CustomNavController {
     // 当前路由的内部可变状态，初始为"点亮"页面。
     // private 防止外部直接修改，必须通过 navigate() 切换
-    private val _currentDestination = mutableStateOf(NavPathObj2.lighten)
+    private val _currentDestination = mutableStateOf(NavPathObj2.journey)
     // 对外公开的只读路由状态，供 CustomNavHost2 等组件监听
     val currentDestination = _currentDestination
 

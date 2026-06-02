@@ -65,6 +65,7 @@ fun BGImgBox(
     modifier: Modifier = Modifier, // 应用于外层 Box 的修饰符（在 drawBehind 之后）
     drawRectColor: Color = Color.White.copy(alpha = .3f), // 图片上方遮罩层颜色，默认 30% 透明白色
     contentAlignment: Alignment = Alignment.TopStart, // 内容在容器内的对齐方式
+    alpha: Float = 1f,
     composable: @Composable () -> Unit, // 容器内的子组件内容
 ) {
     // 记录渲染开始时间，用于性能日志
@@ -130,7 +131,8 @@ fun BGImgBox(
                             ((canvasWidth - scaledWidth) / 2).roundToInt(),
                             ((canvasHeight - scaledHeight) / 2).roundToInt()
                         ),
-                        dstSize = IntSize(scaledWidth.roundToInt(), scaledHeight.roundToInt())
+                        dstSize = IntSize(scaledWidth.roundToInt(), scaledHeight.roundToInt()),
+                        alpha = alpha
                     )
 
                     // 半透明遮罩层：降低背景图片的视觉强度，确保上层文字/组件可读

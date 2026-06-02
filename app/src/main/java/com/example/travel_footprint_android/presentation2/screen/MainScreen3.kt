@@ -54,8 +54,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation2.components.debug.DebugOverlay
-import com.example.travel_footprint_android.presentation2.navigation.CustomNavHost2
-import com.example.travel_footprint_android.presentation2.navigation.Navigation2
+import com.example.travel_footprint_android.presentation2.navigation.CustomNavHost3
+import com.example.travel_footprint_android.presentation2.navigation.Navigation3
 import com.example.travel_footprint_android.presentation2.viewmodel.nav_controller.NavigationViewModel
 import com.example.travel_footprint_android.utils.DebugHelper
 
@@ -65,13 +65,15 @@ import com.example.travel_footprint_android.utils.DebugHelper
  * @param debugHelper 调试工具类实例，传入 null 时不显示调试面板（默认不显示）
  */
 @Composable
-fun MainScreen2(
+fun MainScreen3(
     debugHelper: DebugHelper? = null
 ) {
     val navigationViewModel: NavigationViewModel = hiltViewModel()
 
     var showSplash by remember { mutableStateOf(true) }
     var showScreen by remember { mutableStateOf(false) }
+
+    var viewIndex by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -83,13 +85,14 @@ fun MainScreen2(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    CustomNavHost2(
+                    CustomNavHost3(
                         modifier = Modifier.weight(1f),
-                        navigationViewModel = navigationViewModel,
+                        viewIndex = viewIndex
                     )
-                    Navigation2(
+                    Navigation3(
                         modifier = Modifier.wrapContentHeight(),
                         navigationViewModel = navigationViewModel,
+                        setViewIndex = { v -> viewIndex = v},
                     )
                 }
                 if (debugHelper != null) {

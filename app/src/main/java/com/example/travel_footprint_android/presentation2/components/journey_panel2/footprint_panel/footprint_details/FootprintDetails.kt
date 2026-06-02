@@ -23,7 +23,6 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation2.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation2.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation2.components.text.text_small.TextSmall
@@ -35,6 +34,7 @@ import java.util.Locale
 fun FootprintDetails(
     footprintSelected: Footprint,
     journeySelected: Journey,
+    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
 //    // 是否记录用户定位
 //    var isRecord by remember { mutableStateOf(true) }
@@ -57,9 +57,7 @@ fun FootprintDetails(
                     .size(26.dp)
                     .padding(start = 5.dp)
                     .clickable(onClick = {
-                        JourneyNavController.navigate(
-                            JourneyPanel2State.FOOTPRINT_LIST
-                        )
+                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
                     }),
                 painter = painterResource(id = R.drawable.ic_left2),
                 contentDescription = "返回图标",
@@ -71,10 +69,7 @@ fun FootprintDetails(
             )
             Spacer(Modifier.weight(1f))
             IconEdit() {
-                JourneyNavController.navigate(
-                    JourneyPanel2State.FOOTPRINT_LIST,
-                    footprintData = footprintSelected
-                )
+                onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, footprintSelected)
             }
             Spacer(Modifier.width(10.dp))
         }

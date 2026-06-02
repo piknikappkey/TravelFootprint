@@ -93,7 +93,6 @@ import com.example.travel_footprint_android.presentation2.components.journey_pan
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.location.JourneyEditLocation        // 地址编辑子组件
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.journey_edit.title.JourneyEditTitle              // 标题编辑子组件
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.line_between.LineBetween                        // 虚线分隔线
-import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyNavController                   // 旅程面板导航控制器
 import com.example.travel_footprint_android.presentation2.components.journey_panel2.viewmodel.JourneyPanel2State                     // 面板状态枚举
 import com.example.travel_footprint_android.presentation2.components.text.headline.Headline                                          // 标题文字组件
 import com.example.travel_footprint_android.ui.theme.SecondColor3      // 主题色（用于返回按钮箭头颜色）
@@ -183,9 +182,8 @@ fun JourneyEdit(
                 title = "删除旅程",
                 message = "确定要删除「${journeySelected.title}」吗？此操作不可撤销。",
                 onConfirm = {
-                    // 确认删除：执行删除回调 → 导航回列表 → 关闭弹窗
                     deleteJourney(journeySelected)
-                    JourneyNavController.navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
                     showDeleteDialog = false
                 },
                 onDismiss = { showDeleteDialog = false }  // 取消：仅关闭弹窗
@@ -236,11 +234,10 @@ fun JourneyHead(
                 .size(26.dp)
                 .padding(start = 5.dp)
                 .clickable(onClick = {
-                    // 新建模式下返回列表时传 null，编辑模式下传当前选中旅程
                     if(journeySelected == null) {
                         navigate(JourneyPanel2State.JOURNEY_LIST, null)
                     } else {
-                        navigate(JourneyPanel2State.JOURNEY_LIST, journeySelected)
+                        navigate(JourneyPanel2State.JOURNEY_DETAIL, journeySelected)
                     }
                 }),
             painter = painterResource(id = R.drawable.ic_left_long),  // 左箭头图标
