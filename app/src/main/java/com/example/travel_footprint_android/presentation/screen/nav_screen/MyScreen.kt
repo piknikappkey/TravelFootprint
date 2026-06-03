@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,20 +19,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.button.button_image_setting.ButtonImageSetting
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.image_random.setting_dialog.RainSettingDialog
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherViewModel
+import com.example.travel_footprint_android.presentation.components.setting.SettingView
+import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 
 @Composable
 fun MyScreen(
     modifier: Modifier = Modifier,
-    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain")
+    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain"),
+    weatherViewModel: WeatherViewModel = hiltViewModel(),
 ) {
     val rainSettings by imageRainViewModel.settings.collectAsState()
     var showRainDialog by remember { mutableStateOf(false) }
@@ -58,37 +57,17 @@ fun MyScreen(
             ) {
                 Spacer(modifier = Modifier.height(48.dp))
 
-                Text(
+                Headline(
                     text = "我的",
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                HorizontalDivider()
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "设置",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
+                SettingView(
+                    weatherViewModel = weatherViewModel,
+                    onOpenRainSettings = { showRainDialog = true },
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                BGBox(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "暂无设置项",
-                        modifier = Modifier.padding(vertical = 48.dp),
-                        fontSize = 14.sp,
-                    )
-                }
             }
         }
 
@@ -113,3 +92,5 @@ fun MyScreen(
         )
     }
 }
+
+

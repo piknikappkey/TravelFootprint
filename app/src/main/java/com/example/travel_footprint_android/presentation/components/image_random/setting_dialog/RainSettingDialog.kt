@@ -62,7 +62,7 @@ fun RainSettingDialog(
     ) {
         BGBox {
             BGImgBox(
-                listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3),
+                R.drawable.bg_rectangular_1__2__3
             ) {
                 Column(
                     modifier = Modifier

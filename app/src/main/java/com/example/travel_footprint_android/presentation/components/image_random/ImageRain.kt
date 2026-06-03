@@ -47,6 +47,7 @@ package com.example.travel_footprint_android.presentation.components.image_rando
 // 协程工具
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -61,6 +62,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -120,6 +122,13 @@ fun ImageRain(
 
     val rainSettings by imageRainViewModel.settings.collectAsState()
 
+    // 图片雨透明度动画：根据 rainEnabled 状态在 1f 和 0f 之间切换
+    val aniImgRainAlpha by animateFloatAsState(
+        targetValue = if (rainSettings.rainEnabled) 1f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "aniImgRainAlpha"
+    )
+
     var prevClearAllTrigger by remember { mutableStateOf(rainSettings.clearAllTrigger) }
 
     // 清除回调映射表：key 为图片 id，value 为对应图片的清除回调
@@ -142,13 +151,14 @@ fun ImageRain(
     }
 
     // 获取容器实际尺寸（由父布局约束决定），用于计算图片随机位置范围
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize().alpha(aniImgRainAlpha)) {
         val boxWidth = maxWidth   // 容器可用宽度（Dp）
         val boxHeight = maxHeight // 容器可用高度（Dp）
 
         // 图片生成协程：定时生成新图片数据
         // key 为 maxImages/intervalMs/minSize/maxSize，任一变化时重启协程
         LaunchedEffect(rainSettings.maxImages, rainSettings.intervalMs, rainSettings.minSize, rainSettings.maxSize) {
+            delay(500)
             while (true) {
                 delay(rainSettings.intervalMs)  // 等待指定间隔
 

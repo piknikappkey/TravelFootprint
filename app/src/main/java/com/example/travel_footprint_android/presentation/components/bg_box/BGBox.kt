@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.travel_footprint_android.ui.theme.BGPaperTexture
 
 /**
  * 通用背景盒子组件：带阴影的圆角色块容器
@@ -54,7 +55,7 @@ fun BGBox(
     modifier: Modifier = Modifier,
     elevation: Dp = 1.dp, // 阴影大小
     shape: RoundedCornerShape = RoundedCornerShape(8.dp), // 圆角
-    bgColor: Color = Color(0xFFFCF1EB),
+    bgColor: Color = BGPaperTexture,
     contentAlignment: Alignment = Alignment.TopStart,
     composable: @Composable () -> Unit,
 ) {

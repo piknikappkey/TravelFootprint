@@ -74,7 +74,7 @@ import com.example.travel_footprint_android.presentation.components.bg_box.BGImg
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.journey_map.location_search.LocationSearch
 import com.example.travel_footprint_android.presentation.components.journey_map.location_search.LocationSearchViewModel
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
@@ -88,7 +88,7 @@ fun JourneyEditLocation(
     journey: Journey,
     setJourney: (Journey) -> Unit,
     locationSearchViewModel: LocationSearchViewModel = hiltViewModel(),
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(),
+    journeyMapViewModel: JourneyMapViewModel = hiltViewModel(),
 ) {
     // 本地状态：是否已选择位置（根据 journey.address 是否为空判断）
     var isSelectedLocation by remember { mutableStateOf(journey.address != "") }
@@ -111,7 +111,7 @@ fun JourneyEditLocation(
     // 初始化：注册 LocationSearchViewModel 回调，将选中位置同步到地图进行标记
     LaunchedEffect(Unit) {
         locationSearchViewModel.setOnLocationSelectedCallback { latLng ->
-            journeyMap3ViewModel.setSelectedLocation(latLng)
+            journeyMapViewModel.setSelectedLocation(latLng)
         }
     }
 
@@ -238,7 +238,7 @@ fun LocationPanel(
         shape = RoundedCornerShape(12.dp)
     ) {
         // 内层背景图片容器：随机选择背景图
-        BGImgBox(listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3),) {
+        BGImgBox(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3) {
             Column(
                 modifier = Modifier
                     .padding(start = 16.dp, top = 16.dp, end = 16.dp, 8.dp)

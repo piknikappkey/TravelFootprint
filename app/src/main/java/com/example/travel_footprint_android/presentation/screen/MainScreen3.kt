@@ -54,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.components.debug.DebugOverlay
+import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.navigation.CustomNavHost3
 import com.example.travel_footprint_android.presentation.navigation.Navigation3
 import com.example.travel_footprint_android.presentation.screen.viewmodel.NavigationViewModel
@@ -85,10 +86,12 @@ fun MainScreen3(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    CustomNavHost3(
-                        modifier = Modifier.weight(1f),
-                        viewIndex = viewIndex
-                    )
+                    Box(Modifier.weight(1f)) {
+                        CustomNavHost3(
+                            viewIndex = viewIndex
+                        )
+                    }
+
                     Navigation3(
                         modifier = Modifier.wrapContentHeight(),
                         navigationViewModel = navigationViewModel,

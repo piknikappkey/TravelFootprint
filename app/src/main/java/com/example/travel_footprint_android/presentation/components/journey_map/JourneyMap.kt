@@ -55,46 +55,38 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.amap.api.maps.MapView
+import com.amap.api.maps.TextureMapView
 import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.presentation.components.journey_map.location_button.LocationButton
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherCard
-import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherViewModel
 
 @Composable
-fun JourneyMap3(
+fun JourneyMap(
     modifier: Modifier = Modifier,
     locationList: List<Location> = emptyList(), // 足迹位置点列表，按 index 分组形成轨迹路线
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(
+    journeyMapViewModel: JourneyMapViewModel = hiltViewModel(
         viewModelStoreOwner = LocalContext.current as ComponentActivity,
         key = "JourneyMap3"
     ), // Hilt 注入地图 ViewModel（Activity 级作用域，页面切换时不销毁）
-    weatherViewModel: WeatherViewModel = hiltViewModel(
-        viewModelStoreOwner = LocalContext.current as ComponentActivity,
-    ), // Hilt 注入天气 ViewModel（Activity 级作用域）
 ) {
     // 监听地图初始化状态（ViewModel 中 initializeMap 完成后设为 true）
-    val isInitialized by journeyMap3ViewModel.isInitialized.collectAsState()
+    val isInitialized by journeyMapViewModel.isInitialized.collectAsState()
     // 获取当前 Activity Context，用于创建 MapView
     val context = LocalContext.current
     // 标记容器尺寸是否已就绪，确保尺寸有效后才 onResume 地图
-    var mapSizeReady by remember { mutableStateOf(false) }
 
-    // 创建高德 MapView 实例并执行 onCreate
+    // 创建高德 TextureMapView 实例并执行 onCreate
     // 优先复用 ViewModel 中已有的 MapView，避免二次进入时重建
     val mapView = remember {
-        journeyMap3ViewModel.getMapView() ?: MapView(context).apply {
+        journeyMapViewModel.getMapView() ?: TextureMapView(context).apply {
             onCreate(null)
         }
     }
@@ -102,17 +94,8 @@ fun JourneyMap3(
     // MapView 创建/复用后 → 仅在首次初始化时调用 ViewModel 初始化地图
     // 二次进入时 ViewModel 已初始化，跳过以节省资源
     LaunchedEffect(mapView) {
-        if (!journeyMap3ViewModel.isInitialized.value) {
-            journeyMap3ViewModel.initializeMap(mapView)
-        }
-    }
-
-    // 容器尺寸就绪后 → 恢复地图渲染（onResume + requestLayout + invalidate 确保正确显示）
-    LaunchedEffect(mapSizeReady) {
-        if (mapSizeReady) {
-            mapView.onResume()
-            mapView.requestLayout()
-            mapView.invalidate()
+        if (!journeyMapViewModel.isInitialized.value) {
+            journeyMapViewModel.initializeMap(mapView)
         }
     }
 
@@ -125,9 +108,6 @@ fun JourneyMap3(
         }
     }
 
-    // ========== 天气状态（在初始化之后自动加载） ==========
-    val weatherState by weatherViewModel.weatherState.collectAsState()
-
     // 外层容器：填满父组件
     Box(modifier = modifier.fillMaxSize()) {
         // AndroidView 嵌入原生 MapView
@@ -136,34 +116,28 @@ fun JourneyMap3(
             factory = { mapView },
             modifier = Modifier
                 .fillMaxSize()
-                .onSizeChanged { size ->
-                    if (size.width > 0 && size.height > 0 && !mapSizeReady) {
-                        mapSizeReady = true
-                    }
-                }
         )
         // 浮动定位按钮：覆盖在地图上方，matchParentSize 使其与地图容器等大
         // 支持拖拽和点击定位，拖拽范围受容器边界约束
         LocationButton(
-            modifier = Modifier.matchParentSize().statusBarsPadding()
+            modifier = Modifier
+                .matchParentSize()
+                .statusBarsPadding()
+                .padding(12.dp, 12.dp, 12.dp, 70.dp)
         )
         // 天气卡片：左上角显示当前天气
-        if (weatherState.liveWeather != null) {
-            Log.d("JourneyMap3", "weatherState.liveWeather = ${weatherState.liveWeather}")
-            WeatherCard(
-                weatherState = weatherState,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(12.dp)
-            )
-        }
+        WeatherCard(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(12.dp, 12.dp, 12.dp, 70.dp)
+        )
     }
 
     // 地图初始化完成后 → 启动定位服务（aniMoveTime=2000 为相机移动动画时长）
     LaunchedEffect(isInitialized) {
         if (isInitialized) {
-            journeyMap3ViewModel.startLocation(aniMoveTime = 2000)
+            journeyMapViewModel.startLocation(aniMoveTime = 2000)
         }
     }
 
@@ -176,17 +150,10 @@ fun JourneyMap3(
                 Log.d("JourneyMap3Routes", "locationList = ${locationList.first()}, size = ${locationList.size}")
             }
             if (locationList.isNotEmpty()) {
-                journeyMap3ViewModel.updateRoutesWithAnimation(locationList)
+                journeyMapViewModel.updateRoutesWithAnimation(locationList)
             } else {
-                journeyMap3ViewModel.clearAllRoutes()
+                journeyMapViewModel.clearAllRoutes()
             }
-        }
-    }
-
-    // 地图初始化完成后 → 自动加载当前位置天气
-    LaunchedEffect(isInitialized) {
-        if (isInitialized) {
-            weatherViewModel.loadWeatherForCurrentLocation()
         }
     }
 }

@@ -44,10 +44,7 @@ data class NavPath(
     val name: String,
     // 导航图标在 R.drawable 中的资源 ID
     val icon: Int,
-) {
-    // 拷贝构造函数：通过现有 NavPath2 实例创建新实例
-    constructor(navPath: NavPath) : this(navPath.name, navPath.icon)
-}
+)
 
 // —— 导航路径常量对象 ——
 // 预定义底部导航栏的所有导航项及其列表

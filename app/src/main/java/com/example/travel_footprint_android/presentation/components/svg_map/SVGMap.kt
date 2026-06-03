@@ -16,7 +16,7 @@ import com.example.travel_footprint_android.presentation.components.svg_map.city
 import com.example.travel_footprint_android.presentation.components.svg_map.city_box.SelectedCityInfo
 import com.example.travel_footprint_android.presentation.components.svg_map.interactive_china_map.InteractiveChinaCityMap
 import com.example.travel_footprint_android.presentation.components.svg_map.interactive_china_map.InteractiveChinaProviceMap
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 @Composable
 fun SVGMap(

@@ -34,7 +34,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.travel_footprint_android.presentation.screen.MainScreen3
+import com.example.travel_footprint_android.presentation.screen.MainScreen2
 import com.example.travel_footprint_android.utils.DebugHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
         // 设置 Compose 内容，MainScreen2 为应用主界面
         // 当前 debugHelper 传 null，故调试悬浮面板不会显示
         setContent {
-            MainScreen3(debugHelper = null)
+            MainScreen2(debugHelper = null)
         }
     }
 }

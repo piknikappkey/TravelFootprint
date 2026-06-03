@@ -15,7 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.presentation.components.journey_map.location_search.LocationSearch
 import com.example.travel_footprint_android.presentation.components.journey_map.location_search.LocationSearchViewModel
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.LocationPanel
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.FontDark4
@@ -25,7 +25,7 @@ fun FootprintEditLocation(
     footprint: Footprint,
     setFootprint: (Footprint) -> Unit,
     locationSearchViewModel: LocationSearchViewModel = hiltViewModel(),
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(),
+    journeyMapViewModel: JourneyMapViewModel = hiltViewModel(),
 ) {
     var isSelectedLocation by remember { mutableStateOf(footprint.address != "") }
 
@@ -38,7 +38,7 @@ fun FootprintEditLocation(
 
     LaunchedEffect(Unit) {
         locationSearchViewModel.setOnLocationSelectedCallback { latLng ->
-            journeyMap3ViewModel.setSelectedLocation(latLng)
+            journeyMapViewModel.setSelectedLocation(latLng)
         }
     }
 

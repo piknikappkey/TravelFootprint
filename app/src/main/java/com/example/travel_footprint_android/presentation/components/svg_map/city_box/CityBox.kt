@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 data class SelectedCityInfo(
     val name: String,           // 城市名称，如 "北京市"

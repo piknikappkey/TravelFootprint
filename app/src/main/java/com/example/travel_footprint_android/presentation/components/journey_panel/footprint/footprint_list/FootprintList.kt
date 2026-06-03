@@ -71,7 +71,7 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
-import com.example.travel_footprint_android.presentation.components.journey_panel.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium

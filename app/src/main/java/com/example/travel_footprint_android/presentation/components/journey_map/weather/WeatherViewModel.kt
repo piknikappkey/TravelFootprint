@@ -224,8 +224,14 @@ class WeatherViewModel @Inject constructor(
 
     // 对外入口：加载当前定位城市的天气数据（定位 → 实况查询 → 预报查询）
     fun loadWeatherForCurrentLocation() {
-        // 重置状态：清空旧数据，设置为加载中
-        _weatherState.value = WeatherUiState(isLoading = true)
+        // 重置数据字段，保留 showWeatherCard 等 UI 控制字段不丢失
+        _weatherState.value = _weatherState.value.copy(
+            isLoading = true,
+            liveWeather = null,
+            forecast = null,
+            cityName = null,
+            error = null
+        )
         val context = getApplication<Application>().applicationContext
 
         // 创建高德定位客户端，配置单次高精度定位

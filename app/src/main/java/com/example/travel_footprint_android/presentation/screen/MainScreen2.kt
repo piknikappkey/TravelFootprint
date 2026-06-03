@@ -66,10 +66,9 @@ import com.example.travel_footprint_android.utils.DebugHelper
  */
 @Composable
 fun MainScreen2(
-    debugHelper: DebugHelper? = null
+    debugHelper: DebugHelper? = null,
+    navigationViewModel: NavigationViewModel = hiltViewModel()
 ) {
-    val navigationViewModel: NavigationViewModel = hiltViewModel()
-
     var showSplash by remember { mutableStateOf(true) }
     var showScreen by remember { mutableStateOf(false) }
 
@@ -83,10 +82,11 @@ fun MainScreen2(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    CustomNavHost2(
-                        modifier = Modifier.weight(1f),
-                        navigationViewModel = navigationViewModel,
-                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        CustomNavHost2(
+                            navigationViewModel = navigationViewModel,
+                        )
+                    }
                     Navigation2(
                         modifier = Modifier.wrapContentHeight(),
                         navigationViewModel = navigationViewModel,

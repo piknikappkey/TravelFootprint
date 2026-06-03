@@ -25,7 +25,7 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 import kotlinx.coroutines.delay
 
 @Composable
-fun JourneyMap3SplashScreen(
+fun JourneyMapSplashScreen(
     onFinished: () -> Unit,
     onShowScreen: () -> Unit,
 ) {
@@ -49,11 +49,13 @@ fun JourneyMap3SplashScreen(
         // 阶段1：背景淡入，透明度从 0 动画到 1，持续 400ms
         alpha.animateTo(1f, animationSpec = tween(200))
 
+        delay(200)
+
         // 阶段2：通知父组件开始渲染主界面（此时闪屏仍在显示，主界面可在后台预渲染）
         onShowScreen()
 
         // 阶段3：等待 600ms，让用户欣赏完整的闪屏画面
-        delay(500)
+        delay(600)
 
         // 阶段4：触发 Logo 放大动画（iconLargen 变为 true，aniIconScale 自动过渡到 1.5f）
         iconLargen = true

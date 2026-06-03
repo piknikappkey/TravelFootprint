@@ -64,7 +64,7 @@ import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_details.LocationRecorder
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
@@ -86,7 +86,7 @@ import kotlin.math.sqrt
 fun FootprintListPanel(
     footprint: Footprint,                               // 目标足迹对象，携带初始运动数据(duration/distance等)
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),           // 旅程数据ViewModel（共享同一实例）
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3"), // 地图ViewModel（用于清除路线）
+    journeyMapViewModel: JourneyMapViewModel = hiltViewModel(key = "JourneyMap3"), // 地图ViewModel（用于清除路线）
 ) {
     // 从 JourneyViewModel 的 UI 状态中获取位置数据列表
     val journeyUiState by journeyViewModel.uiState.collectAsState()
@@ -230,7 +230,7 @@ fun FootprintListPanel(
         onDispose {
             Log.d("FootprintListPanel", "onDispose")
             isRecord = false
-            journeyMap3ViewModel.clearAllRoutes()         // 清除地图上的路线
+            journeyMapViewModel.clearAllRoutes()         // 清除地图上的路线
             journeyViewModel.getLocation(footprint.copy(id = 0)) // 清空位置列表（id=0表示查询空数据）
         }
     }

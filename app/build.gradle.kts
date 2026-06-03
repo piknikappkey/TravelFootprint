@@ -93,6 +93,9 @@ dependencies {
     // ================== 图片加载 ==================
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // ================== DataStore ==================
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // ================== 协程 ==================
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 

@@ -77,7 +77,7 @@ fun ConfirmDeleteDialog(
             // BGImgBox：在背景上随机渲染一张装饰图片（带半透明遮罩），提升视觉层次感
             BGImgBox(
                 // 从两张矩形背景图中随机选取一张作为弹窗装饰背景
-                listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1),
+                R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1,
             ) {
                 // Column 垂直排列弹窗内容：标题 → 消息 → 按钮行
                 Column(

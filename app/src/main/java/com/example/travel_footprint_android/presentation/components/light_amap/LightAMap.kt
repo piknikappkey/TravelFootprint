@@ -15,7 +15,7 @@ import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.MapView
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.PolygonOptions
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

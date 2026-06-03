@@ -20,16 +20,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
-import com.example.travel_footprint_android.presentation2.components.light_panel2.LightPanel2
-import com.example.travel_footprint_android.presentation2.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation2.components.svg_map.SVGMap
 import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.presentation2.components.image_random.ImageRain
-
-import com.example.travel_footprint_android.presentation2.components.bg_animotion.IllustrationRain
-import com.example.travel_footprint_android.presentation2.components.bg_animotion.RainEffect
-import com.example.travel_footprint_android.presentation2.components.bg_animotion.opengl_rain.OpenGLRainBackground
+import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
+import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2
+import com.example.travel_footprint_android.presentation.components.svg_map.SVGMap
+import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 
 @Composable
 fun LightenScreen2(

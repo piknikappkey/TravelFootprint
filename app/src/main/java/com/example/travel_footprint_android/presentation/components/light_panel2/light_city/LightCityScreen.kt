@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,8 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2State
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
-import androidx.compose.foundation.layout.FlowRow
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
