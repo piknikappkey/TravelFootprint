@@ -72,6 +72,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class CheckInRecord(
@@ -416,10 +417,14 @@ private fun CheckInCityItem(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
         val remaining = 9 - selectedPhotoPaths.size
-        uris.take(remaining).forEach { uri ->
-            val path = copyUriToFile(context, uri, generatePhotoFileName())
-            if (path != null) {
-                selectedPhotoPaths = selectedPhotoPaths + path
+        scope.launch {
+            uris.take(remaining).forEach { uri ->
+                val path = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    copyUriToFile(context, uri, generatePhotoFileName())
+                }
+                if (path != null) {
+                    selectedPhotoPaths = selectedPhotoPaths + path
+                }
             }
         }
     }

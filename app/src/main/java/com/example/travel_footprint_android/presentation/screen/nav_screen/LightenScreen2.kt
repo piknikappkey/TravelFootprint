@@ -93,10 +93,10 @@ fun LightenScreen2(
 //            intensity = 1.2f,      // 雨势强度
 //            enableSplash = true    // 启用溅射效果
 //        )
-            //外层天气动效
-            RainEffect(
-                isRaining=true
-            )
+//            //外层天气动效
+//            RainEffect(
+//                isRaining=true
+//            )
 //
 //            /////////////第二卡顿//////////////
 //            // 底部可拖拽面板（覆盖在地图之上）
@@ -112,11 +112,11 @@ fun LightenScreen2(
 ////
 ////            //插花雨效果
 ////            /////////////加载流畅//////////////
-            ImageRain(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(1f),
-            )
+//            ImageRain(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .alpha(1f),
+//            )
 
         }
     }

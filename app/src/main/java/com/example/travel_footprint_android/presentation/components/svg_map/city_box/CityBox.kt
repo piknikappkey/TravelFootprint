@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -66,45 +70,38 @@ fun CityBox(
     Box(
         modifier = Modifier
             .alpha(animatedAlpha)
-            .padding(vertical = 8.dp, horizontal = 12.dp)
+            .padding(vertical = 28.dp, horizontal = 12.dp)
+            .background(
+                color = Color.White.copy(alpha = 0.9f),
+                RoundedCornerShape(14.dp)
+            )
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    clip = false
-                )
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(16.dp)
-                )
                 .padding(vertical = 16.dp, horizontal = 18.dp)
                 .wrapContentHeight()
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (selectedCityInfo != null) {
-                Text(
-                    text = cityName,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1F2937),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-            }
+            // 左侧：城市名称
+            Text(
+                text = selectedCityInfo?.let { cityName } ?: "",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isLighted) {
+                    Color(0xFF3B82F6)  // 点亮后：蓝色
+                } else {
+                    Color(0xFF9CA3AF)  // 未点亮：灰色
+                },
+                modifier = Modifier.weight(1f, fill = false)  // 不强制占满，让文字自适应
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // 右侧：始终占据固定宽度的区域
+            Box(
+                modifier = Modifier.width(80.dp),  // 固定宽度，与按钮宽度一致
+                contentAlignment = Alignment.CenterEnd
             ) {
-                Text(
-                    text = if (isLighted) "✓ 该地区已点亮" else "该地区未点亮",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isLighted) Color(0xFF10B981) else Color(0xFFF59E0B)
-                )
-
                 if (!isLighted && selectedCityInfo != null) {
                     Button(
                         onClick = { onLightCityClick(cityAdcode, cityName) },
@@ -112,15 +109,20 @@ fun CityBox(
                             containerColor = Color(0xFF3B82F6),
                             contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .width(72.dp)  // 固定按钮宽度
+                            .height(32.dp)  // 固定按钮高度
                     ) {
                         Text(
-                            text = "点亮此地",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            text = "点亮",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
+                } else {
+                    // 点亮后显示一个占位符，保持布局稳定
+                    Spacer(modifier = Modifier.width(72.dp).height(32.dp))
                 }
             }
         }

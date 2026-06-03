@@ -12,6 +12,7 @@ playServicesMaps = "20.0.0"
 material3 = "1.4.0"
 remoteCreationCore = "1.0.0-alpha07"
 constraintlayout = "2.2.1"
+foundation = "1.11.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,7 @@ androidx-foundation = { group = "androidx.compose.foundation", name = "foundatio
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout" }
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

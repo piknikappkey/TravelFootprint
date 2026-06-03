@@ -97,6 +97,18 @@ interface LightedCityDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun lightCityByAdcode(city: LightedCity): Long
 
+    /**
+     * 更新某个点亮城市记录的省份名称
+     */
+    @Query("UPDATE lighted_cities SET provinceName = :provinceName WHERE cityAdcode = :cityAdcode")
+    suspend fun updateProvinceName(cityAdcode: String, provinceName: String)
+
+    /**
+     * 获取所有点亮城市记录（包括省级记录，用于修复数据）
+     */
+    @Query("SELECT * FROM lighted_cities ORDER BY lightedTime DESC")
+    suspend fun getAllLightedCitiesSync(): List<LightedCity>
+
 }
 
 // 点亮省份数据类

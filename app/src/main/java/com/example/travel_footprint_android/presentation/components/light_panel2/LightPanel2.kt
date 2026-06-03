@@ -61,10 +61,10 @@ import com.example.travel_footprint_android.presentation.components.light_panel2
 import com.example.travel_footprint_android.presentation.components.light_panel2.corner.CornerContent
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city.LightCityScreen
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.LightCityEditScreen
-import com.example.travel_footprint_android.presentation.components.light_panel2.milestone.MilestoneContent
 import com.example.travel_footprint_android.presentation.components.light_panel2.panel_title.PanelTitle
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
 import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import kotlinx.serialization.json.JsonNull.content
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,11 +80,30 @@ fun LightPanel2(
     onBackButtonClick: (() -> Unit)? = null,
 ) {
 
-    val uiState by lightenViewModel.uiState.collectAsState()
+    // ========== 拆分为独立状态流，避免跨 Tab 重组污染 ==========
+    val lightCityList by lightenViewModel.lightedCitiesList.collectAsState()
+    val lightedProvinces by lightenViewModel.lightedProvincesList.collectAsState()
+    val lightedProvinceCount by lightenViewModel.lightedProvinceCountFlow.collectAsState()
+    val dbCheckInRecords by lightenViewModel.checkInRecords.collectAsState()
+    val allFootprints by lightenViewModel.allFootprints.collectAsState()
 
-    val lightCityList = uiState.lightedCities
-    val lightedProvinces = uiState.lightedProvinces
-    val lightedProvinceCount = uiState.lightedProvinceCount
+    // ✅ 添加 selectionState 状态定义
+    var selectionState by remember {
+        mutableStateOf(SelectionState())
+    }
+
+    val checkInRecords = remember(dbCheckInRecords) {
+        dbCheckInRecords.map { entity ->
+            CheckInRecord(
+                cityAdcode = entity.cityAdcode,
+                cityName = entity.cityName,
+                note = entity.note,
+                time = entity.time,
+                tags = entity.tags,
+                photoPaths = entity.photoPaths
+            )
+        }
+    }
 
     var lightPanel2State by remember {
         mutableStateOf(LightPanel2State.ROUGH_DISPLAY)
@@ -104,70 +123,9 @@ fun LightPanel2(
         mutableStateOf<String?>(null)
     }
 
-    // 打卡记录（已持久化到数据库）
-    val dbCheckInRecords by lightenViewModel.checkInRecords.collectAsState()
-    val checkInRecords = remember(dbCheckInRecords) {
-        dbCheckInRecords.map { entity ->
-            CheckInRecord(
-                cityAdcode = entity.cityAdcode,
-                cityName = entity.cityName,
-                note = entity.note,
-                time = entity.time,
-                tags = entity.tags,
-                photoPaths = entity.photoPaths
-            )
-        }
-    }
-
-    // 所有足迹
-    val allFootprints by lightenViewModel.allFootprints.collectAsState()
-
     val configuration = LocalConfiguration.current
-    val screenHeightPixels = remember(configuration) {
-        val density = configuration.densityDpi.toFloat() / 160f
-        configuration.screenHeightDp * density
-    }
 
-    var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
-    var isDragging by remember { mutableStateOf(false) }
-
-    val aniPanelHeight = if (isDragging) {
-        currentHeightRatio
-    } else {
-        animateFloatAsState(
-            targetValue = currentHeightRatio,
-            animationSpec = tween(durationMillis = 300),
-            label = "lightPanelHeight"
-        ).value
-    }
-
-    val isExpanded by remember {
-        derivedStateOf { currentHeightRatio > 0.5f }
-    }
-
-    LaunchedEffect(isExpanded) {
-        onExpandedChanged?.invoke(isExpanded)
-    }
-
-    val togglePanelHeight = remember {
-        { _: Boolean ->
-            if (!isDragging) {
-                currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
-            }
-        }
-    }
-
-    val onDragDelta = remember {
-        { deltaY: Float ->
-            val ratioDelta = -deltaY / screenHeightPixels
-            currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
-        }
-    }
-
-    var selectionState by remember {
-        mutableStateOf(SelectionState())
-    }
-
+    // ========== 稳定回调（不捕获拖拽状态） ==========
     val onSelectionChanged = remember {
         { sCities: Set<String>, uCities: Set<String>, sProvinces: Set<String>, uProvinces: Set<String> ->
             selectionState = SelectionState(
@@ -193,16 +151,6 @@ fun LightPanel2(
 
     val onProvinceFilterCleared = remember {
         { selectedProvinceAdcode = null }
-    }
-
-    val onGoCheckIn = remember {
-        { provinceAdcode: String ->
-            selectedProvinceAdcode = provinceAdcode
-            selectedTab = LightPanel2Tab.CHECK_IN
-            if (!isExpanded) {
-                currentHeightRatio = 0.6f
-            }
-        }
     }
 
     val onStateChange = remember {
@@ -239,119 +187,241 @@ fun LightPanel2(
             )
         }
 
+        // ========== 拖拽容器（隔离重组作用域：拖拽时仅此容器重组，内容子节点跳过重组） ==========
+        @Composable
+        fun DragPanelContainer(
+            screenHeightDp: Int,
+            onExpandedChanged: ((Boolean) -> Unit)?,
+            content: @Composable ColumnScope.(isExpanded: Boolean, requestExpand: () -> Unit) -> Unit  // ✅ 修改这里
+        ) {
+            var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
+            var isDragging by remember { mutableStateOf(false) }
 
-         Column {
-            // ================= 拖拽区域 =================
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)  // 拖拽触控区域
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onDragStart = { isDragging = true },
-                            onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
-                            onDragEnd = { isDragging = false }
-                        )
-                    },
-                contentAlignment = Alignment.TopCenter
-            ) {
-                // 视觉上的浮动指示器 - 与面板分离
+            val isExpanded by remember { derivedStateOf { currentHeightRatio > 0.5f } }
+
+            LaunchedEffect(isExpanded) {
+                onExpandedChanged?.invoke(isExpanded)
+            }
+
+            val configuration = LocalConfiguration.current
+            val screenHeightPixels = remember(configuration) {
+                val density = configuration.densityDpi.toFloat() / 160f
+                configuration.screenHeightDp * density
+            }
+
+            val aniPanelHeight = if (isDragging) {
+                currentHeightRatio
+            } else {
+                animateFloatAsState(
+                    targetValue = currentHeightRatio,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "lightPanelHeight"
+                ).value
+            }
+
+            val requestExpand = remember {
+                { if (currentHeightRatio < 0.5f) currentHeightRatio = 0.6f }
+            }
+
+            Column {
+                // ================= 拖拽区域 =================
                 Box(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .shadow(
-                            elevation = 4.dp,
-                            shape = RoundedCornerShape(2.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.1f),
-                            spotColor = Color.Black.copy(alpha = 0.1f)
-                        )
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    Color(0xFFE2E8F0).copy(alpha = 0.9f),
-                                    Color(0xFF94A3B8).copy(alpha = 0.9f),
-                                    Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { isDragging = true },
+                                onVerticalDrag = { _, dragAmount ->
+                                    val ratioDelta = -dragAmount / screenHeightPixels
+                                    currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+                                },
+                                onDragEnd = { isDragging = false }
+                            )
+                        },
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    // 视觉浮动指示器
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(4.dp)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(2.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.1f),
+                                spotColor = Color.Black.copy(alpha = 0.1f)
+                            )
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFFE2E8F0).copy(alpha = 0.9f),
+                                        Color(0xFF94A3B8).copy(alpha = 0.9f),
+                                        Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                                    )
                                 )
                             )
-                        )
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(configuration.screenHeightDp.dp * aniPanelHeight)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
-                        clip = true
                     )
-                    .background(
-                        color = Color.White,
-                        shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
-                    )
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onDragStart = { isDragging = true },
-                            onVerticalDrag = { _, dragAmount -> onDragDelta(dragAmount) },
-                            onDragEnd = { isDragging = false }
-                        )
-                    }
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-
-                    // ================= Tab 标题 =================
-
-                    val onTabSelected: (LightPanel2Tab) -> Unit = remember {
-                        { tab ->
-                            selectedTab = tab
-                            selectedProvinceAdcode = null
-                            if (!isExpanded) {
-                                currentHeightRatio = 0.6f
-                            }
-                        }
-                    }
-
-                    PanelTitle(
-                        modifier = Modifier,
-                        selectedTab = selectedTab,
-                        onTabSelected = onTabSelected
-                    )
-
-                    LightPanelBody(
-                        selectedTab = selectedTab,
-                        lightPanel2State = lightPanel2State,
-                        isDeleteMode = isDeleteMode,
-                        isExpanded = isExpanded,
-                        lightCityList = lightCityList,
-                        lightedProvinces = lightedProvinces,
-                        lightedProvinceCount = lightedProvinceCount,
-                        lightenCityMode = lightenCityMode,
-                        checkInRecords = checkInRecords,
-                        selectedProvinceAdcode = selectedProvinceAdcode,
-                        allFootprints = allFootprints,
-                        selectionState = selectionState,
-                        onSelectionChanged = onSelectionChanged,
-                        onAddCheckIn = onAddCheckIn,
-                        onAddCheckInRich = onAddCheckInRich,
-                        onProvinceFilterCleared = onProvinceFilterCleared,
-                        onGoCheckIn = onGoCheckIn,
-                        lightenViewModel = lightenViewModel,
-                        onStateChange = onStateChange,
-                        onDeleteModeChange = onDeleteModeChange,
-                        onSelectionReset = onSelectionReset
-                    )
-
                 }
-            }
+
+                // ================= 面板主体（固定高度 + placement offset，避免拖拽时触发子节点 measure） =================
+                val maxHeightDp = screenHeightDp.dp * 0.6f
+                val offsetDp = maxHeightDp * (0.6f - aniPanelHeight) / 0.6f
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(maxHeightDp)
+                        .offset(y = offsetDp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                            clip = true
+                        )
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
+                        )
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { isDragging = true },
+                                onVerticalDrag = { _, dragAmount ->
+                                    val ratioDelta = -dragAmount / screenHeightPixels
+                                    currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+                                },
+                                onDragEnd = { isDragging = false }
+                            )
+                        }
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // ✅ 关键修改：将 this（ColumnScope）作为接收者传递给 content
+                        content(this, isExpanded, requestExpand)
+                    }
+                }
             }
         }
     }
+}
 
+
+// ========== 拖拽容器（隔离重组作用域：拖拽时仅此容器重组，内容子节点跳过重组） ==========
+@Composable
+private fun DragPanelContainer(
+    screenHeightDp: Int,
+    onExpandedChanged: ((Boolean) -> Unit)?,
+    content: @Composable (isExpanded: Boolean, requestExpand: () -> Unit) -> Unit
+) {
+    var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val isExpanded by remember { derivedStateOf { currentHeightRatio > 0.5f } }
+
+    LaunchedEffect(isExpanded) {
+        onExpandedChanged?.invoke(isExpanded)
+    }
+
+    val configuration = LocalConfiguration.current
+    val screenHeightPixels = remember(configuration) {
+        val density = configuration.densityDpi.toFloat() / 160f
+        configuration.screenHeightDp * density
+    }
+
+    val aniPanelHeight = if (isDragging) {
+        currentHeightRatio
+    } else {
+        animateFloatAsState(
+            targetValue = currentHeightRatio,
+            animationSpec = tween(durationMillis = 300),
+            label = "lightPanelHeight"
+        ).value
+    }
+
+    val requestExpand = remember {
+        { if (currentHeightRatio < 0.5f) currentHeightRatio = 0.6f }
+    }
+
+    Column {
+        // ================= 拖拽区域 =================
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { isDragging = true },
+                        onVerticalDrag = { _, dragAmount ->
+                            val ratioDelta = -dragAmount / screenHeightPixels
+                            currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+                        },
+                        onDragEnd = { isDragging = false }
+                    )
+                },
+            contentAlignment = Alignment.TopCenter
+        ) {
+            // 视觉浮动指示器
+            Box(
+                modifier = Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .shadow(
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(2.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.1f),
+                        spotColor = Color.Black.copy(alpha = 0.1f)
+                    )
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFFE2E8F0).copy(alpha = 0.9f),
+                                Color(0xFF94A3B8).copy(alpha = 0.9f),
+                                Color(0xFFE2E8F0).copy(alpha = 0.9f)
+                            )
+                        )
+                    )
+            )
+        }
+
+        // ================= 面板主体（固定高度 + placement offset，避免拖拽时触发子节点 measure） =================
+        val maxHeightDp = screenHeightDp.dp * 0.6f
+        val offsetDp = maxHeightDp * (0.6f - aniPanelHeight) / 0.6f
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(maxHeightDp)
+                .offset(y = offsetDp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                    clip = true
+                )
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
+                )
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragStart = { isDragging = true },
+                        onVerticalDrag = { _, dragAmount ->
+                            val ratioDelta = -dragAmount / screenHeightPixels
+                            currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+                        },
+                        onDragEnd = { isDragging = false }
+                    )
+                }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                content(isExpanded, requestExpand)
+            }
+        }
+    }
+}
 
 // ========== 内容区域（不含底部按钮） ==========
 @Composable
@@ -361,9 +431,9 @@ private fun LightUpContentOnly(
     lightedProvinces: List<LightedProvince>,
     lightenCityMode: LightenCityMode,
     isDeleteMode: Boolean,
-    onLightenViewModel: LightenViewModel,
     onSelectionChanged: (Set<String>, Set<String>, Set<String>, Set<String>) -> Unit
 ) {
+    val lightenViewModel: LightenViewModel = hiltViewModel()
     val provinceTimeline = remember(lightCityList) {
         lightCityList.groupBy { it.provinceAdcode }.map { (_, cities) ->
             val latest = cities.maxByOrNull { it.lightedTime }
@@ -375,6 +445,7 @@ private fun LightUpContentOnly(
             )
         }.sortedByDescending { it.latestLightTime }
     }
+    Log.d("是枫树","$provinceTimeline")
 
     LazyColumn(
         modifier = Modifier
@@ -388,10 +459,10 @@ private fun LightUpContentOnly(
             lightenCityMode = lightenCityMode,
             isDeleteMode = isDeleteMode,
             onDeleteProvince = { provinceCode ->
-                onLightenViewModel.unlightProvince(provinceCode)
+                lightenViewModel.unlightProvince(provinceCode)
             },
             onDeleteCity = { cityCode ->
-                onLightenViewModel.unlightCity(cityCode)
+                lightenViewModel.unlightCity(cityCode)
             })
 
         }
@@ -450,9 +521,9 @@ private fun BottomActionButtons(
     unselectedProvinceCodes: Set<String>,
     onStateChange: (LightPanel2State) -> Unit,
     onDeleteModeChange: (Boolean) -> Unit,
-    onLightenViewModel: LightenViewModel,
     onSelectionReset: () -> Unit
 ) {
+    val lightenViewModel: LightenViewModel = hiltViewModel()
     Column(
         modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -463,7 +534,7 @@ private fun BottomActionButtons(
             ) {
                 Button(
                     onClick = {
-                        onLightenViewModel.applyLightingChanges(
+                        lightenViewModel.applyLightingChanges(
                             selectedCityCodes = selectedCityCodes,
                             unselectedCityCodes = unselectedCityCodes,
                             selectedProvinceCodes = selectedProvinceCodes,
@@ -503,7 +574,7 @@ private fun BottomActionButtons(
                 Button(
                     onClick = {
                         onDeleteModeChange(false)
-                        onLightenViewModel.refreshAllData()
+                        lightenViewModel.refreshAllData()
                         Log.d("LightPanel2", "刷新数据完成")
                     }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF6B7280)
@@ -669,7 +740,6 @@ private fun ColumnScope.LightPanelBody(
     onAddCheckInRich: (String, String, String, List<String>, List<String>) -> Unit,
     onProvinceFilterCleared: () -> Unit,
     onGoCheckIn: (String) -> Unit,
-    lightenViewModel: LightenViewModel,
     onStateChange: (LightPanel2State) -> Unit,
     onDeleteModeChange: (Boolean) -> Unit,
     onSelectionReset: () -> Unit
@@ -687,7 +757,6 @@ private fun ColumnScope.LightPanelBody(
                     lightedProvinces = lightedProvinces,
                     lightenCityMode = lightenCityMode,
                     isDeleteMode = isDeleteMode,
-                    onLightenViewModel = lightenViewModel,
                     onSelectionChanged = onSelectionChanged
                 )
             }
@@ -711,13 +780,6 @@ private fun ColumnScope.LightPanelBody(
                 )
             }
 
-            LightPanel2Tab.MILESTONE -> {
-                MilestoneContent(
-                    lightCityList = lightCityList,
-                    lightedProvinceCount = lightedProvinceCount,
-                    allFootprints = allFootprints
-                )
-            }
         }
     }
 
@@ -735,7 +797,6 @@ private fun ColumnScope.LightPanelBody(
             unselectedProvinceCodes = selectionState.unselectedProvinceCodes,
             onStateChange = onStateChange,
             onDeleteModeChange = onDeleteModeChange,
-            onLightenViewModel = lightenViewModel,
             onSelectionReset = onSelectionReset
         )
     }

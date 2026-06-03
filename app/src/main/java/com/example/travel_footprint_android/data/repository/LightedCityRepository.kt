@@ -109,6 +109,19 @@ class LightedCityRepository @Inject constructor(
     suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> =
         lightedCityDao.getLightedCitiesCountByProvince()
 
+    /**
+     * 更新某个点亮城市记录的省份名称
+     */
+    suspend fun updateProvinceName(cityAdcode: String, provinceName: String) {
+        lightedCityDao.updateProvinceName(cityAdcode, provinceName)
+    }
+
+    /**
+     * 获取所有点亮城市记录（包括省级记录，用于修复数据）
+     */
+    suspend fun getAllLightedCitiesSync(): List<LightedCity> =
+        lightedCityDao.getAllLightedCitiesSync()
+
 
     /**
      * 点亮省份（独立点亮省份，不需要关联城市）

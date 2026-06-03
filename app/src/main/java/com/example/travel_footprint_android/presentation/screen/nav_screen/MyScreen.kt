@@ -31,14 +31,22 @@ import com.example.travel_footprint_android.presentation.components.button.butto
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.image_random.setting_dialog.RainSettingDialog
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
+import com.example.travel_footprint_android.presentation.components.light_panel2.milestone.MilestoneContent
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 
 @Composable
 fun MyScreen(
     modifier: Modifier = Modifier,
-    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain")
+    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain"),
+    lightenViewModel: LightenViewModel = hiltViewModel(),
 ) {
     val rainSettings by imageRainViewModel.settings.collectAsState()
     var showRainDialog by remember { mutableStateOf(false) }
+
+    val uiState by lightenViewModel.uiState.collectAsState()
+    val lightCityList = uiState.lightedCities
+    val lightedProvinceCount = uiState.lightedProvinceCount
+    val allFootprints by lightenViewModel.allFootprints.collectAsState()
 
     val aniImgRainAlpha by animateFloatAsState(
         targetValue = if (rainSettings.rainEnabled) 1f else 0f,
@@ -65,7 +73,15 @@ fun MyScreen(
                     fontWeight = FontWeight.Bold,
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MilestoneContent(
+                    lightCityList = lightCityList,
+                    lightedProvinceCount = lightedProvinceCount,
+                    allFootprints = allFootprints
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 HorizontalDivider()
 
