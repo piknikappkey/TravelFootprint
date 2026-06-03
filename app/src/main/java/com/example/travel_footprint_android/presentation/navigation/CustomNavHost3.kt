@@ -11,12 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.presentation.screen.nav_screen.JourneyScreen
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenScreen2
 import com.example.travel_footprint_android.presentation.screen.nav_screen.MyScreen
+import com.example.travel_footprint_android.presentation2.screen.LightenScreen2
 
 @Composable
 fun CustomNavHost3(
-    modifier: Modifier = Modifier,
     viewIndex: Int,
 ) {
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
@@ -27,18 +26,14 @@ fun CustomNavHost3(
         label = "navItemAlpha"
     )
 
-    Box(
-        modifier = modifier
-    ) {
-        NavPathObj.list.forEachIndexed { index, it ->
-            Box(
-                modifier = Modifier.fillMaxSize().offset(x = (screenWidthDp.dp * (index - aniViewIndex)))
-            ) {
-                when (it) {
-                    NavPathObj.lighten -> LightenScreen2()
-                    NavPathObj.journey -> JourneyScreen()
-                    NavPathObj.my -> MyScreen()
-                }
+    NavPathObj.list.forEachIndexed { index, it ->
+        Box(
+            modifier = Modifier.fillMaxSize().offset(x = (screenWidthDp.dp * (index - aniViewIndex)))
+        ) {
+            when (it) {
+                NavPathObj.lighten -> LightenScreen2()
+                NavPathObj.journey -> JourneyScreen()
+                NavPathObj.my -> MyScreen()
             }
         }
     }

@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare2
-import com.example.travel_footprint_android.presentation.components.journey_panel.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 
 @Composable
 fun JourneyDetailCoverSection(

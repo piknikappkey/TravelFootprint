@@ -45,7 +45,7 @@ import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
 import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
-import com.amap.api.maps.MapView
+import com.amap.api.maps.TextureMapView
 import com.amap.api.maps.model.BitmapDescriptor
 import com.amap.api.maps.model.BitmapDescriptorFactory
 import com.amap.api.maps.model.CustomMapStyleOptions
@@ -69,14 +69,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class JourneyMap3ViewModel @Inject constructor(
+class JourneyMapViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
     // ========== 状态 StateFlow（暴露给 UI 层读取） ==========
 
-    // 地图视图实例
-    private val _mapView = MutableStateFlow<MapView?>(null)
+    // 地图视图实例（使用 TextureMapView 避免 SurfaceView 黑色区域问题）
+    private val _mapView = MutableStateFlow<TextureMapView?>(null)
     // 高德地图控制器
     private val _aMap = MutableStateFlow<AMap?>(null)
     // 定位客户端
@@ -116,8 +116,8 @@ class JourneyMap3ViewModel @Inject constructor(
 
     // ========== 地图初始化 ==========
 
-    /** 初始化地图（由 Compose 层在 MapView.onCreate() 之后调用） */
-    fun initializeMap(mapView: MapView) {
+    /** 初始化地图（由 Compose 层在 TextureMapView.onCreate() 之后调用） */
+    fun initializeMap(mapView: TextureMapView) {
         // 防止重复初始化
         if (_mapView.value != null) return
 
@@ -129,11 +129,13 @@ class JourneyMap3ViewModel @Inject constructor(
 
         val context = getApplication<Application>()
         viewModelScope.launch {
+            delay(100)
             // 创建定位客户端
             val locationClient = AMapLocationClient(context)
             _locationClient.value = locationClient
             // 配置地图设置和定位参数
             setupMap(aMap, locationClient)
+            delay(100)
             // 设置自定义定位图标
             setLocationIcon(aMap, context)
             // 设置地图点击监听（点击清除选中标记）
@@ -457,7 +459,7 @@ class JourneyMap3ViewModel @Inject constructor(
         return _currentLocation.value?.let { Pair(it.latitude, it.longitude) }
     }
 
-    fun getMapView(): MapView? = _mapView.value
+    fun getMapView(): TextureMapView? = _mapView.value
     fun getAMap(): AMap? = _aMap.value
     fun getLocationClient(): AMapLocationClient? = _locationClient.value
 

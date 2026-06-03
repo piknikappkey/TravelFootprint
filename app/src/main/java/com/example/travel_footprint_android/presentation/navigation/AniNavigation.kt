@@ -24,6 +24,8 @@
  */
 package com.example.travel_footprint_android.presentation.navigation
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,7 +59,7 @@ import com.example.travel_footprint_android.ui.theme.Purple40
 import com.example.travel_footprint_android.ui.theme.Purple80
 
 @Composable
-fun Navigation2(
+fun AniNavigation(
     modifier: Modifier = Modifier,
     navigationViewModel: NavigationViewModel,
 ) {
@@ -95,6 +97,34 @@ private fun NavItem(
     // 判断当前项是否被选中
     val isSelected = navPathNow == navPath
 
+    // 文字透明度动画：选中时完全不透明(1f)，未选中时半透明(0.6f)，200ms过渡
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0.6f,
+        animationSpec = tween(durationMillis = 200),
+        label = "navItemAlpha"
+    )
+
+    // 文字大小动画：选中时缩小(.9f)，未选中时正常(1f)，200ms过渡
+    val animatedFontSize by animateFloatAsState(
+        targetValue = if (isSelected) .9f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "navItemFontSize"
+    )
+
+    // 图标大小动画：选中时正常(1f)，未选中时缩小(.8f)，200ms过渡
+    val animateIconSize by animateFloatAsState(
+        targetValue = if (isSelected) 1f else .8f,
+        animationSpec = tween(durationMillis = 200),
+        label = "navItemSize"
+    )
+
+    // 背景色动画：选中时渐变为30%透明度紫色(.3f)，未选中时完全透明(0f)，200ms过渡
+    val backgroundAlpht by animateFloatAsState(
+        targetValue = if (isSelected) .3f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "navItemAlpha"
+    )
+
     // 垂直布局：图标在上，文字在下，居中对齐，点击无涟漪效果
     Column(
         modifier = modifier
@@ -109,8 +139,8 @@ private fun NavItem(
         // 导航图标：尺寸和透明度随选中状态动画变化，统一使用紫色染色
         Image(
             modifier = Modifier
-                .size(18.dp)
-                .alpha(if(isSelected) 1f else .6f),
+                .size(18.dp * animateIconSize)
+                .alpha(animatedAlpha),
             painter = painterResource(id = navPath.icon),
             contentDescription = navPath.name + "图标",
             colorFilter = ColorFilter.tint(Purple40.copy(alpha = 0.8f)),
@@ -123,13 +153,13 @@ private fun NavItem(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(25.dp)) // 圆角背景
-                .background(Purple80.copy(if(isSelected) .85f else 0f)) // 动画背景色
+                .background(Purple80.copy(backgroundAlpht)) // 动画背景色
                 .padding(horizontal = 10.dp, vertical = 0.dp) // 内边距让背景更自然
         ) {
             Text(
                 text = navPath.name,
-                modifier = Modifier.alpha(if(isSelected) 1f else .85f),
-                fontSize = 14.sp,
+                modifier = Modifier.alpha(animatedAlpha),
+                fontSize = 14.sp  * animatedFontSize,
                 color = FontDark4,
             )
         }

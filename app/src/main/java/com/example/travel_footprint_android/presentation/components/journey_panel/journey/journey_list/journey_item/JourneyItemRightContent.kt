@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.ui.theme.FontDark4
 
 @Composable
 internal fun JourneyItemRightContent(
@@ -18,8 +21,10 @@ internal fun JourneyItemRightContent(
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 5.dp)
     ) {
-        JourneyItemTitle(
-            title = journey.title,
+        TextMedium(
+            text = journey.title,
+            fontSize = 15.sp,
+            color = FontDark4,
         )
 
         Spacer(Modifier.padding(1.dp))

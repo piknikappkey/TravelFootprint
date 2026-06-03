@@ -36,10 +36,10 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.confirm_delete_dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
-import com.example.travel_footprint_android.presentation.components.journey_panel.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
@@ -60,8 +60,8 @@ fun FootprintEdit(
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
-    val journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(key = "JourneyMap3")
-    val currentLatLng by journeyMap3ViewModel.currentLocation.collectAsState()
+    val journeyMapViewModel: JourneyMapViewModel = hiltViewModel(key = "JourneyMap3")
+    val currentLatLng by journeyMapViewModel.currentLocation.collectAsState()
 
     var footprint by remember {
         mutableStateOf(
@@ -91,7 +91,7 @@ fun FootprintEdit(
     }
 
     LaunchedEffect(Unit) {
-        journeyMap3ViewModel.startLocation()
+        journeyMapViewModel.startLocation()
     }
 
     Column(

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,7 +35,7 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 
 @Composable
 fun JourneyDetail(
-    journey: Journey,
+    journey: Journey?,
     updateJourney: (Journey) -> Unit,
     journeyPanelHeightState: Boolean,
     setJourneyPanelHeightState: (Boolean) -> Unit,
@@ -42,7 +43,12 @@ fun JourneyDetail(
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if(journey == null) {
+            return@Column
+        }
         HeadRow(
             journey = journey,
             journeyPanelHeightState = journeyPanelHeightState,
@@ -140,7 +146,7 @@ private fun Content(
                 clip = true,
             ),
     ) {
-        BGImgBox(listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2)) {
+        BGImgBox(R.drawable.bg_rectangular_1__2__1, R.drawable.bg_rectangular_1__2__2) {
             Column {
                 JourneyDetailTitle(
                     title = journey.title,
