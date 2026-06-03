@@ -42,12 +42,7 @@ package com.example.travel_footprint_android
 
 import android.app.Application
 import com.amap.api.location.AMapLocationClient
-import com.example.travel_footprint_android.data.database.AppDatabase
-import com.example.travel_footprint_android.utils.GeoDataInitializer
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 // —— 应用入口类 ——
 // 标记 Hilt 依赖注入，启动时初始化高德地图隐私声明和地区数据
@@ -61,7 +56,7 @@ class MyApplication : Application() {
         initAMapPrivacy()
 
         // 2. 异步初始化中国省份和城市地区数据到数据库
-        initGeoData()
+//        initGeoData()
     }
 
     // —— 高德地图隐私合规初始化 ——
@@ -79,18 +74,18 @@ class MyApplication : Application() {
     // —— 地区数据初始化 ——
     // 在 IO 线程中读取 assets/china_all_data.json，
     // 解析出省份和城市列表并写入 Room 数据库
-    private fun initGeoData() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val database = AppDatabase.getInstance(this@MyApplication)
-                GeoDataInitializer.initializeData(
-                    context = this@MyApplication,
-                    provinceDao = database.provinceDao(),
-                    cityDao = database.cityDao()
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+//    private fun initGeoData() {
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val database = AppDatabase.getInstance(this@MyApplication)
+//                GeoDataInitializer.initializeData(
+//                    context = this@MyApplication,
+//                    provinceDao = database.provinceDao(),
+//                    cityDao = database.cityDao()
+//                )
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
+//        }
+//    }
 }
