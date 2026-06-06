@@ -21,11 +21,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation.components.bg_animotion.RainEffect
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2
 import com.example.travel_footprint_android.presentation.components.svg_map.SVGMap
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 
 @Composable
 fun LightenScreen2(
@@ -82,6 +83,21 @@ fun LightenScreen2(
                 navigateRequest = navigateRequest,
             )
 
+
+            /////////////非常卡顿//////////////
+// 前景雨（带溅射效果，性能优化版）
+//        IllustrationRain(
+//            count = 150,           // 雨滴数量（可根据性能调整）
+//            intensity = 1.2f,      // 雨势强度
+//            enableSplash = true    // 启用溅射效果
+//        )
+//            //外层天气动效
+//            RainEffect(
+//                isRaining=true
+//            )
+//
+//            /////////////第二卡顿//////////////
+//            // 底部可拖拽面板（覆盖在地图之上）
             // 雨滴叠加在内容上层
 //            OpenGLRainBackground(show = true)
 
@@ -96,6 +112,14 @@ fun LightenScreen2(
                 showMapMode = showMapMode,
                 onBackButtonClick = onBackButtonClick,
             )
+////
+////            //插花雨效果
+////            /////////////加载流畅//////////////
+//            ImageRain(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .alpha(1f),
+//            )
 
             //插花雨效果
             ImageRain(

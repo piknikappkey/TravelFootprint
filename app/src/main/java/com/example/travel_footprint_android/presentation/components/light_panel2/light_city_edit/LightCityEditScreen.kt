@@ -4,7 +4,6 @@ package com.example.travel_footprint_android.presentation.components.light_panel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +40,7 @@ fun LightCityEditScreen(
         mutableStateOf(initialSelectedProvinceCodes)
     }
 
-    // 自动计算未选中的（被取消点亮的）
+    // 自动计算未选中的（被取消点亮的）— 使用 derivedStateOf 避免 LaunchedEffect 链式触发
     val unselectedCityCodes by remember(selectedCityCodes, initialSelectedCityCodes) {
         derivedStateOf { initialSelectedCityCodes subtract selectedCityCodes }
     }
@@ -49,8 +48,8 @@ fun LightCityEditScreen(
         derivedStateOf { initialSelectedProvinceCodes subtract selectedProvinceCodes }
     }
 
-    // 当选中状态变化时，通知父组件
-    LaunchedEffect(selectedCityCodes, unselectedCityCodes, selectedProvinceCodes, unselectedProvinceCodes) {
+    // 通知选择变更的辅助函数 — 在每次选择变化时直接调用，避免 LaunchedEffect 的协程调度开销
+    fun notifySelectionChanged() {
         onSelectionChanged(
             selectedCityCodes, unselectedCityCodes,
             selectedProvinceCodes, unselectedProvinceCodes
@@ -74,6 +73,7 @@ fun LightCityEditScreen(
                     } else {
                         selectedCityCodes - cityCode
                     }
+                    notifySelectionChanged()
                 },
                 onProvinceSelectionChange = { provinceCode, isSelected ->
                     selectedProvinceCodes = if (isSelected) {
@@ -81,6 +81,7 @@ fun LightCityEditScreen(
                     } else {
                         selectedProvinceCodes - provinceCode
                     }
+                    notifySelectionChanged()
                 },
                 lightenCityMode=lightenCityMode
             )
@@ -93,6 +94,7 @@ fun LightCityEditScreen(
                     } else {
                         selectedProvinceCodes - provinceCode
                     }
+                    notifySelectionChanged()
                 }
             )
         }

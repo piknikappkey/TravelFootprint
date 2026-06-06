@@ -167,7 +167,6 @@ fun InteractiveChinaProviceMap(
 
     LaunchedEffect(lightedProvinces) {
         Log.d("SVGMap", "lightedProvinces changed, size = ${lightedProvinces.size}")
-        if (lightedProvinces.isEmpty()) return@LaunchedEffect
 
         if (isPageLoaded) {
             sendLightedDataToWebView(lightedProvinces, webView)

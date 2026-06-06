@@ -512,6 +512,111 @@ class AppService @Inject constructor(
         lightedCityRepository.isCityLighted(cityAdcode)
     }
 
+    /**
+     * 更新某个点亮城市记录的省份名称
+     */
+    suspend fun updateProvinceName(cityAdcode: String, provinceName: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.updateProvinceName(cityAdcode, provinceName)
+        }
+    }
+
+    /**
+     * 获取所有点亮城市记录（用于修复数据）
+     */
+    suspend fun getAllLightedCitiesSync(): List<LightedCity> = withContext(Dispatchers.IO) {
+        lightedCityRepository.getAllLightedCitiesSync()
+    }
+
+    // ==================== 地区数据初始化 ====================
+
+    /**
+     * 初始化省份和城市数据（从 china_all_data.json 读取并写入数据库）
+     * 仅当 provinces 表为空时执行
+     */
+    suspend fun initializeRegionData() {
+        withContext(Dispatchers.IO) {
+            val count = regionRepository.getProvinceCount()
+            if (count > 0) {
+                Log.d("AppService", "省份数据已存在（${count}条），跳过初始化")
+                return@withContext
+            }
+
+            Log.d("AppService", "开始初始化地区数据...")
+            try {
+                val jsonString = context.assets.open("china_all_data.json")
+                    .bufferedReader().use { it.readText() }
+                val json = org.json.JSONObject(jsonString)
+
+                // 解析省份
+                val provincesArray = json.getJSONArray("provinces")
+                val provinces = mutableListOf<Province>()
+                for (i in 0 until provincesArray.length()) {
+                    val obj = provincesArray.getJSONObject(i)
+                    provinces.add(
+                        Province(
+                            adcode = obj.getInt("adcode").toString(),
+                            name = obj.getString("name"),
+                            centerLat = obj.optDouble("centerLat", 0.0),
+                            centerLng = obj.optDouble("centerLng", 0.0),
+                            sortOrder = i
+                        )
+                    )
+                }
+                regionRepository.getProvinceCount() // 仅用于确认
+                regionRepository.insertProvinces(provinces)
+                Log.d("AppService", "省份数据初始化完成: ${provinces.size}条")
+
+                // 解析城市
+                val citiesArray = json.getJSONArray("cities")
+                val cities = mutableListOf<City>()
+                for (i in 0 until citiesArray.length()) {
+                    val obj = citiesArray.getJSONObject(i)
+                    cities.add(
+                        City(
+                            adcode = obj.getInt("adcode").toString(),
+                            name = obj.getString("name"),
+                            provinceAdcode = obj.getInt("parent").toString(),
+                            centerLat = obj.optDouble("centerLat", 0.0),
+                            centerLng = obj.optDouble("centerLng", 0.0),
+                            sortOrder = i
+                        )
+                    )
+                }
+                regionRepository.insertCities(cities)
+                Log.d("AppService", "城市数据初始化完成: ${cities.size}条")
+            } catch (e: Exception) {
+                Log.e("AppService", "地区数据初始化失败", e)
+            }
+        }
+    }
+
+    /**
+     * 修复已点亮城市记录中错误的省份名称
+     * 遍历所有 lighted_cities 记录，将 provinceName 修正为 provinces 表中正确的名称
+     */
+    suspend fun fixLightedCityProvinceNames() {
+        withContext(Dispatchers.IO) {
+            try {
+                val allCities = lightedCityRepository.getAllLightedCitiesSync()
+                var fixedCount = 0
+                for (city in allCities) {
+                    // 查省份名称
+                    val province = regionRepository.getProvinceByAdcode(city.provinceAdcode)
+                    val correctName = province?.name
+                    if (correctName != null && city.provinceName != correctName) {
+                        Log.d("AppService", "修复省份名称: ${city.cityName} (${city.provinceName} -> ${correctName})")
+                        lightedCityRepository.updateProvinceName(city.cityAdcode, correctName)
+                        fixedCount++
+                    }
+                }
+                Log.d("AppService", "省份名称修复完成: 共检查${allCities.size}条，修复${fixedCount}条")
+            } catch (e: Exception) {
+                Log.e("AppService", "修复省份名称失败", e)
+            }
+        }
+    }
+
     // ==================== 点亮省份相关 ====================
 
     /**

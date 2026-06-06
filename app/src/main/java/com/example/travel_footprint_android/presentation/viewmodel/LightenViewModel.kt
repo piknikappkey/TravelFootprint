@@ -79,6 +79,20 @@ class LightenViewModel @Inject constructor(
     private val _allFootprints = MutableStateFlow<List<Footprint>>(emptyList())
     val allFootprints: StateFlow<List<Footprint>> = _allFootprints.asStateFlow()
 
+    // ========== 拆分后的独立状态流（按 Tab 隔离，避免跨 Tab 重组污染） ==========
+
+    /** 已点亮城市列表 — 独立流，仅影响 LIGHT_UP Tab 和 CORNER Tab */
+    private val _lightedCitiesList = MutableStateFlow<List<LightedCity>>(emptyList())
+    val lightedCitiesList: StateFlow<List<LightedCity>> = _lightedCitiesList.asStateFlow()
+
+    /** 已点亮省份列表 — 独立流，仅影响 LIGHT_UP Tab */
+    private val _lightedProvincesList = MutableStateFlow<List<LightedProvince>>(emptyList())
+    val lightedProvincesList: StateFlow<List<LightedProvince>> = _lightedProvincesList.asStateFlow()
+
+    /** 已点亮省份数量 — 独立流，仅影响 CORNER/Milestone 的计数显示 */
+    private val _lightedProvinceCount = MutableStateFlow(0)
+    val lightedProvinceCountFlow: StateFlow<Int> = _lightedProvinceCount.asStateFlow()
+
 
     private val _uiState = MutableStateFlow(LightenUiState())
     val uiState: StateFlow<LightenUiState> = _uiState.asStateFlow()
@@ -99,6 +113,11 @@ class LightenViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
+                // 初始化省份/城市数据（从 JSON 加载，仅首次运行）
+                appService.initializeRegionData()
+                // 修复已有点亮记录中错误的省份名称
+                appService.fixLightedCityProvinceNames()
+
                 launch { loadProvinceCityCount() }
                 // 等待首次 Flow 发射以确保初始数据已加载
                 appService.getAllLightedCities().first()
@@ -130,9 +149,10 @@ class LightenViewModel @Inject constructor(
     private fun startContinuousCollectors() {
         // 城市代码 - 实时响应
         loadLightedCityCodes()
-        // 城市数据 - 实时响应
+        // 城市数据 - 实时响应（同时写入 uiState 和独立流）
         viewModelScope.launch {
             appService.getAllLightedCities().collect { cities ->
+                _lightedCitiesList.value = cities
                 _uiState.update { state ->
                     state.copy(
                         lightedCities = cities,
@@ -141,10 +161,12 @@ class LightenViewModel @Inject constructor(
                 }
             }
         }
-        // 省份代码 + 省份数据 - 实时响应
+        // 省份代码 + 省份数据 - 实时响应（同时写入独立流）
         viewModelScope.launch {
             appService.getLightedProvinces().collect { provinces ->
                 _lightedProvinceCodes.value = provinces.map { it.provinceAdcode }.toSet()
+                _lightedProvincesList.value = provinces
+                _lightedProvinceCount.value = provinces.size
                 _uiState.update { state ->
                     state.copy(
                         lightedProvinces = provinces,
@@ -230,17 +252,20 @@ class LightenViewModel @Inject constructor(
                     // 市级：XXYY00 格式
                     cleanAdcode.matches(Regex("\\d{4}00")) && !cleanAdcode.matches(Regex("\\d{2}0000")) -> {
                         val city = getCityInfo(cleanAdcode)
+                        // 从城市 adcode 推导省份 adcode（前2位+0000）
+                        val derivedProvinceAdcode = cleanAdcode.take(2) + "0000"
                         val provinces = appService.getAllProvinces().first()
-                        val provinceName = city?.provinceAdcode?.let { adcode ->
+                        val foundProvinceName = city?.provinceAdcode?.let { adcode ->
                             provinces.find { it.adcode == adcode }?.name
-                        } ?: "未知省份"
+                        } ?: provinces.find { it.adcode == derivedProvinceAdcode }?.name
+                            ?: cleanName.take(2) + "省"
 
                         if (city != null) {
                             appService.lightCity(
                                 cityAdcode = city.adcode,
                                 cityName = city.name,
                                 provinceAdcode = city.provinceAdcode,
-                                provinceName = "$provinceName",
+                                provinceName = "$foundProvinceName",
                                 latitude = city.centerLat,
                                 longitude = city.centerLng,
                                 remark = "从地图选择点亮（城市模式）"
@@ -249,8 +274,8 @@ class LightenViewModel @Inject constructor(
                             appService.lightCity(
                                 cityAdcode = cleanAdcode,
                                 cityName = cleanName,
-                                provinceAdcode = "",
-                                provinceName = "",
+                                provinceAdcode = derivedProvinceAdcode,
+                                provinceName = foundProvinceName,
                                 latitude = 0.0,
                                 longitude = 0.0,
                                 remark = "从地图选择点亮（城市模式）"
@@ -383,11 +408,13 @@ class LightenViewModel @Inject constructor(
              *     val sortOrder: Int = 0     // 排序顺序
              */
             if (city != null) {
+                // 查找实际省份名称
+                val province = appService.getProvinceByAdcode(city.provinceAdcode)
                 lightCity(
                     cityAdcode = city.adcode,
                     cityName = city.name,
                     provinceAdcode = city.provinceAdcode,
-                    provinceName = "默认省份",
+                    provinceName = province?.name ?: "",
                     latitude = city.centerLat,
                     longitude = city.centerLng,
                     remark = "从地图选择点亮（城市模式）"
@@ -442,11 +469,13 @@ class LightenViewModel @Inject constructor(
                 selectedCityCodes.forEach { cityCode ->
                     val city = appService.getCityByAdcode(cityCode)
                     city?.let {
+                        // 查找实际省份名称
+                        val province = appService.getProvinceByAdcode(it.provinceAdcode)
                         appService.lightCity(
                             cityAdcode = it.adcode,
                             cityName = it.name,
                             provinceAdcode = it.provinceAdcode,
-                            provinceName = "",
+                            provinceName = province?.name ?: "",
                             latitude = it.centerLat,
                             longitude = it.centerLng
                         )
@@ -473,7 +502,7 @@ class LightenViewModel @Inject constructor(
                 unselectedProvinceCodes.forEach { provinceCode ->
                     appService.unlightProvince(provinceCode)
                 }
-
+                Log.d("执行取消","执行")
                 // 5. 刷新所有数据
                 refreshAllData()
 
