@@ -76,7 +76,8 @@ import com.example.travel_footprint_android.presentation.components.light_panel2
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.LightCityEditScreen
 import com.example.travel_footprint_android.presentation.components.light_panel2.panel_title.PanelTitle
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import kotlinx.serialization.json.JsonNull.content
 import java.text.SimpleDateFormat
 import java.util.Date
