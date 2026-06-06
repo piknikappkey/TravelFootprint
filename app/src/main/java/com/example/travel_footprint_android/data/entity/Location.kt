@@ -16,7 +16,8 @@ import androidx.room.ForeignKey
             childColumns = ["footprintId"],
             onDelete = ForeignKey.CASCADE  // 删除足迹时同时删除位置
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["footprintId"])]
 )
 data class Location(
     @PrimaryKey(autoGenerate = true)

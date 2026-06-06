@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.bg_animotion.RainEffect
+import com.example.travel_footprint_android.presentation.components.bg_animotion.SnowEffect
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2
 import com.example.travel_footprint_android.presentation.components.svg_map.SVGMap
@@ -94,9 +95,7 @@ fun LightenScreen2(
 //            enableSplash = true    // 启用溅射效果
 //        )
 //            //外层天气动效
-//            RainEffect(
-//                isRaining=true
-//            )
+            SnowEffect(isSnowing = true)
 //
 //            /////////////第二卡顿//////////////
 //            // 底部可拖拽面板（覆盖在地图之上）

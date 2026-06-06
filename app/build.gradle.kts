@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 // app/build.gradle.kts
 plugins {
     id("com.android.application")
@@ -170,4 +172,13 @@ dependencies {
     // 权限请求库（可选，简化权限处理）
     implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
 
+    //pag动效依赖
+    // 企业版基础版本（推荐）
+    implementation ("com.tencent.tav:libpag-enterprise:latest.release")
+
+    // 或者使用社区版
+    // implementation 'com.tencent.tav:libpag:latest.release'
+
+    // 必需依赖
+    implementation("androidx.exifinterface:exifinterface:1.3.3")
 }

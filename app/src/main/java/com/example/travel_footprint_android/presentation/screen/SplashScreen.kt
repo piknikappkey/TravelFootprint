@@ -106,7 +106,8 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         // 阶段1：背景淡入，透明度从 0 动画到 1，持续 400ms
         alpha.animateTo(1f, animationSpec = tween(500))
-
+        // 阶段2：通知父组件开始渲染主界面（此时闪屏仍在显示，主界面可在后台预渲染）
+        onShowScreen()
         // 阶段3：等待 600ms，让用户欣赏完整的闪屏画面
         delay(600)
 
@@ -122,8 +123,7 @@ fun SplashScreen(
         // 阶段7：通知父组件闪屏动画已结束，可以安全移除闪屏层
         onFinished()
 
-        // 阶段2：通知父组件开始渲染主界面（此时闪屏仍在显示，主界面可在后台预渲染）
-        onShowScreen()
+
     }
 
     // 背景图片容器：加载闪屏背景图并居中放置内容
