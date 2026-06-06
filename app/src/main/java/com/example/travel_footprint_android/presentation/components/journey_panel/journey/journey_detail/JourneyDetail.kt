@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -35,24 +36,27 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 
 @Composable
 fun JourneyDetail(
-    journey: Journey?,
+    journeySelected: Journey?,
     updateJourney: (Journey) -> Unit,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
 ) {
+    val journey = remember { journeySelected?.copy() }
+
+    if(journey == null) {
+        return
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        if(journey == null) {
-            return@Column
-        }
         HeadRow(
             journey = journey,
-            journeyPanelHeightState = journeyPanelHeightState,
-            setJourneyPanelHeightState = setJourneyPanelHeightState,
+            journeyPanelExpandedState = journeyPanelExpandedState,
+            setJourneyPanelOffset = setJourneyPanelOffset,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
             onPanelNavigate = onPanelNavigate
@@ -87,8 +91,8 @@ fun JourneyDetail(
 @Composable
 private fun HeadRow(
     journey: Journey,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -127,7 +131,7 @@ private fun HeadRow(
             onPanelNavigate(JourneyPanel2State.JOURNEY_EDIT, journey, null)
         }
         Spacer(Modifier.width(10.dp))
-        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        IcJourneyHeightButton(journeyPanelExpandedState, { setJourneyPanelOffset(!journeyPanelExpandedState) })
         Spacer(Modifier.width(10.dp))
     }
 }

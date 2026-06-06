@@ -54,8 +54,8 @@ fun FootprintEdit(
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
     deleteFootprint: (Footprint) -> Unit,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -106,8 +106,8 @@ fun FootprintEdit(
             journeySelected,
             addFootprint,
             updateFootprint,
-            journeyPanelHeightState,
-            setJourneyPanelHeightState,
+            journeyPanelExpandedState,
+            setJourneyPanelOffset,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
             onPanelNavigate = onPanelNavigate,
@@ -146,8 +146,8 @@ private fun HeadRow(
     journeySelected: Journey,
     addFootprint: (Journey, Footprint) -> Unit,
     updateFootprint: (Footprint) -> Unit,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -205,7 +205,7 @@ private fun HeadRow(
         )
         Spacer(Modifier.width(10.dp))
 
-        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        IcJourneyHeightButton(journeyPanelExpandedState, { setJourneyPanelOffset(!journeyPanelExpandedState) })
         Spacer(Modifier.width(10.dp))
     }
 }

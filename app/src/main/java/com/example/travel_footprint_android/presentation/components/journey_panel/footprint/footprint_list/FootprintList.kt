@@ -80,8 +80,8 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 @Composable
 fun FootprintList(
     journeySelected: Journey,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -108,8 +108,8 @@ fun FootprintList(
         Spacer(Modifier.height(10.dp))
         HeadRow(
             journeySelected,
-            journeyPanelHeightState,
-            setJourneyPanelHeightState,
+            journeyPanelExpandedState,
+            setJourneyPanelOffset,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
             onPanelNavigate = onPanelNavigate,
@@ -129,8 +129,8 @@ fun FootprintList(
 @Composable
 private fun HeadRow(
     journeySelected: Journey,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -164,8 +164,8 @@ private fun HeadRow(
             text = "${journeySelected.title}——足迹",
             fontSize = 18.sp
         )
-        // 面板高度切换按钮：点击切换面板高度状态（展开/折叠）
-        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        // 面板高度切换按钮：点击切换面板位置状态（展开/折叠）
+        IcJourneyHeightButton(journeyPanelExpandedState, { setJourneyPanelOffset(!journeyPanelExpandedState) })
         Spacer(Modifier.width(10.dp))
     }
 }

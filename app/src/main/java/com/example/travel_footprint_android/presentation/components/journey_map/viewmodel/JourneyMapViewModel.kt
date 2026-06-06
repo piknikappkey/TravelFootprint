@@ -106,6 +106,23 @@ class JourneyMapViewModel @Inject constructor(
     // 定位后相机移动动画时长（毫秒）
     private var _aniMoveTime: Long = 0
 
+    // 屏幕参数和面板偏移量（用于底部面板补偿定位）
+    private var _screenWidthPx: Int = 0
+    private var _screenHeightPx: Int = 0
+    private var _panelTopY: Int = 0
+
+    // 面板偏移持久化存储（由 JourneyPanel 在每次组合时写入，供初始自动定位等场景使用）
+    private var _storedScreenWidthPx: Int = 0
+    private var _storedScreenHeightPx: Int = 0
+    private var _storedPanelTopY: Int = 0
+
+    // 供 JourneyPanel 写入当前面板偏移量，使初始定位等场景也能使用补偿定位
+    fun setPanelOffset(screenWidthPx: Int, screenHeightPx: Int, panelTopY: Int) {
+        _storedScreenWidthPx = screenWidthPx
+        _storedScreenHeightPx = screenHeightPx
+        _storedPanelTopY = panelTopY
+    }
+
     // ========== 对外暴露的只读 StateFlow ==========
 
     val aMap: StateFlow<AMap?> = _aMap.asStateFlow()
@@ -178,14 +195,59 @@ class JourneyMapViewModel @Inject constructor(
                 val latLng = LatLng(location.latitude, location.longitude)
                 _currentLocation.value = latLng
                 val aniTime = _aniMoveTime
-                // 根据是否设置动画时间决定移动方式
-                if (aniTime > 0) {
+                val spWidth = _screenWidthPx
+                val spHeight = _screenHeightPx
+                val pTopY = _panelTopY
+                // 如果传入了有效的屏幕参数（>0），使用补偿定位；否则回退到标准定位
+                if (aniTime > 0 && spWidth > 0 && spHeight > 0 && pTopY > 0) {
+                    animateCameraToPanelCompensatedCenter(aMap, latLng, aniTime, spWidth, spHeight.toFloat(), pTopY.toFloat())
+                } else if (aniTime > 0) {
                     aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f), aniTime, null)
                 } else {
                     aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
                 }
             }
         }
+    }
+
+    /**
+     * 底部面板补偿定位：直接用数学公式计算补偿经纬度，使定位位置出现在可见区域（全屏-底部面板）的中心
+     *
+     * 原理：
+     *   Web Mercator 投影下，在 zoom=z、纬度 φ 时：
+     *     pixels_per_degree_lat = 256 * 2^z / (360 * cos(φ))
+     *   用户位置需要从屏幕中心上升 offsetY_px 到可见区域中心，
+     *   因此补偿后的相机目标 = 用户位置向南偏移 offsetY_px / pixels_per_degree_lat
+     */
+    private fun animateCameraToPanelCompensatedCenter(
+        aMap: AMap,
+        userLatLng: LatLng,
+        aniTime: Long,
+        screenWidthPx: Int,
+        screenHeightPx: Float,
+        panelTopY: Float
+    ) {
+        val lat = userLatLng.latitude
+        val lng = userLatLng.longitude
+        val zoom = 17f
+
+        // 用户位置在屏幕上需要向上偏移的像素量（从屏幕中心到可见区域中心）
+        val offsetPx = ((((screenHeightPx / 2) - (panelTopY / 2)) / screenHeightPx) * 1080)
+
+        // Web Mercator: 在给定 zoom 和纬度下，每纬度对应的像素数
+        // 256 * 2^zoom / 360 = 每个经度对应的赤道像素数
+        // 除以 cos(lat) 得到纬度方向的像素/度（Mercator 拉伸）
+        val pixelsPerDegreeLat = 256f * (1 shl zoom.toInt()) / 360f / kotlin.math.cos(Math.toRadians(lat)).toFloat()
+
+        // 目标纬度偏移（offsetPx 为正 = 用户位置在可见区域中心偏上 = 目标在用户位置偏南）
+        val latOffset = offsetPx / pixelsPerDegreeLat
+        val compensatedLat = lat - latOffset
+
+        val compensatedLatLng = LatLng(compensatedLat, lng)
+
+        Log.d("JourneyMap3ViewModel", "compensate: screenH=$screenHeightPx panelTopY=$panelTopY offsetPx=$offsetPx pxPerDegLat=$pixelsPerDegreeLat latOffset=$latOffset compensatedLat=$compensatedLat")
+
+        aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(compensatedLatLng, zoom), aniTime, null)
     }
 
     // ========== 定位图标 ==========
@@ -302,9 +364,17 @@ class JourneyMapViewModel @Inject constructor(
 
     /** 启动定位服务
      *  @param aniMoveTime 定位成功后相机移动动画时长（毫秒），0 表示无动画
+     *  @param screenWidthPx 屏幕宽度（像素），>0 时启用底部面板补偿定位
+     *  @param screenHeightPx 屏幕高度（像素）
+     *  @param panelTopY 面板顶部距屏幕顶部的 Y 偏移（像素），即可见区域底部边界
      */
-    fun startLocation(aniMoveTime: Long = 0) {
+    fun startLocation(aniMoveTime: Long = 0, screenWidthPx: Int = 0, screenHeightPx: Int = 0, panelTopY: Int = 0) {
+        Log.d("JourneyMap3ViewModel", "startLocation called: screenW=$screenWidthPx screenH=$screenHeightPx panelTopY=$panelTopY aniTime=$aniMoveTime")
         _aniMoveTime = aniMoveTime
+        // 优先使用显式传入的参数，否则使用 JourneyPanel 最后一次写入的持久化值
+        _screenWidthPx = if (screenWidthPx > 0) screenWidthPx else _storedScreenWidthPx
+        _screenHeightPx = if (screenHeightPx > 0) screenHeightPx else _storedScreenHeightPx
+        _panelTopY = if (panelTopY > 0) panelTopY else _storedPanelTopY
         _locationClient.value?.startLocation()
     }
 

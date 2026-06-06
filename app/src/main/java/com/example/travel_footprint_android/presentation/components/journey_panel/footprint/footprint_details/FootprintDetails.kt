@@ -57,7 +57,7 @@ fun FootprintDetails(
                     .size(26.dp)
                     .padding(start = 5.dp)
                     .clickable(onClick = {
-                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
+                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_EDIT, journeySelected, footprintSelected)
                     }),
                 painter = painterResource(id = R.drawable.ic_left2),
                 contentDescription = "返回图标",
@@ -69,7 +69,7 @@ fun FootprintDetails(
             )
             Spacer(Modifier.weight(1f))
             IconEdit() {
-                onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, footprintSelected)
+                onPanelNavigate(JourneyPanel2State.FOOTPRINT_EDIT, journeySelected, footprintSelected)
             }
             Spacer(Modifier.width(10.dp))
         }

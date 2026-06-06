@@ -46,10 +46,8 @@ fun JourneyMapSplashScreen(
 
     // 编排整个闪屏动画的时序（仅在首次组合时执行一次，key 为 Unit）
     LaunchedEffect(Unit) {
-        // 阶段1：背景淡入，透明度从 0 动画到 1，持续 400ms
+        // 阶段1：背景淡入，透明度从 0 动画到 1，持续 200ms
         alpha.animateTo(1f, animationSpec = tween(200))
-
-        delay(200)
 
         // 阶段2：通知父组件开始渲染主界面（此时闪屏仍在显示，主界面可在后台预渲染）
         onShowScreen()

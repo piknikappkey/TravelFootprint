@@ -13,7 +13,7 @@ import javax.inject.Inject
 class NavigationViewModel @Inject constructor() : ViewModel() {
 
 //    private val _currentDestination = MutableStateFlow(NavPathObj.list.first())
-    private val _currentDestination = MutableStateFlow(NavPathObj.journey)
+    private val _currentDestination = MutableStateFlow(NavPathObj.lighten)
     val currentDestination: StateFlow<NavPath> = _currentDestination.asStateFlow()
 
     private var lastNavigateTime = 0L

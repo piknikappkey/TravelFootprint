@@ -121,8 +121,8 @@ fun JourneyEdit(
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
     deleteJourney: (Journey) -> Unit,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     ) {
@@ -155,8 +155,8 @@ fun JourneyEdit(
             navigate,
             addJourney,
             updateJourney,
-            journeyPanelHeightState,
-            setJourneyPanelHeightState,
+            journeyPanelExpandedState,
+            setJourneyPanelOffset,
             setIsDragging = setIsDragging,
             onDragDelta = onDragDelta,
         )
@@ -211,8 +211,8 @@ fun JourneyHead(
     navigate: (JourneyPanel2State, Journey?) -> Unit,
     addJourney: (Journey) -> Unit,
     updateJourney: (Journey) -> Unit,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
 ) {
@@ -283,7 +283,7 @@ fun JourneyHead(
         Spacer(Modifier.width(10.dp))
 
         // 面板高度切换按钮（展开/收起箭头，带旋转动画）
-        IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+        IcJourneyHeightButton(journeyPanelExpandedState, { setJourneyPanelOffset(!journeyPanelExpandedState) })
 
         Spacer(Modifier.width(10.dp))
     }
@@ -321,7 +321,6 @@ fun JourneyContent(
         ) {
             // 内层背景图片容器（随机选择背景图之一）
             BGImgBox(
-                R.drawable.bg_rectangular_1__2__0,  // 背景图1
                 R.drawable.bg_rectangular_1__2__1,  // 背景图2
                 R.drawable.bg_rectangular_1__2__2,  // 背景图3
             ) {

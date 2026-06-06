@@ -1,41 +1,50 @@
 package com.example.travel_footprint_android.presentation.components.journey_panel
 
 /**
- * 旅程面板根组件
+ * ====================================================================
+ * JourneyPanel — 旅程底部面板根组件
+ * ====================================================================
  *
- * 用途：
- * - 作为整个旅程功能的底部面板容器，管理旅程列表、详情、编辑及足迹的完整交互流程
- * - 是 presentation 层级中最核心的面板容器，承载了所有旅程相关子页面的切换与路由
+ * 【用途】
+ *  - 作为整个旅程功能的底部弹出面板容器，管理旅程/足迹的完整交互流程
+ *  - 是 presentation 层中最核心的面板容器，承载所有旅程相关子页面的切换与路由
  *
- * 功能：
- * - 面板高度可拖拽：通过顶部拖拽手柄和标题栏的垂直拖拽手势，面板高度在 20%~80% 屏幕高度之间动态调整
- * - 5 个页面状态切换：通过 AnimatedContent 实现 JOURNEY_LIST / JOURNEY_DETAIL / JOURNEY_EDIT / FOOTPRINT_LIST / FOOTPRINT_EDIT 之间的过渡动画
- * - 页面切换动画：渐变 + 垂直滑动动画，通过 aniTime 参数控制动画时长
- * - 面板外观：顶部圆角、阴影、随机背景图、拖拽手柄指示条
- * - 数据联动：通过 JourneyViewModel 管理旅程和足迹数据的增删改查
+ * 【功能】
+ *  1. 面板高度可拖拽：通过 DragHandle 检测垂直拖拽手势，面板高度在 20%~70% 屏幕高度间动态调整
+ *  2. 5 个页面状态切换：JOURNEY_LIST / JOURNEY_DETAIL / JOURNEY_EDIT / FOOTPRINT_LIST / FOOTPRINT_EDIT
+ *  3. 页面切换动画：使用 AnimatedContent 实现渐变(fadeIn/fadeOut) + 垂直滑动(slideInVertically/slideOutVertically)
+ *  4. 面板外观：顶部圆角 + 阴影(elevation=2.dp) + 随机背景纹理(BGImgBox) + 拖拽手柄指示条
+ *  5. 数据联动：通过 JourneyViewModel 管理旅程和足迹数据的增删改查，Jetpack Room 持久化
  *
- * 关联组件：
- * - JourneyPanelState(数据类): 面板状态容器，包含 currentPage(JourneyPanel2State)、selectedJourney、selectedFootprint
- * - JourneyPanel2State(枚举): 面板页面状态，包含 JOURNEY_LIST / JOURNEY_DETAIL / JOURNEY_EDIT / FOOTPRINT_LIST / FOOTPRINT_EDIT
- * - JourneyViewModel(Hilt): 核心 ViewModel，管理旅程/足迹的数据库操作和 UI 状态
- * - BGImgBox: 背景图片容器，为面板内容区域提供随机背景纹理
- * - JourneyList / JourneyDetail / JourneyEdit / FootprintList / FootprintEdit: 各子页面组件
+ * 【关联组件】
+ *  - JourneyPanelState(数据类) : 面板状态容器，包含 currentPage(JourneyPanel2State)、selectedJourney、selectedFootprint
+ *  - JourneyPanel2State(枚举)  : 面板页面状态枚举，5 种取值(列表/详情/编辑旅程 + 列表/编辑足迹)
+ *  - JourneyViewModel(Hilt)    : 核心 ViewModel，管理旅程/足迹的 Room 数据库操作和 UI 状态流(StateFlow)
+ *  - BGImgBox                 : 背景图片容器，为面板内容区提供随机背景纹理(Coil 异步加载，半透明白色遮罩)
+ *  - DragHandle               : 拖拽手柄组件，28×4dp 灰色横条 + detectVerticalDragGestures 手势检测
+ *  - JourneyList/JourneyDetail/JourneyEdit/FootprintList/FootprintEdit : 5 个子页面组件
+ *  - Journey/Footprint(Room Entity) : 数据库实体类，分别对应 journeys/footprints 表
  *
- * 实现逻辑：
- * - 状态读取：通过 panelState.currentPage / selectedJourney / selectedFootprint 获取当前面板状态
- * - 屏幕适配：通过 LocalConfiguration 获取屏幕 density 和像素高度，用于手势计算
- * - 高度管理：currentHeightRatio(0.2~0.8) 记录面板高度比例，拖拽时直接修改，松手后 animateFloatAsState 平滑过渡
- * - 布局技巧：外层 Box 通过 layout 修饰符向上偏移 60.dp，使面板内容从视觉上从底部弹出
- * - 手势区域：一个 32.dp 高的透明 Box + 28×4dp 灰色小横条作为拖拽手柄，detectVerticalDragGestures 检测手势
- * - 内容容器：使用 shadow + 顶部圆角 + BGImgBox 背景 + 动态高度(screenHeightDp * aniJourneyHeight)
- * - 页面路由：AnimatedContent 的 targetState = journeyPanel2State，when 分支匹配 5 种状态渲染对应子组件
- * - 数据传递：各子组件通过 onPanelNavigate / addJourney / updateJourney 等回调与 JourneyPanel 和 ViewModel 通信
+ * 【简单实现逻辑】
+ *  1. 状态读取：通过 panelState.currentPage / selectedJourney / selectedFootprint 获取当前面板状态
+ *  2. 屏幕适配：LocalConfiguration 获取 density 和 screenHeightDp，用于拖拽像素→比例换算
+ *  3. 高度管理：currentHeightRatio(初始 0.4, 范围 0.2~0.7) 记录面板高度比例
+ *     - 拖拽中(isDragging=true)直接跟随手指，实时更新 currentHeightRatio
+ *     - 松手后通过 animateFloatAsState 以 300ms tween 动画平滑过渡到目标值
+ *  4. 布局技巧：外层 Box 通过 layout 修饰符向上偏移 60.dp，遮挡高德地图 SDK 的 logo
+ *  5. 拖拽区域：DragHandle 组件(32.dp 高透明区域 + 28×4dp 灰色指示条)，detectVerticalDragGestures 检测手势
+ *  6. 内容容器：shadow(2.dp) + 顶部 RoundedCornerShape(12.dp) + BGImgBox 背景 + 动态高度(screenHeightDp * aniJourneyHeight)
+ *  7. 页面路由：AnimatedContent 以 journeyPanel2State 为 targetState，when 分支匹配 5 种状态渲染对应子组件
+ *  8. 数据传递：各子组件通过 onPanelNavigate / addJourney / updateJourney / addFootprint 等回调与 JourneyPanel 和 ViewModel 通信
+ *  9. 高度切换：togglePanelHeight 在 0.4 和 0.6 之间切换，供子页面的展开/收缩按钮调用
+ * ====================================================================
  */
+
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,13 +52,15 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,12 +70,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation.components.journey_map.location_button.LocationButton
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit.FootprintEdit
 import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_list.FootprintList
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_detail.JourneyDetail
@@ -79,73 +93,110 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 
-
-// 旅程面板根组件：管理底部弹出面板的拖拽、高度变化和 5 个子页面切换
+// =========================================================================
+// JourneyPanel Composable: 旅程底部面板根组件，管理 Y 轴偏移拖拽 + 5 个子页面路由
+// =========================================================================
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun JourneyPanel(
-    modifier: Modifier = Modifier, // 外部 Modifier，用于整体布局
-    aniTime: Int, // 页面切换动画时长（毫秒），控制 fadeIn/slideIn 等过渡速度
-    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"), // 旅程/足迹数据的 ViewModel，Hilt 注入
-    panelState: JourneyPanelState, // 面板状态容器（当前页面 + 选中旅程 + 选中足迹）
-    onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit, // 面板导航回调，切换页面时携带数据
+    modifier: Modifier,                                        // 外部 Modifier，用于整体布局定位
+    aniTime: Int,                                              // 页面切换动画时长(毫秒)，控制 fadeIn/slideIn 过渡速度
+    journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"), // Hilt 注入的 JourneyViewModel，管理旅程/足迹数据
 ) {
-    // 从 ViewModel 收集 UI 状态，获取旅程列表数据
+    // ===== 1. 从 JourneyViewModel 收集 UI 状态 =====
     val journeyUiState by journeyViewModel.uiState.collectAsState()
     val journeyList = journeyUiState.journeys
 
-    // 从 panelState 中解构当前页面状态和选中的旅程/足迹
-    val journeyPanel2State = panelState.currentPage // 当前面板页面状态
-    val journeySelected = panelState.selectedJourney // 当前选中的旅程（用于详情/编辑/足迹列表）
-    val footprintSelected = panelState.selectedFootprint // 当前选中的足迹（用于足迹编辑）
+    // ===== 面板状态管理（内部状态，无需外部传入） =====
+    var panelState by remember { mutableStateOf(JourneyPanelState()) }
+    val onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit = { page, journey, footprint ->
+        panelState = JourneyPanelState(
+            currentPage = page,
+            selectedJourney = journey,
+            selectedFootprint = footprint,
+        )
+    }
 
-    // 屏幕参数：用于将拖拽像素位移转换为面板高度比例变化
+    // ===== 2. 从 panelState 解构当前页面与选中数据 =====
+    val journeyPanel2State = panelState.currentPage           // 当前面板页面状态枚举
+    val journeySelected = panelState.selectedJourney           // 当前选中的旅程
+    val footprintSelected = panelState.selectedFootprint       // 当前选中的足迹
+
+    // ===== 3. 屏幕参数计算 =====
     val configuration = LocalConfiguration.current
-    val density = remember { configuration.densityDpi.toFloat() / 160f } // 屏幕密度（dp → px 转换）
-    val screenHeightPixels = remember { configuration.screenHeightDp * density } // 屏幕像素高度
+    val density = remember { configuration.densityDpi.toFloat() / 160f }
+    val screenWidthPx = remember { (configuration.screenWidthDp * density).toInt() }
+    val screenHeightPx = remember { (configuration.screenHeightDp * density).toInt() }
 
-    // 面板高度比例状态：0.2 ~ 0.8，0.4 为初始值
-    var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
-    // 拖拽状态标记：为 true 时禁用动画，实现实时跟随手指
+    // ===== 4. 面板 Y 轴偏移量管理 =====
+    // targetOffsetY：面板顶部距离屏幕顶部的像素偏移，初始 60%(屏幕高度 * 0.6)，范围 10%~80%
+    var targetOffsetY by remember { mutableIntStateOf((screenHeightPx * 0.6f).toInt()) }
+    // isDragging：拖拽中标记
     var isDragging by remember { mutableStateOf(false) }
 
-    // 面板高度比例动画值：拖拽中实时更新，松手后以 300ms 动画过渡
-    val aniJourneyHeight = if (isDragging) {
-        currentHeightRatio
+    // ===== 5. 面板偏移量动画值 =====
+    // 拖拽中：直接使用实时偏移量，无动画延迟，手指跟随精准
+    // 松手后：通过 animateIntAsState 以 300ms tween 动画平滑过渡到目标值
+    val aniOffsetY = if (isDragging) {
+        targetOffsetY
     } else {
-        animateFloatAsState(
-            targetValue = currentHeightRatio,
+        animateIntAsState(
+            targetValue = targetOffsetY,
             animationSpec = tween(durationMillis = 300),
-            label = "journeyPanelHeight"
+            label = "journeyPanelOffset"
         ).value
     }
 
-    // 面板高度切换回调：在 0.4 和 0.6 之间切换（点击高度切换按钮时调用）
-    val togglePanelHeight = { _: Boolean ->
+    // ===== 5b. 将面板偏移写入 JourneyMapViewModel（供初始自动定位补偿使用） =====
+    val journeyMapViewModel: JourneyMapViewModel = hiltViewModel(
+        viewModelStoreOwner = LocalContext.current as androidx.activity.ComponentActivity,
+        key = "JourneyMap3"
+    )
+    LaunchedEffect(screenWidthPx, screenHeightPx, aniOffsetY) {
+        journeyMapViewModel.setPanelOffset(screenWidthPx, screenHeightPx, aniOffsetY)
+    }
+
+    // ===== 6. 面板位置切换回调（供子页面按钮调用） =====
+    // 在 40% 和 60% 两个档位之间切换
+    val togglePanelOffset = { _: Boolean ->
         if (!isDragging) {
-            currentHeightRatio = if (currentHeightRatio < 0.5f) 0.6f else 0.4f
+            targetOffsetY = if (targetOffsetY > screenHeightPx * 0.5f) {
+                (screenHeightPx * 0.4f).toInt()
+            } else {
+                (screenHeightPx * 0.6f).toInt()
+            }
         }
     }
 
-    // 拖拽位移转比例回调：将拖拽像素差转为高度比例变化，并限制在 0.2~0.8 之间
+    // ===== 7. 拖拽位移 → Y 轴偏移量转换回调 =====
     val onDragDelta = { deltaY: Float ->
-        val ratioDelta = -deltaY / screenHeightPixels
-        currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+        targetOffsetY = (targetOffsetY + deltaY.toInt())
+            .coerceIn(
+                (screenHeightPx * 0.1f).toInt(),  // 最小偏移：面板底部露出 90%
+                (screenHeightPx * 0.8f).toInt()   // 最大偏移：面板底部露出 20%
+            )
     }
 
-    // 外层容器：通过 layout 修饰符向上偏移 60.dp，遮挡JourneyMap高德地图logo
+    // ===== 8. 内容容器：阴影 + 顶部圆角 + 可视高度 + 锚定底部 =====
+    // 使用 layout 修饰符确保面板内容区域始终锚定在屏幕底部
+    // 且高度 = 屏幕高度 - 偏移量，避免内容超出屏幕不可见
+    val visiblePanelHeight = (screenHeightPx - if (isDragging) targetOffsetY else aniOffsetY).coerceAtLeast(0)
     Box(
         modifier = modifier
             .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                val offsetPx = 60.dp.roundToPx()
-                val layoutHeight = (placeable.height - offsetPx).coerceAtLeast(0)
-                layout(placeable.width, layoutHeight) {
-                    placeable.placeRelative(0, -offsetPx)
+                val h = visiblePanelHeight
+                val placeable = measurable.measure(
+                    constraints.copy(
+                        minHeight = h,
+                        maxHeight = h
+                    )
+                )
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    placeable.placeRelative(0, constraints.maxHeight - h)
                 }
             }
     ) {
-        // 拖拽手柄区域：32.dp 高的透明区域，覆盖整个面板顶部宽度，检测垂直拖拽手势
+        // ===== 9a. 拖拽手柄：位于面板顶部 =====
         DragHandle(
             onDragStart = { isDragging = true },
             onDragEnd = { isDragging = false },
@@ -153,8 +204,17 @@ fun JourneyPanel(
             modifier = Modifier.align(Alignment.TopCenter)
         )
 
-        // 内容容器：顶部圆角阴影 + 随机背景图 + 动态面板高度
-        // 动态高度容器：根据拖拽比例计算面板实际高度
+        // ===== 9b. 定位按钮：固定在面板右上角上方 100dp 位置 =====
+        LocationButton(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-10).dp, y = (-60).dp),
+            screenWidthPx = screenWidthPx,
+            screenHeightPx = screenHeightPx,
+            panelTopY = aniOffsetY,
+        )
+
+        // ===== 9c. 内容容器：阴影 + 顶部圆角 + 全屏高度 + 背景纹理 =====
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -163,11 +223,11 @@ fun JourneyPanel(
                     shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
                     clip = true
                 )
-                .height(configuration.screenHeightDp.dp * aniJourneyHeight)
+                .fillMaxSize()
         ) {
-            // 随机背景图容器，提供装饰性纹理
+            // ===== 9c. 随机背景纹理容器 =====
             BGImgBox(R.drawable.bg_rectangular_1__2__0) {
-                // 页面切换动画容器：渐变 + 垂直滑动，targetState 变化时触发过渡
+                // ===== 9d. AnimatedContent：页面切换动画控制器 =====
                 AnimatedContent(
                     modifier = Modifier
                         .clip(shape = RoundedCornerShape(0.dp))
@@ -189,34 +249,31 @@ fun JourneyPanel(
                     },
                     label = "vertical_slide_fade_animation"
                 ) { state ->
-                    // 根据面板状态渲染对应子页面
+                    // ===== 10. 根据面板状态渲染对应子页面 =====
                     when (state) {
-                        // ====== 旅程列表页 ======
                         JOURNEY_LIST -> {
                             JourneyList(
                                 journeyList = journeyList,
-                                journeyPanelHeightState = currentHeightRatio > 0.5f,
-                                setJourneyPanelHeightState = togglePanelHeight,
+                                journeyPanelExpandedState = targetOffsetY <= screenHeightPx * 0.5f,
+                                setJourneyPanelOffset = togglePanelOffset,
                                 setIsDragging = { b -> isDragging = b },
                                 onDragDelta = onDragDelta,
                                 onPanelNavigate = onPanelNavigate,
                             )
                         }
 
-                        // ====== 旅程详情页 ======
                         JOURNEY_DETAIL -> {
                             JourneyDetail(
-                                journey = journeySelected,
+                                journeySelected = journeySelected,
                                 updateJourney = { j -> journeyViewModel.updateJourney(j) },
-                                journeyPanelHeightState = currentHeightRatio > 0.5f,
-                                setJourneyPanelHeightState = togglePanelHeight,
+                                journeyPanelExpandedState = targetOffsetY <= screenHeightPx * 0.5f,
+                                setJourneyPanelOffset = togglePanelOffset,
                                 setIsDragging = { b -> isDragging = b },
                                 onDragDelta = onDragDelta,
                                 onPanelNavigate = onPanelNavigate,
                             )
                         }
 
-                        // ====== 旅程新增/编辑页 ======
                         JOURNEY_EDIT -> {
                             JourneyEdit(
                                 journeySelected = journeySelected,
@@ -226,20 +283,19 @@ fun JourneyPanel(
                                 addJourney = { j -> journeyViewModel.createJourney(j) },
                                 updateJourney = { j -> journeyViewModel.updateJourney(j) },
                                 deleteJourney = { j -> journeyViewModel.deleteJourney(j) },
-                                journeyPanelHeightState = currentHeightRatio > 0.5f,
-                                setJourneyPanelHeightState = togglePanelHeight,
+                                journeyPanelExpandedState = targetOffsetY <= screenHeightPx * 0.5f,
+                                setJourneyPanelOffset = togglePanelOffset,
                                 setIsDragging = { b -> isDragging = b },
                                 onDragDelta = onDragDelta,
                             )
                         }
 
-                        // ====== 足迹列表页 ======
                         FOOTPRINT_LIST -> {
                             journeySelected?.let {
                                 FootprintList(
                                     it,
-                                    currentHeightRatio > 0.5f,
-                                    togglePanelHeight,
+                                    targetOffsetY <= screenHeightPx * 0.5f,
+                                    togglePanelOffset,
                                     setIsDragging = { b -> isDragging = b },
                                     onDragDelta = onDragDelta,
                                     onPanelNavigate = onPanelNavigate,
@@ -247,7 +303,6 @@ fun JourneyPanel(
                             }
                         }
 
-                        // ====== 足迹新增/编辑页 ======
                         FOOTPRINT_EDIT -> {
                             journeySelected?.let {
                                 FootprintEdit(
@@ -265,8 +320,8 @@ fun JourneyPanel(
                                     deleteFootprint = { f ->
                                         journeyViewModel.deleteFootprint(f.copy())
                                     },
-                                    currentHeightRatio > 0.5f,
-                                    togglePanelHeight,
+                                    targetOffsetY <= screenHeightPx * 0.5f,
+                                    togglePanelOffset,
                                     setIsDragging = { b -> isDragging = b },
                                     onDragDelta = onDragDelta,
                                     onPanelNavigate = onPanelNavigate,

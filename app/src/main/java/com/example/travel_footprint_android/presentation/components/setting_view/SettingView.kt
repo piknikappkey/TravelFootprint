@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation.components.setting
+package com.example.travel_footprint_android.presentation.components.setting_view
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

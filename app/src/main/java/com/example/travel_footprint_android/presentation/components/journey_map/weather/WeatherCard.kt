@@ -9,11 +9,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -32,9 +31,7 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.components.bg_box.DraggableBox
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
-import com.example.travel_footprint_android.ui.theme.BGPaperTexture
 import com.example.travel_footprint_android.ui.theme.FontDark5
-import kotlinx.coroutines.delay
 
 @Composable
 fun WeatherCard(
@@ -46,11 +43,6 @@ fun WeatherCard(
     val weatherState by weatherViewModel.weatherState.collectAsState()
 
     if(!weatherState.showWeatherCard) return
-
-    LaunchedEffect(Unit) {
-        delay(200)
-        weatherViewModel.loadWeatherForCurrentLocation()
-    }
 
     val live = weatherState.liveWeather
 
@@ -67,7 +59,7 @@ fun WeatherCard(
     )
 
     DraggableBox(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         initialOffsetX = 10f,
         initialOffsetY = 10f,
         onDragStart = { isPress = true },
@@ -81,7 +73,7 @@ fun WeatherCard(
                     scaleY = aniScale
                     alpha = aniAlpha
                 }
-                .background(BGPaperTexture)
+                .background(Color(0xFFF8F8F8))
                 .padding(horizontal = 14.dp, vertical = 10.dp)
                 .animateContentSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -92,7 +84,7 @@ fun WeatherCard(
                     painter = painterResource(getWeatherImg(live.weather)),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.width(32.dp)
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

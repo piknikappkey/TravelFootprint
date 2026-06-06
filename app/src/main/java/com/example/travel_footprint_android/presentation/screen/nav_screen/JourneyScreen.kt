@@ -38,87 +38,63 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.data.entity.Footprint
-import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMap
 import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMapSplashScreen
+import com.example.travel_footprint_android.presentation.components.journey_map.permission_request_content.PermissionRequestContent
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
+import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherCard
 import com.example.travel_footprint_android.presentation.components.journey_panel.JourneyPanel
-import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
-import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
-import com.example.travel_footprint_android.presentation.components.text.headline.Headline
-import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
-import com.example.travel_footprint_android.ui.theme.BGLight0
-import com.example.travel_footprint_android.ui.theme.SecondColor3
 
-// 旅程主界面 Composable 函数，通过 Hilt 注入 JourneyViewModel
+// 旅程主界面 Composable 函数：作为应用核心页面，整合地图、面板、特效层
+// 通过 Hilt 注入 JourneyViewModel（页面级作用域）和 JourneyMapViewModel（Activity 级作用域）
 @Composable
 fun JourneyScreen(
+    // journeyViewModel：管理旅程/足迹的增删改查，key="journey" 确保同一 ViewModel 实例
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
+    // journeyMapViewModel：管理地图实例和定位服务，Activity 级作用域避免页面切换时重建
     journeyMapViewModel: JourneyMapViewModel = hiltViewModel(
         viewModelStoreOwner = LocalContext.current as ComponentActivity,
         key = "JourneyMap3"
     ),
 ) {
-    // 从 ViewModel 收集 UI 状态，获取旅程列表和足迹计数
+    // journeyUiState：收集旅程 UI 状态流，包含旅程列表、足迹计数、位置列表等数据
     val journeyUiState by journeyViewModel.uiState.collectAsState()
 
-    // 定义动画时长和界面状态变量
+    // aniTime：页面切换动画时长（400ms），用于后续面板动画
     val aniTime = remember { 400 }
+    // sizeChange：标记面板尺寸是否已获取，避免重复打印日志
     var sizeChange by remember { mutableStateOf(false) }
 
-    var panelState by remember { mutableStateOf(JourneyPanelState()) }
-    val onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit = { page, journey, footprint ->
-        panelState = JourneyPanelState(
-            currentPage = page,
-            selectedJourney = journey,
-            selectedFootprint = footprint,
-        )
-    }
-
-    // 获取上下文和位置权限数组
+    // context：当前 Android 上下文，用于权限检查和创建权限请求启动器
     val context = LocalContext.current
+    // locationPermissions：需要申请的位置权限数组（精确定位 + 粗略定位）
     val locationPermissions = remember {
         arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     }
-    // 检查初始权限状态
+    // hasLocationPermission：当前是否已授予所有位置权限，初始检查权限状态
     var hasLocationPermission by remember {
         mutableStateOf(locationPermissions.all { locationPermission ->
             ContextCompat
@@ -127,120 +103,76 @@ fun JourneyScreen(
         })
     }
 
-    // 创建权限请求启动器，处理权限请求结果
+    // permissionLauncher：Activity Result API 权限请求启动器，处理多权限请求回调
+    // granted：权限请求结果 Map，key 为权限名，value 为是否授予
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { granted ->
+        // 所有权限都授予时才设为 true
         hasLocationPermission = granted.values.all { it }
     }
 
-    // 从 JourneyMap3ViewModel 获取闪屏/地图显示状态（ViewModel 级别持久化，避免 AnimatedContent 切换时丢失）
+    // showSplash：是否显示地图闪屏动画，ViewModel 级别状态避免页面切换时丢失
     val showSplash by journeyMapViewModel.showSplash.collectAsState()
+    // showMapScreen：是否显示地图主界面，闪屏结束后由 ViewModel 控制
     val showMapScreen by journeyMapViewModel.showMapScreen.collectAsState()
 
-    // 主布局容器：使用 Box 实现多层叠加效果
+    // ===== 主布局：Box 容器实现多层叠加效果 =====
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // 垂直布局：上方是地图区域，下方是旅程面板
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(0.dp))
-        ) {
-            // 地图区域：占据剩余空间，根据权限状态显示地图或权限请求界面
-            Box(
-                modifier = Modifier.weight(1f),
-            ) {
-                if(showMapScreen) {
-                    if (hasLocationPermission) {
-                        // 有权限时显示地图组件，传入位置列表用于绘制路线
-                        JourneyMap(
-                            locationList = journeyUiState.LocationList
-                        )
-                    } else {
-                        // 无权限时显示权限请求界面，用户点击按钮触发权限申请
-                        PermissionRequestContent(
-                            onRequestPermission = {
-                                permissionLauncher.launch(locationPermissions)
-                            }
-                        )
-                    }
-                }
-                if(showSplash) {
-                    JourneyMapSplashScreen(
-                        onFinished = { journeyMapViewModel.setShowSplash(false) },
-                        onShowScreen = { journeyMapViewModel.setShowMapScreen(true) }
+        // ===== Box 容器：地图全屏 + 面板覆盖 =====
+        // JourneyMap 始终填满屏幕，不受面板位置影响
+        if(showMapScreen) {
+            if (hasLocationPermission) {
+                JourneyMap(
+                    locationList = journeyUiState.LocationList
+                )
+            } else {
+                // 权限请求页面：限制在 JourneyPanel 上方的可用区域（屏幕上方 60%）
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.6f)
+                ) {
+                    PermissionRequestContent(
+                        onRequestPermission = {
+                            permissionLauncher.launch(locationPermissions)
+                        }
                     )
                 }
             }
-
-            JourneyPanel(
-                modifier = Modifier
-                    .onSizeChanged { newSize ->
-                        if (!sizeChange) {
-                            sizeChange = true
-                            Log.d("JourneyScreen2", "新的组件尺寸: 宽度 = ${newSize.width}, 高度 = ${newSize.height}")
-                        }
-                    },
-                aniTime = aniTime,
-                journeyViewModel = journeyViewModel,
-                panelState = panelState,
-                onPanelNavigate = onPanelNavigate,
-            )
         }
+        // 闪屏动画：限制在 JourneyPanel 上方的可用区域（屏幕上方 60%）
+        if(showSplash) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.6f)
+            ) {
+                JourneyMapSplashScreen(
+                    onFinished = { journeyMapViewModel.setShowSplash(false) },
+                    onShowScreen = { journeyMapViewModel.setShowMapScreen(true) }
+                )
+            }
+        }
+
+        // ===== 旅程面板：覆盖在地图上方，通过 offset 控制 Y 轴位置 =====
+        JourneyPanel(
+            modifier = Modifier
+                .onSizeChanged { newSize ->
+                    if (!sizeChange) {
+                        sizeChange = true
+                        Log.d("JourneyScreen2", "新的组件尺寸: 宽度 = ${newSize.width}, 高度 = ${newSize.height}")
+                    }
+                },
+            aniTime = aniTime,
+            journeyViewModel = journeyViewModel,
+        )
+        // ===== 天气卡片：位于面板上方（z-order），避免被面板遮挡 =====
+        WeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
+        // ===== 图片雨特效层：覆盖在整个页面上方，作为装饰性背景特效 =====
         ImageRain()
     }
 }
 
-// 权限请求界面组件：当用户未授予位置权限时显示
-@Composable
-fun PermissionRequestContent(onRequestPermission: () -> Unit) {
-    // 全屏背景容器，居中对齐内容
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BGLight0),
-        contentAlignment = Alignment.Center
-    ) {
-        // 垂直排列的权限请求内容，向上偏移 50dp
-        Column(
-            modifier = Modifier.offset(y = (-50).dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // 显示地图图标，使用主题色进行着色
-            Image(
-                modifier = Modifier.fillMaxSize(0.3f),
-                painter = painterResource(id = R.drawable.ic_map),
-                contentDescription = "地图图标",
-                colorFilter = ColorFilter.tint(SecondColor3),
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            // 显示标题文本
-            Headline(
-                text = "需要位置权限",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            // 显示说明文本，告知用户为何需要位置权限
-            TextMedium(
-                text = "为了在地图上显示你的位置，\n需要获取设备的位置信息权限",
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            // 授权按钮：点击触发权限请求回调
-            ButtonMain(
-                onClick = onRequestPermission,
-                bgColor = SecondColor3,
-                paddingValues = PaddingValues(vertical = 5.dp, horizontal = 10.dp)
-            ) {
-                Headline(
-                    text = "授予位置权限",
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
