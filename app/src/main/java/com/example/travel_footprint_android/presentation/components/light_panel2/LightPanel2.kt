@@ -53,7 +53,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -68,6 +67,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.back_buttom.city_province_backButtom
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInContent
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInRecord
@@ -76,8 +76,7 @@ import com.example.travel_footprint_android.presentation.components.light_panel2
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.LightCityEditScreen
 import com.example.travel_footprint_android.presentation.components.light_panel2.panel_title.PanelTitle
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
-import kotlinx.serialization.json.JsonNull.content
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -203,40 +202,41 @@ fun LightPanel2(
         DragPanelContainer(
             screenHeightDp = configuration.screenHeightDp,
             onExpandedChanged = onExpandedChanged,
-        ) { isExpanded, requestExpand ->
-            PanelTitle(
-                modifier = Modifier.fillMaxWidth(),
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-            )
-
-            LightPanelBody(
-                selectedTab = selectedTab,
-                lightPanel2State = lightPanel2State,
-                isDeleteMode = isDeleteMode,
-                isExpanded = isExpanded,
-                lightCityList = lightCityList,
-                lightedProvinces = lightedProvinces,
-                lightedProvinceCount = lightedProvinceCount,
-                lightenCityMode = lightenCityMode,
-                checkInRecords = checkInRecords,
-                selectedProvinceAdcode = selectedProvinceAdcode,
-                allFootprints = allFootprints,
-                selectionState = selectionState,
-                onSelectionChanged = onSelectionChanged,
-                onAddCheckIn = onAddCheckIn,
-                onAddCheckInRich = onAddCheckInRich,
-                onProvinceFilterCleared = onProvinceFilterCleared,
-                onGoCheckIn = { provinceCode ->
-                    selectedProvinceAdcode = provinceCode
-                    selectedTab = LightPanel2Tab.CHECK_IN
-                    requestExpand()
-                },
-                onStateChange = onStateChange,
-                onDeleteModeChange = onDeleteModeChange,
-                onSelectionReset = onSelectionReset
-            )
-        }
+            titleContent = {
+                PanelTitle(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                )
+            },
+            bodyContent = { isExpanded, requestExpand ->
+                LightPanelBody(
+                    selectedTab = selectedTab,
+                    lightPanel2State = lightPanel2State,
+                    isDeleteMode = isDeleteMode,
+                    isExpanded = isExpanded,
+                    lightCityList = lightCityList,
+                    lightedProvinces = lightedProvinces,
+                    lightedProvinceCount = lightedProvinceCount,
+                    lightenCityMode = lightenCityMode,
+                    checkInRecords = checkInRecords,
+                    selectedProvinceAdcode = selectedProvinceAdcode,
+                    allFootprints = allFootprints,
+                    selectionState = selectionState,
+                    onSelectionChanged = onSelectionChanged,
+                    onAddCheckIn = onAddCheckIn,
+                    onAddCheckInRich = onAddCheckInRich,
+                    onProvinceFilterCleared = onProvinceFilterCleared,
+                    onGoCheckIn = { provinceCode ->
+                        selectedProvinceAdcode = provinceCode
+                        selectedTab = LightPanel2Tab.CHECK_IN
+                        requestExpand()
+                    },
+                    onStateChange = onStateChange,
+                    onDeleteModeChange = onDeleteModeChange,
+                    onSelectionReset = onSelectionReset
+                )
+            })
     }
 }
 
@@ -248,7 +248,8 @@ fun LightPanel2(
 private fun DragPanelContainer(
     screenHeightDp: Int,
     onExpandedChanged: ((Boolean) -> Unit)?,
-    content: @Composable ColumnScope.(isExpanded: Boolean, requestExpand: () -> Unit) -> Unit
+    titleContent: @Composable () -> Unit,
+    bodyContent: @Composable ColumnScope.(isExpanded: Boolean, requestExpand: () -> Unit) -> Unit
 ) {
     var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
     var isDragging by remember { mutableStateOf(false) }
@@ -332,34 +333,35 @@ private fun DragPanelContainer(
                 .fillMaxSize()
                 .nestedScroll(nestedScrollConnection)
         ) {
-            // 顶部拖拽手柄（用于直接拖拽缩放面板，不影响 LazyColumn 滚动）
-            DragHandle(
+            // 整个顶部区域（手柄指示条 + tab栏）支持拖拽
+            DragHeader(
                 screenHeightPixels = screenHeightPixels,
                 onDragStart = { isDragging = true },
                 onDrag = { ratioDelta ->
                     currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
                 },
-                onDragEnd = { isDragging = false }
+                onDragEnd = { isDragging = false },
+                titleContent = titleContent
             )
 
-            // 面板内容（ColumnScope 上下文，content 可调用 LightPanelBody 等）
-            content(isExpanded, requestExpand)
+            // 面板主体（ColumnScope 上下文）
+            bodyContent(isExpanded, requestExpand)
         }
     }
 }
 
-// ========== 顶部拖拽手柄 ==========
+// ========== 拖拽头部（手柄指示条 + tab栏） ==========
 @Composable
-private fun DragHandle(
+private fun DragHeader(
     screenHeightPixels: Float,
     onDragStart: () -> Unit,
     onDrag: (Float) -> Unit,
-    onDragEnd: () -> Unit
+    onDragEnd: () -> Unit,
+    titleContent: @Composable () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(20.dp)
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragStart = { onDragStart() },
@@ -369,17 +371,26 @@ private fun DragHandle(
                     },
                     onDragEnd = { onDragEnd() }
                 )
-            },
-        contentAlignment = Alignment.Center
+            }
     ) {
         // 视觉手柄条
         Box(
             modifier = Modifier
-                .width(36.dp)
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(Color(0xFFD1D5DB))
-        )
+                .fillMaxWidth()
+                .height(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(36.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFD1D5DB))
+            )
+        }
+
+        // tab栏
+        titleContent()
     }
 }
 
@@ -745,54 +756,37 @@ private fun ColumnScope.LightPanelBody(
             .weight(1f)
             .fillMaxWidth()
     ) {
-        // 记录所有已显示过的Tab，保持其内容在composition中
-        var displayedTabs by remember { mutableStateOf(setOf<LightPanel2Tab>()) }
-        
-        // 当选择新Tab时，将其添加到已显示集合中
-        if (selectedTab != null && !displayedTabs.contains(selectedTab!!)) {
-            displayedTabs = displayedTabs + selectedTab!!
-        }
+        when (selectedTab) {
+            null -> { /* 没有选中任何 Tab 时显示空白 */ }
 
-        // 渲染所有已显示过的Tab内容，但只显示当前选中的Tab
-        for (tab in displayedTabs) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    // 只显示当前选中的Tab，其他Tab隐藏但保持在composition中
-                    .graphicsLayer { alpha = if (tab == selectedTab) 1f else 0f }
-                    // 使用graphicsLayer而不是visibility，保持组件在composition中
-            ) {
-                when (tab) {
-                    LightPanel2Tab.LIGHT_UP -> {
-                        LightUpContentOnly(
-                            lightPanel2State = lightPanel2State,
-                            lightCityList = lightCityList,
-                            lightedProvinces = lightedProvinces,
-                            lightenCityMode = lightenCityMode,
-                            isDeleteMode = isDeleteMode,
-                            onSelectionChanged = onSelectionChanged
-                        )
-                    }
+            LightPanel2Tab.LIGHT_UP -> {
+                LightUpContentOnly(
+                    lightPanel2State = lightPanel2State,
+                    lightCityList = lightCityList,
+                    lightedProvinces = lightedProvinces,
+                    lightenCityMode = lightenCityMode,
+                    isDeleteMode = isDeleteMode,
+                    onSelectionChanged = onSelectionChanged
+                )
+            }
 
-                    LightPanel2Tab.CORNER -> {
-                        CornerContent(
-                            lightedProvinceCount = lightedProvinceCount,
-                            lightCityList = lightCityList,
-                            onGoCheckIn = onGoCheckIn
-                        )
-                    }
+            LightPanel2Tab.CORNER -> {
+                CornerContent(
+                    lightedProvinceCount = lightedProvinceCount,
+                    lightCityList = lightCityList,
+                    onGoCheckIn = onGoCheckIn
+                )
+            }
 
-                    LightPanel2Tab.CHECK_IN -> {
-                        CheckInContent(
-                            lightCityList = lightCityList,
-                            checkInRecords = checkInRecords,
-                            currentProvinceAdcode = selectedProvinceAdcode,
-                            onAddCheckIn = onAddCheckIn,
-                            onAddCheckInRich = onAddCheckInRich,
-                            onProvinceFilterCleared = onProvinceFilterCleared
-                        )
-                    }
-                }
+            LightPanel2Tab.CHECK_IN -> {
+                CheckInContent(
+                    lightCityList = lightCityList,
+                    checkInRecords = checkInRecords,
+                    currentProvinceAdcode = selectedProvinceAdcode,
+                    onAddCheckIn = onAddCheckIn,
+                    onAddCheckInRich = onAddCheckInRich,
+                    onProvinceFilterCleared = onProvinceFilterCleared
+                )
             }
         }
     }
