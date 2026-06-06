@@ -657,7 +657,7 @@ private fun MonthlyChart(
             drawContext.canvas.nativeCanvas.drawText(
                 data.monthLabel,
                 x,
-                height - 10.dp.toPx(),
+                height - 2.dp.toPx(),
                 labelPaint
             )
         }
@@ -665,14 +665,14 @@ private fun MonthlyChart(
 }
 
 private val milestones = listOf(
-    Milestone(1, "初出茅庐", "点亮第1个省份", 1),
-    Milestone(2, "初露锋芒", "点亮5个省份", 5),
-    Milestone(3, "走南闯北", "点亮10个省份", 10),
-    Milestone(4, "行万里路", "点亮15个省份", 15),
-    Milestone(5, "踏遍四方", "点亮20个省份", 20),
-    Milestone(6, "纵横四海", "点亮25个省份", 25),
-    Milestone(7, "大江南北", "点亮30个省份", 30),
-    Milestone(8, "足迹天下", "点亮全部34个省份", 34)
+    Milestone(1, "初出茅庐", "点亮第1个地区", 1),
+    Milestone(2, "初露锋芒", "点亮5个地区", 5),
+    Milestone(3, "走南闯北", "点亮10个地区", 10),
+    Milestone(4, "行万里路", "点亮15个地区", 15),
+    Milestone(5, "踏遍四方", "点亮20个地区", 20),
+    Milestone(6, "纵横四海", "点亮25个地区", 25),
+    Milestone(7, "大江南北", "点亮30个地区", 30),
+    Milestone(8, "足迹天下", "点亮全部36个地区", 34)
 )
 
 data class Milestone(

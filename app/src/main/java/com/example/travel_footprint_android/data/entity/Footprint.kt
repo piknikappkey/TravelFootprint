@@ -15,7 +15,8 @@ import java.util.Date
             childColumns = ["journeyId"],
             onDelete = ForeignKey.CASCADE  // 删除旅程时同时删除足迹
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["journeyId"])]
 )
 data class Footprint(
     @PrimaryKey(autoGenerate = true)

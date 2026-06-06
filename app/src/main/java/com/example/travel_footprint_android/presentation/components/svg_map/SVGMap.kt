@@ -90,6 +90,14 @@ fun SVGMap(
         }
     }
 
+    // CityBox 展示 5 秒后自动消失
+    LaunchedEffect(cityState) {
+        if (cityState) {
+            kotlinx.coroutines.delay(5000)
+            cityState = false
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         if (showProvinceMap) {
             InteractiveChinaProviceMap(

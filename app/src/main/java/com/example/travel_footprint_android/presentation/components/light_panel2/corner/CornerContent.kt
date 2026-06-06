@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.presentation.components.light_panel
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -52,6 +53,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -216,13 +220,13 @@ fun CornerContent(
 
         item { Spacer(Modifier.height(20.dp)) }
 
-        item {
-            Module4BottomActions(
-                showMapView = showMapView,
-                onToggleView = { showMapView = !showMapView },
-                onExport = onExportFootprint
-            )
-        }
+//        item {
+//            Module4BottomActions(
+//                showMapView = showMapView,
+//                onToggleView = { showMapView = !showMapView },
+//                onExport = onExportFootprint
+//            )
+//        }
 
         item { Spacer(Modifier.height(16.dp)) }
     }
@@ -304,8 +308,8 @@ private fun DashboardCard(
             .background(
                 Brush.linearGradient(
                  colors =  listOf(
-                     Color(0xFF3B82F6),
-                     Color(0xFF3B82F6)
+                     Color(0xFF3382E3),
+                     Color(0xFFCBCCF8)
                  )
                 )
             )
@@ -381,8 +385,8 @@ private fun GradientProgressBar(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            Color(0xFF60A5FA), // 柔和蓝
-                            Color(0xFF93C5FD)  // 浅蓝
+                            Color(0xFF3382E3),
+                            Color(0xFFCBCCF8)
                         )
                     )
                 )
@@ -542,7 +546,12 @@ private fun ProvinceCard(
             Brush.linearGradient(colors = listOf(Color(0xFFD1D5DB), Color(0xFFD1D5DB)))
         }
     }
-    val provinceNamePrefix = remember(data.provinceName) { data.provinceName.take(1) }
+    val context = LocalContext.current
+    val provinceImageRes = remember(data.provinceName) {
+        context.resources.getIdentifier(
+            provinceImageName(data.provinceName), "drawable", context.packageName
+        )
+    }
     val citySummary = remember(data.isLighted, data.cityCount, data.cityNames) {
         if (data.isLighted && data.cityNames.isNotEmpty()) {
             "已点亮${data.cityCount}个城市"
@@ -585,12 +594,23 @@ private fun ProvinceCard(
                     .background(iconBrush),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = provinceNamePrefix,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (data.isLighted) Color.White else Color(0xFF9CA3AF)
-                )
+                if (provinceImageRes != 0) {
+                    Image(
+                        painter = painterResource(id = provinceImageRes),
+                        contentDescription = data.provinceName,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        text = data.provinceName.take(1),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (data.isLighted) Color.White else Color(0xFF9CA3AF)
+                    )
+                }
             }
 
             Spacer(Modifier.width(12.dp))
@@ -608,13 +628,13 @@ private fun ProvinceCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFFFEE2E2))
+                                .background(Color(0xFF80D7F8))
                                 .padding(horizontal = 6.dp, vertical = 1.dp)
                         ) {
                             Text(
                                 text = "待解锁",
                                 fontSize = 10.sp,
-                                color = Color(0xFFEF4444),
+                                color = Color(0xFFFFFDFD),
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -1048,73 +1068,6 @@ private fun Module4BottomActions(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(Color(0xFF3B82F6), Color(0xFF60A5FA))
-                    )
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { onExport?.invoke() }
-                )
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "导出",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "导出足迹",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFF3F4F6))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onToggleView
-                )
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = if (showMapView) Icons.Default.GridView else Icons.Default.Map,
-                    contentDescription = "切换视图",
-                    tint = Color(0xFF374151),
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = if (showMapView) "列表视图" else "地图缩略",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF374151)
-                )
-            }
-        }
     }
 }
 
@@ -1180,3 +1133,42 @@ private fun getAllChineseProvinces(): List<ChineseProvince> = listOf(
     ChineseProvince("香港特别行政区", "810000"),
     ChineseProvince("澳门特别行政区", "820000")
 )
+
+/** 省份中文名 → 英文资源名映射 */
+private fun provinceImageName(provinceName: String): String = when (provinceName) {
+    "河北省" -> "hebei"
+    "山西省" -> "shanxi"
+    "辽宁省" -> "liaoning"
+    "吉林省" -> "jilin"
+    "黑龙江省" -> "heilongjiang"
+    "江苏省" -> "jiangsu"
+    "浙江省" -> "zhejiang"
+    "安徽省" -> "anhui"
+    "福建省" -> "fujian"
+    "江西省" -> "jiangxi"
+    "山东省" -> "shandong"
+    "河南省" -> "henan"
+    "湖北省" -> "hubei"
+    "湖南省" -> "hunan"
+    "广东省" -> "guangdong"
+    "海南省" -> "hainan"
+    "四川省" -> "sichuan"
+    "贵州省" -> "guizhou"
+    "云南省" -> "yunnan"
+    "陕西省" -> "shaanxi"
+    "甘肃省" -> "gansu"
+    "青海省" -> "qinghai"
+    "台湾省" -> "taiwan"
+    "内蒙古自治区" -> "neimenggu"
+    "广西壮族自治区" -> "guangxi"
+    "西藏自治区" -> "xizang"
+    "宁夏回族自治区" -> "ningxia"
+    "新疆维吾尔自治区" -> "xinjiang"
+    "北京市" -> "beijing"
+    "上海市" -> "shanghai"
+    "天津市" -> "tianjin"
+    "重庆市" -> "chongqing"
+    "香港特别行政区" -> "hongkong"
+    "澳门特别行政区" -> "macau"
+    else -> provinceName // fallback
+}
