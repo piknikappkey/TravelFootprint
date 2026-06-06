@@ -68,8 +68,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.ui.theme.FFRuanMengChuLianTi
 import com.example.travel_footprint_android.ui.theme.MainColor2
 import com.example.travel_footprint_android.ui.theme.SecondColor2
@@ -124,9 +123,7 @@ fun InputText3(
             )
     ) {
         // 背景图片容器，为输入框提供纹理背景
-        BGImgBox(
-            R.drawable.bg_simple_hor_small_small,
-        ) {
+        BGBox {
             Box(
                 modifier = Modifier
                     .padding(contentPadding)

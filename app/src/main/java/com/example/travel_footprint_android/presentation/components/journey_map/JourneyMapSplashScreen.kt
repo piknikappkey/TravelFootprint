@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,10 +47,8 @@ fun JourneyMapSplashScreen(
 
     // 编排整个闪屏动画的时序（仅在首次组合时执行一次，key 为 Unit）
     LaunchedEffect(Unit) {
-        // 阶段1：背景淡入，透明度从 0 动画到 1，持续 400ms
+        // 阶段1：背景淡入，透明度从 0 动画到 1，持续 200ms
         alpha.animateTo(1f, animationSpec = tween(200))
-
-        delay(200)
 
         // 阶段2：通知父组件开始渲染主界面（此时闪屏仍在显示，主界面可在后台预渲染）
         onShowScreen()
@@ -84,7 +83,8 @@ fun JourneyMapSplashScreen(
             modifier = Modifier
                 .size(140.dp)            // 固定尺寸 140dp × 140dp
                 .scale(aniIconScale)     // 应用缩放动画（1.0x → 1.5x）
-                .alpha(alpha.value),     // 透明度与背景同步
+                .alpha(alpha.value)
+                .offset(y = (-150).dp),     // 透明度与背景同步
             colorFilter = ColorFilter.tint(SecondColor3), // 主题色染色
         )
     }

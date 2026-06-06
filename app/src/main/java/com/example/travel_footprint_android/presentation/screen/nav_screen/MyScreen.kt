@@ -27,7 +27,7 @@ import com.example.travel_footprint_android.presentation.components.image_random
 import com.example.travel_footprint_android.presentation.components.image_random.setting_dialog.RainSettingDialog
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
 import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherViewModel
-import com.example.travel_footprint_android.presentation.components.setting.SettingView
+import com.example.travel_footprint_android.presentation.components.setting_view.SettingView
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 
 @Composable

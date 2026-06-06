@@ -29,8 +29,8 @@ import com.example.travel_footprint_android.presentation.components.text.text_me
 @Composable
 fun JourneyList(
     journeyList: List<Journey>,
-    journeyPanelHeightState: Boolean,
-    setJourneyPanelHeightState: (Boolean) -> Unit,
+    journeyPanelExpandedState: Boolean,
+    setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
@@ -54,7 +54,7 @@ fun JourneyList(
             )
 
             Spacer(Modifier.width(10.dp))
-            IcJourneyHeightButton(journeyPanelHeightState, { setJourneyPanelHeightState(!journeyPanelHeightState) })
+            IcJourneyHeightButton(journeyPanelExpandedState, { setJourneyPanelOffset(!journeyPanelExpandedState) })
             Spacer(Modifier.width(10.dp))
         }
 

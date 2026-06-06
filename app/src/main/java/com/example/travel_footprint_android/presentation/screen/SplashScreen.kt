@@ -137,7 +137,7 @@ fun SplashScreen(
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
-            painter = painterResource(id = R.drawable.bg_rectangular_1__2__0),
+            painter = painterResource(id = R.drawable.bg_rectangular_1__2__2),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             alpha = alpha.value,
