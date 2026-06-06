@@ -47,7 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare2
+import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare
 
 // 旅程回忆图片网格：FlowRow 流式布局展示图片列表，支持添加和删除
 @OptIn(ExperimentalLayoutApi::class)
@@ -85,7 +85,7 @@ fun Reminiscence(
                         .height(imgSize)
                         .width(imgSize)
                 ) {
-                    ImageSquare2(
+                    ImageSquare(
                         imgPath = imgPath,
                         updateImgPath = { file -> file }, // 展示模式无需更新路径
                         deleteImgPath = { path ->
@@ -110,7 +110,7 @@ fun Reminiscence(
                     .height(imgSize)
                     .width(imgSize)
             ) {
-                ImageSquare2(
+                ImageSquare(
                     imgPath = "",
                     updateImgPath = { file ->
                         // 将新图片路径追加到列表

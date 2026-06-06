@@ -241,6 +241,8 @@ fun ImageRain(
                         rotationSpeed = rainSettings.rotationSpeed,
                         containerWidth = boxWidth,         // 传递容器尺寸用于边界约束
                         containerHeight = boxHeight,
+                        clickEnabled = rainSettings.clickEnabled,
+                        pressEnabled = rainSettings.pressEnabled,
                     )
                 }
             }

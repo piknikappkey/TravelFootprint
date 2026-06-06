@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
-import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare2
+import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare
 
 @Composable
 fun JourneyItem(
@@ -41,7 +41,7 @@ fun JourneyItem(
             ) {
                 Spacer(Modifier.width(3.dp))
                 if(journey.coverImagePath != "") {
-                    ImageSquare2(
+                    ImageSquare(
                         imgPath = journey.coverImagePath,
                         modifier = Modifier.width(110.dp),
                         aspectRatio = 1.2f,

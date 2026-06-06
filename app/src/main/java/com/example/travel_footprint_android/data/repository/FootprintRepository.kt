@@ -300,4 +300,11 @@ class FootprintRepository @Inject constructor(
     suspend fun updateLocationsByFootprint(footprintId: Long, latitude: Double, longitude: Double, index: Int) {
         locationDao.updateLocationsByFootprint(footprintId, latitude, longitude, index)
     }
+
+    // ==================== 里程碑统计方法 ====================
+
+    /**
+     * 获取足迹总数
+     */
+    suspend fun getTotalFootprintCount(): Int = footprintDao.getFootprintCount()
 }

@@ -36,4 +36,20 @@ fun RainSwitchSettings(
         checked = settings.isChaos,
         onCheckedChange = { imageRainViewModel.updateIsChaos(it) }
     )
+
+    Spacer(Modifier.height(8.dp))
+
+    SwitchRow(
+        label = "启用涂鸦点击效果",
+        checked = settings.clickEnabled,
+        onCheckedChange = { imageRainViewModel.updateClickEnabled(it) }
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    SwitchRow(
+        label = "启用涂鸦按压效果",
+        checked = settings.pressEnabled,
+        onCheckedChange = { imageRainViewModel.updatePressEnabled(it) }
+    )
 }

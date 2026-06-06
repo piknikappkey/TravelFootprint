@@ -32,7 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare2
+import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import java.io.File
 
@@ -52,7 +52,7 @@ fun JourneyEditCover(
     // 标签与图片编辑器之间的 2.dp 间距
     Spacer(Modifier.padding(2.dp))
     // 方形图片编辑器：展示/添加/删除封面图片，横版比例 1.2:1，显示删除按钮
-    ImageSquare2(
+    ImageSquare(
         imgPath = journey.coverImagePath,
         updateImgPath = updateImgPath,
         deleteImgPath = deleteImgPath,

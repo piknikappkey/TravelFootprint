@@ -25,6 +25,8 @@ data class ImageRainSettings(
     val pressScale: Float = 20f,
     val rotationSpeed: Float = 30f,
     val clearAllTrigger: Int = 0,
+    val clickEnabled: Boolean = true,
+    val pressEnabled: Boolean = true,
 )
 
 @HiltViewModel
@@ -100,6 +102,16 @@ class ImageRainViewModel @Inject constructor(
 
     fun updateRotationSpeed(value: Float) {
         _settings.update { it.copy(rotationSpeed = value) }
+        saveSettings()
+    }
+
+    fun updateClickEnabled(value: Boolean) {
+        _settings.update { it.copy(clickEnabled = value) }
+        saveSettings()
+    }
+
+    fun updatePressEnabled(value: Boolean) {
+        _settings.update { it.copy(pressEnabled = value) }
         saveSettings()
     }
 

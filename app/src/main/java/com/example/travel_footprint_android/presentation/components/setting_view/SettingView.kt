@@ -42,7 +42,7 @@ fun SettingView(
         modifier = modifier
             .shadow(
                 elevation = 1.dp,
-                shape = RoundedCornerShape(5.dp),
+                shape = RoundedCornerShape(12.dp),
                 clip = true
             )
     ) {

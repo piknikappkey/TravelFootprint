@@ -37,6 +37,8 @@ class ImageRainSettingsStore @Inject constructor(
         val maxAngle = intPreferencesKey("max_angle")
         val pressScale = floatPreferencesKey("press_scale")
         val rotationSpeed = floatPreferencesKey("rotation_speed")
+        val clickEnabled = booleanPreferencesKey("click_enabled")
+        val pressEnabled = booleanPreferencesKey("press_enabled")
     }
 
     val settingsFlow: Flow<ImageRainSettings> = context.imageRainDataStore.data.map { prefs ->
@@ -53,6 +55,8 @@ class ImageRainSettingsStore @Inject constructor(
             maxAngle = prefs[Keys.maxAngle] ?: 360,
             pressScale = prefs[Keys.pressScale] ?: 20f,
             rotationSpeed = prefs[Keys.rotationSpeed] ?: 30f,
+            clickEnabled = prefs[Keys.clickEnabled] ?: true,
+            pressEnabled = prefs[Keys.pressEnabled] ?: true,
         )
     }
 
@@ -70,6 +74,8 @@ class ImageRainSettingsStore @Inject constructor(
             prefs[Keys.maxAngle] = settings.maxAngle
             prefs[Keys.pressScale] = settings.pressScale
             prefs[Keys.rotationSpeed] = settings.rotationSpeed
+            prefs[Keys.clickEnabled] = settings.clickEnabled
+            prefs[Keys.pressEnabled] = settings.pressEnabled
         }
     }
 }

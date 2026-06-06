@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,17 +27,19 @@ import com.example.travel_footprint_android.presentation.components.button.butto
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.image_random.setting_dialog.RainSettingDialog
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
-import com.example.travel_footprint_android.presentation.components.light_panel2.milestone.MilestoneContent
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherViewModel
+import com.example.travel_footprint_android.presentation.components.milestone.MilestoneContent
 import com.example.travel_footprint_android.presentation.components.setting_view.SettingView
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.MilestoneViewModel
 
 @Composable
 fun MyScreen(
     modifier: Modifier = Modifier,
     imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain"),
     lightenViewModel: LightenViewModel = hiltViewModel(),
+    milestoneViewModel: MilestoneViewModel = hiltViewModel(),
     weatherViewModel: WeatherViewModel = hiltViewModel(),
 ) {
     val rainSettings by imageRainViewModel.settings.collectAsState()
@@ -46,6 +49,11 @@ fun MyScreen(
     val lightCityList = uiState.lightedCities
     val lightedProvinceCount = uiState.lightedProvinceCount
     val allFootprints by lightenViewModel.allFootprints.collectAsState()
+
+    // 将 LightenViewModel 的数据同步到 MilestoneViewModel
+    LaunchedEffect(lightCityList, lightedProvinceCount, allFootprints) {
+        milestoneViewModel.updateData(allFootprints, lightedProvinceCount, lightCityList)
+    }
 
     val aniImgRainAlpha by animateFloatAsState(
         targetValue = if (rainSettings.rainEnabled) 1f else 0f,
@@ -73,13 +81,10 @@ fun MyScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 MilestoneContent(
-                    lightCityList = lightCityList,
-                    lightedProvinceCount = lightedProvinceCount,
-                    allFootprints = allFootprints
+                    milestoneViewModel = milestoneViewModel
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Spacer(modifier = Modifier.height(20.dp))
 
                 SettingView(
                     weatherViewModel = weatherViewModel,

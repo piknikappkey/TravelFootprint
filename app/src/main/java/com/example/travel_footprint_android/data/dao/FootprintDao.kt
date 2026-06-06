@@ -89,6 +89,13 @@ interface FootprintDao {
     @Query("SELECT * FROM footprints WHERE id = :footprintId")
     suspend fun getFootprintById(footprintId: Long): Footprint?
 
+    // ==================== 统计查询 ====================
+
+    /**
+     * 获取足迹总数
+     */
+    @Query("SELECT COUNT(*) FROM footprints")
+    suspend fun getFootprintCount(): Int
 
 }
 

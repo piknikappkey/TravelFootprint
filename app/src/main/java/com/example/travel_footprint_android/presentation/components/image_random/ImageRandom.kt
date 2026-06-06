@@ -38,6 +38,8 @@
  * @param pressScale 按压时放大的像素量（dp）
  * @param rotationSpeed 旋转速度（度/秒）
  * @param containerWidth/containerHeight 容器尺寸（dp），用于边界约束
+ * @param clickEnabled 是否启用点击移除效果，false 时禁用点击
+ * @param pressEnabled 是否启用按压效果（缩放+旋转），false 时禁用按压缩放和旋转
  */
 package com.example.travel_footprint_android.presentation.components.image_random
 
@@ -94,6 +96,8 @@ fun ImageRandom(
     rotationSpeed: Float = 30f,
     containerWidth: Dp = Dp.Infinity,
     containerHeight: Dp = Dp.Infinity,
+    clickEnabled: Boolean = true,
+    pressEnabled: Boolean = true,
 ) {
     // 按压状态：决定缩放动画和旋转动画的启停
     var isPress by remember { mutableStateOf(false) }
@@ -126,8 +130,9 @@ fun ImageRandom(
         if (low == high) low else Random.nextInt(low, high + 1)
     }
     // 按压缩放动画：按住时放大 pressScale，松开恢复原尺寸，200ms 缓动
+    // pressEnabled 为 false 时始终使用原始尺寸，不触发放大动画
     val aniImgSize by animateFloatAsState(
-        targetValue = if (isPress) imgSize.toFloat() + pressScale else imgSize.toFloat(),
+        targetValue = if (pressEnabled && isPress) imgSize.toFloat() + pressScale else imgSize.toFloat(),
         animationSpec = tween(durationMillis = 200),
     )
 
@@ -184,14 +189,17 @@ fun ImageRandom(
     // 拖拽修饰符：isChaos 控制旋转与拖拽的叠加顺序
     // chaos 模式：先 rotate 再 pointerInput（旋转坐标系中拖拽）
     // 普通模式：先 pointerInput 再 rotate（拖拽后旋转视觉）
+    // pressEnabled 为 false 时拖拽不触发 isPress，从而禁用按压缩放和旋转
+    val onDragStart: () -> Unit = { if (pressEnabled) isPress = true }
+    val onDragEnd: () -> Unit = { isPress = false }
     val dragModifier = if (isChaos) {
         Modifier
             .rotate(angle.value)
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { isPress = true },
-                    onDragEnd = { isPress = false },
-                    onDragCancel = { isPress = false },
+                    onDragStart = { onDragStart() },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val boxSizePx = with(density) { maxBoxSize.dp.toPx() }
@@ -205,9 +213,9 @@ fun ImageRandom(
         Modifier
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { isPress = true },
-                    onDragEnd = { isPress = false },
-                    onDragCancel = { isPress = false },
+                    onDragStart = { onDragStart() },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
                     onDrag = { change, dragAmount ->
                         change.consume()
                         val boxSizePx = with(density) { maxBoxSize.dp.toPx() }
@@ -227,21 +235,23 @@ fun ImageRandom(
             .alpha(alpha)
     ) {
         // 内层 Image：从右下角锚定，缩放时视觉稳定，支持点击移除 + 拖拽/旋转
+        // clickEnabled 为 false 时禁用点击移除效果
+        val imageClickableModifier = if (clickEnabled && onRemove != null) {
+            Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null, // 无点击涟漪
+                onClick = { onRemove() }
+            )
+        } else {
+            Modifier
+        }
         Image(
             painter = painterResource(id = drawableResId),
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.BottomEnd) // 右下角锚定，缩放原点稳定
                 .size(width = aniImgSize.dp, height = aniImgSize.dp) // 按压缩放动画
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null, // 无点击涟漪
-                    onClick = {
-                        if (onRemove != null) {
-                            onRemove() // 点击移除
-                        }
-                    }
-                )
+                .then(imageClickableModifier)
                 .then(dragModifier), // 叠加拖拽 + 旋转修饰符
             contentScale = ContentScale.Fit,
         )

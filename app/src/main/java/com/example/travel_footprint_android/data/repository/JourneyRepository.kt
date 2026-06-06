@@ -145,4 +145,26 @@ class JourneyRepository @Inject constructor(
         return journeyDao.getAllJourneysWithCoordinates()
     }
 
+    // ==================== 里程碑统计方法 ====================
+
+    /**
+     * 获取旅程总数
+     */
+    suspend fun getJourneyCount(): Int = journeyDao.getJourneyCount()
+
+    /**
+     * 获取有封面的旅程数量
+     */
+    suspend fun getCoveredJourneyCount(): Int = journeyDao.getCoveredJourneyCount()
+
+    /**
+     * 获取所有旅程的图片总数（应用层计算）
+     */
+    suspend fun getTotalImageCount(): Int {
+        val journeys = journeyDao.getAllJourneysSuspend()
+        return journeys.sumOf { journey ->
+            journey.journeyImagePaths.count { it.isNotEmpty() }
+        }
+    }
+
 }

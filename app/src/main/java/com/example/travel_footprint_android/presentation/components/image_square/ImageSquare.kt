@@ -58,8 +58,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.presentation.components.icon.icon_add.IconAdd
-import com.example.travel_footprint_android.presentation.components.image_square.image_square_delete_icon.ImageSquareDeleteIcon
 import com.example.travel_footprint_android.presentation.components.image_square.custom_image.CustomImage
+import com.example.travel_footprint_android.presentation.components.image_square.image_square_delete_icon.ImageSquareDeleteIcon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -73,7 +73,7 @@ import java.io.File
  */
 // 方形图片组件：支持展示、添加（相册选取）、删除图片，可选延迟加载
 @Composable
-fun ImageSquare2(
+fun ImageSquare(
     imgPath: String,
     updateImgPath: (File) -> File? = { file -> file},
     deleteImgPath: (String) -> Unit = { string -> },
