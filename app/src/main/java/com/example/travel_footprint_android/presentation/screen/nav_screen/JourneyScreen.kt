@@ -39,7 +39,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
@@ -127,19 +129,32 @@ fun JourneyScreen(
                     locationList = journeyUiState.LocationList
                 )
             } else {
-                PermissionRequestContent(
-                    onRequestPermission = {
-                        permissionLauncher.launch(locationPermissions)
-                    }
-                )
+                // 权限请求页面：限制在 JourneyPanel 上方的可用区域（屏幕上方 60%）
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.6f)
+                ) {
+                    PermissionRequestContent(
+                        onRequestPermission = {
+                            permissionLauncher.launch(locationPermissions)
+                        }
+                    )
+                }
             }
         }
-        // 闪屏动画
+        // 闪屏动画：限制在 JourneyPanel 上方的可用区域（屏幕上方 60%）
         if(showSplash) {
-            JourneyMapSplashScreen(
-                onFinished = { journeyMapViewModel.setShowSplash(false) },
-                onShowScreen = { journeyMapViewModel.setShowMapScreen(true) }
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.6f)
+            ) {
+                JourneyMapSplashScreen(
+                    onFinished = { journeyMapViewModel.setShowSplash(false) },
+                    onShowScreen = { journeyMapViewModel.setShowMapScreen(true) }
+                )
+            }
         }
 
         // ===== 旅程面板：覆盖在地图上方，通过 offset 控制 Y 轴位置 =====

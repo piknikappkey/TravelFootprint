@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -83,8 +82,7 @@ fun JourneyMapSplashScreen(
             modifier = Modifier
                 .size(140.dp)            // 固定尺寸 140dp × 140dp
                 .scale(aniIconScale)     // 应用缩放动画（1.0x → 1.5x）
-                .alpha(alpha.value)
-                .offset(y = (-150).dp),     // 透明度与背景同步
+                .alpha(alpha.value),     // 透明度与背景同步
             colorFilter = ColorFilter.tint(SecondColor3), // 主题色染色
         )
     }

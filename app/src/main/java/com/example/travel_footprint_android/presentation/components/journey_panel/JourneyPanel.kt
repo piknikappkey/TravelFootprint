@@ -208,7 +208,7 @@ fun JourneyPanel(
         LocationButton(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(y = (-60).dp),
+                .offset(x = (-10).dp, y = (-60).dp),
             screenWidthPx = screenWidthPx,
             screenHeightPx = screenHeightPx,
             panelTopY = aniOffsetY,
