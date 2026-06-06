@@ -68,7 +68,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.back_buttom.city_province_backButtom
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInContent
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInRecord

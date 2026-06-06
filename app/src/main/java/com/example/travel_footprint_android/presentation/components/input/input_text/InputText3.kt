@@ -125,7 +125,7 @@ fun InputText3(
     ) {
         // 背景图片容器，为输入框提供纹理背景
         BGImgBox(
-            listOf(R.drawable.bg_simple_hor_small_small),
+            R.drawable.bg_simple_hor_small_small,
         ) {
             Box(
                 modifier = Modifier

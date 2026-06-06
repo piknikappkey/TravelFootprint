@@ -98,7 +98,7 @@ fun FootprintListItem(
     ) {
         // 带随机背景图片的容器，从4张矩形背景图中随机选一张
         BGImgBox(
-            listOf(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3),
+            R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3,
         ) {
             Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
         }

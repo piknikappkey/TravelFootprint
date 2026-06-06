@@ -1,6 +1,5 @@
 package com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_list.journey_item
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,8 +23,6 @@ fun JourneyItem(
     journey: Journey,
     journeyClick: () -> Unit = {},
 ) {
-    val starTime = System.currentTimeMillis()
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,23 +34,23 @@ fun JourneyItem(
             )
             .clickable(onClick = journeyClick)
     ) {
-        BGImgBox(listOf(R.drawable.bg_rectangular_1__3__1, R.drawable.bg_rectangular_1__3__2)) {
+        BGImgBox(R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3) {
             Row(
                 modifier = Modifier,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Spacer(Modifier.width(3.dp))
-                ImageSquare2(
-                    imgPath = journey.coverImagePath,
-                    modifier = Modifier.width(110.dp),
-                    aspectRatio = 1.2f,
-                    addIconSize = .3f,
-                    shape = RoundedCornerShape(5.dp),
-                )
+                if(journey.coverImagePath != "") {
+                    ImageSquare2(
+                        imgPath = journey.coverImagePath,
+                        modifier = Modifier.width(110.dp),
+                        aspectRatio = 1.2f,
+                        addIconSize = .3f,
+                        shape = RoundedCornerShape(5.dp),
+                    )
+                }
                 JourneyItemRightContent(journey)
             }
         }
     }
-
-    Log.d("ComposeTime", "JourneyItem5: ${System.currentTimeMillis() - starTime}")
 }

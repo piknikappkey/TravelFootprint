@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation.screen.nav_screen
+package com.example.travel_footprint_android.presentation2.screen
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -57,8 +57,7 @@ fun LightenScreen2(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(0.dp))
         ) {
-//            //背景图片
-            /////////////加载流畅//////////////
+            //背景图片
             Image(
                 painter = painterResource(id = R.drawable.bg_svg_water_color_blue),
                 contentDescription = "背景图片",
@@ -68,7 +67,6 @@ fun LightenScreen2(
 
 
             // 地图区域（填充整个屏幕）
-            /////////////加载流畅//////////////
             SVGMap(
                 modifier = Modifier.fillMaxSize(),
                 onLightCityClick = { adcode, name ->
@@ -99,6 +97,11 @@ fun LightenScreen2(
 //
 //            /////////////第二卡顿//////////////
 //            // 底部可拖拽面板（覆盖在地图之上）
+            // 雨滴叠加在内容上层
+//            OpenGLRainBackground(show = true)
+
+
+            // 底部可拖拽面板（覆盖在地图之上）
             LightPanel2(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -116,6 +119,13 @@ fun LightenScreen2(
 //                    .fillMaxSize()
 //                    .alpha(1f),
 //            )
+
+            //插花雨效果
+            ImageRain(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(1f),
+            )
 
         }
     }

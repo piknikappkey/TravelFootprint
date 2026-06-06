@@ -130,6 +130,8 @@ val BGLight3 = Color(0xFFFAF1FC) // 浅紫色底，卡片/容器背景
 val BGLight4 = Color(0xFFF6E9F8) // 中浅紫底，按钮/输入框背景
 val BGLight6 = Color(0xFFF1DDF5) // 较深紫底，按下态背景
 
+val BGPaperTexture = Color(0xFFFCF1EB)
+
 // ═══════════════════════════════════════════════════════════════
 // 功能按钮颜色（语义化颜色）
 // 通过颜色传递操作语义，帮助用户直观理解操作性质

@@ -1,4 +1,4 @@
-package com.example.travel_footprint_android.presentation.components.journey_panel.line_between
+package com.example.travel_footprint_android.presentation.components.line_between
 
 /*
  * ============================================================================
@@ -34,10 +34,11 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
  */
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,24 +66,26 @@ fun LineBetween(
     // 虚线占父容器宽度的比例（0~1），默认 95%
     lineLength: Float = .95f,
 ) {
-    // 顶部间距
-    Spacer(Modifier.padding(paddingUp))
-    // 居中对齐行，包裹虚线本身
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        // Canvas 自绘虚线，宽度按 lineLength 比例缩放
-        Line(
-            Modifier
-                .fillMaxWidth(lineLength),
-            color,
-            dashLength,
-            gapLength,
-            thickness
-        )
+    Column {
+        // 顶部间距
+        Spacer(Modifier.height(paddingUp))
+        // 居中对齐行，包裹虚线本身
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // Canvas 自绘虚线，宽度按 lineLength 比例缩放
+            Line(
+                Modifier
+                    .fillMaxWidth(lineLength),
+                color,
+                dashLength,
+                gapLength,
+                thickness
+            )
+        }
+        // 底部间距
+        Spacer(Modifier.height(paddingDown))
     }
-    // 底部间距
-    Spacer(Modifier.padding(paddingDown))
 }

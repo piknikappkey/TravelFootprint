@@ -1,10 +1,5 @@
 package com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_list
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -98,22 +93,14 @@ fun JourneyList(
                     .padding(10.dp)
                     .align(Alignment.BottomEnd)
             ) {
-                Column {
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn() + scaleIn(initialScale = 0.8f),
-                        exit = fadeOut() + scaleOut(targetScale = 0.8f)
-                    ) {
-                        IconAdd(
-                            modifier = Modifier
-                                .width(48.dp)
-                                .height(48.dp),
-                            clickable = {
-                                onPanelNavigate(JourneyPanel2State.JOURNEY_EDIT, null, null)
-                            },
-                        )
-                    }
-                }
+                IconAdd(
+                    modifier = Modifier
+                        .width(48.dp)
+                        .height(48.dp),
+                    clickable = {
+                        onPanelNavigate(JourneyPanel2State.JOURNEY_EDIT, null, null)
+                    },
+                )
             }
         }
     }

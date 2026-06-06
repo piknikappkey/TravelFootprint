@@ -87,7 +87,7 @@ import com.example.travel_footprint_android.presentation.components.button.butto
 import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave      // 保存按钮组件
 import com.example.travel_footprint_android.presentation.components.journey_panel.confirm_delete_dialog.ConfirmDeleteDialog  // 删除确认弹窗
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton  // 面板高度切换按钮
-import com.example.travel_footprint_android.presentation.components.journey_panel.line_between.LineBetween                        // 虚线分隔线
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween                        // 虚线分隔线
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State                     // 面板状态枚举
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline                                          // 标题文字组件
 import com.example.travel_footprint_android.ui.theme.SecondColor3      // 主题色（用于返回按钮箭头颜色）
@@ -321,11 +321,9 @@ fun JourneyContent(
         ) {
             // 内层背景图片容器（随机选择背景图之一）
             BGImgBox(
-                imgList = listOf<Int>(
-                    R.drawable.bg_rectangular_1__3__0,  // 背景图1
-                    R.drawable.bg_rectangular_1__3__1,  // 背景图2
-                    R.drawable.bg_rectangular_1__3__2   // 背景图3
-                ),
+                R.drawable.bg_rectangular_1__2__0,  // 背景图1
+                R.drawable.bg_rectangular_1__2__1,  // 背景图2
+                R.drawable.bg_rectangular_1__2__2,  // 背景图3
             ) {
                 Column {
                     Spacer(Modifier.padding(3.dp))

@@ -38,8 +38,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -76,11 +73,10 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
-import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
-import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMap3
-import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMap3SplashScreen
-import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMap3ViewModel
-import com.example.travel_footprint_android.presentation.components.journey_panel.JourneyPanel7
+import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMap
+import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMapSplashScreen
+import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
+import com.example.travel_footprint_android.presentation.components.journey_panel.JourneyPanel
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
@@ -93,11 +89,10 @@ import com.example.travel_footprint_android.ui.theme.SecondColor3
 @Composable
 fun JourneyScreen(
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
-    journeyMap3ViewModel: JourneyMap3ViewModel = hiltViewModel(
+    journeyMapViewModel: JourneyMapViewModel = hiltViewModel(
         viewModelStoreOwner = LocalContext.current as ComponentActivity,
         key = "JourneyMap3"
     ),
-    imageRainViewModel: ImageRainViewModel = hiltViewModel(key = "image-rain")
 ) {
     // 从 ViewModel 收集 UI 状态，获取旅程列表和足迹计数
     val journeyUiState by journeyViewModel.uiState.collectAsState()
@@ -105,7 +100,6 @@ fun JourneyScreen(
     // 定义动画时长和界面状态变量
     val aniTime = remember { 400 }
     var sizeChange by remember { mutableStateOf(false) }
-    val rainSettings by imageRainViewModel.settings.collectAsState()
 
     var panelState by remember { mutableStateOf(JourneyPanelState()) }
     val onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit = { page, journey, footprint ->
@@ -140,17 +134,9 @@ fun JourneyScreen(
         hasLocationPermission = granted.values.all { it }
     }
 
-    // 图片雨透明度动画：根据 rainEnabled 状态在 1f 和 0f 之间切换
-    val aniImgRainAlpha by animateFloatAsState(
-        targetValue = if (rainSettings.rainEnabled) 1f else 0f,
-        animationSpec = tween(durationMillis = 200),
-        label = "aniImgRainAlpha"
-    )
-    // 图片雨参数状态变量：控制图片数量、尺寸、角度、旋转等属性
-
     // 从 JourneyMap3ViewModel 获取闪屏/地图显示状态（ViewModel 级别持久化，避免 AnimatedContent 切换时丢失）
-    val showSplash by journeyMap3ViewModel.showSplash.collectAsState()
-    val showMapScreen by journeyMap3ViewModel.showMapScreen.collectAsState()
+    val showSplash by journeyMapViewModel.showSplash.collectAsState()
+    val showMapScreen by journeyMapViewModel.showMapScreen.collectAsState()
 
     // 主布局容器：使用 Box 实现多层叠加效果
     Box(
@@ -169,7 +155,7 @@ fun JourneyScreen(
                 if(showMapScreen) {
                     if (hasLocationPermission) {
                         // 有权限时显示地图组件，传入位置列表用于绘制路线
-                        JourneyMap3(
+                        JourneyMap(
                             locationList = journeyUiState.LocationList
                         )
                     } else {
@@ -182,14 +168,14 @@ fun JourneyScreen(
                     }
                 }
                 if(showSplash) {
-                    JourneyMap3SplashScreen(
-                        onFinished = { journeyMap3ViewModel.setShowSplash(false) },
-                        onShowScreen = { journeyMap3ViewModel.setShowMapScreen(true) }
+                    JourneyMapSplashScreen(
+                        onFinished = { journeyMapViewModel.setShowSplash(false) },
+                        onShowScreen = { journeyMapViewModel.setShowMapScreen(true) }
                     )
                 }
             }
 
-            JourneyPanel7(
+            JourneyPanel(
                 modifier = Modifier
                     .onSizeChanged { newSize ->
                         if (!sizeChange) {
@@ -203,14 +189,7 @@ fun JourneyScreen(
                 onPanelNavigate = onPanelNavigate,
             )
         }
-
-        // 图片雨特效层：覆盖整个屏幕，通过 alpha 控制可见性
-        ImageRain(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(aniImgRainAlpha),
-            imageRainViewModel = imageRainViewModel,
-        )
+        ImageRain()
     }
 }
 

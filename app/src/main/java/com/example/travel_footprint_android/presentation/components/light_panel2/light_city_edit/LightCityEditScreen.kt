@@ -11,11 +11,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2State
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.light_city_edit_select.LightCityEidtSelect
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.light_province_edit_select.LightProvinceEditSelect
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenCityMode
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
 
 
 @Composable

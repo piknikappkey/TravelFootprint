@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.presentation.components.journey_panel.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import java.text.SimpleDateFormat
 import java.util.Locale

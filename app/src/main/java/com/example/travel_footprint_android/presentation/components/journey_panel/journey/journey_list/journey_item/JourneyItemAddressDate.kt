@@ -24,9 +24,7 @@ fun JourneyItemAddressDate(
     val shortDateFormat = remember { SimpleDateFormat("MM-dd", Locale.getDefault()) }
     val currentYear = remember { yearFormat.format(Date()) }
 
-    val addressParts = remember(address) { address.split("\n") }
-    val region = addressParts.firstOrNull() ?: ""
-    val location = addressParts.lastOrNull() ?: ""
+    val location = remember(address) { address.split("\n").lastOrNull() ?: "" }
 
     val dateStr by remember {
         derivedStateOf {

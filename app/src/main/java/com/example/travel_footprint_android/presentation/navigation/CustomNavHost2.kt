@@ -2,8 +2,6 @@ package com.example.travel_footprint_android.presentation.navigation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -13,32 +11,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.travel_footprint_android.presentation.screen.nav_screen.JourneyScreen
-import com.example.travel_footprint_android.presentation.screen.nav_screen.LightenScreen2
 import com.example.travel_footprint_android.presentation.screen.nav_screen.MyScreen
 import com.example.travel_footprint_android.presentation.screen.viewmodel.NavigationViewModel
+import com.example.travel_footprint_android.presentation2.screen.LightenScreen2
 import com.example.travel_footprint_android.ui.theme.BGLight0
 
 @Composable
 fun CustomNavHost2(
-    modifier: Modifier = Modifier,
     navigationViewModel: NavigationViewModel,
 ) {
     val currentDest by navigationViewModel.currentDestination.collectAsStateWithLifecycle()
 
     AnimatedContent(
-        modifier = modifier.background(BGLight0),
+        modifier = Modifier.background(BGLight0),
         targetState = currentDest,
         transitionSpec = {
             val direction = getDirection(initialState, targetState)
-            (slideInHorizontally(
-                animationSpec = tween(durationMillis = 300),
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = 500),
                 initialOffsetX = { fullWidth -> direction * fullWidth }
-            ) + fadeIn(animationSpec = tween(durationMillis = 300)))
-                .togetherWith(
-                    slideOutHorizontally(
-                        animationSpec = tween(durationMillis = 300),
-                        targetOffsetX = { fullWidth -> -direction * fullWidth }
-                    ) + fadeOut(animationSpec = tween(durationMillis = 300)))
+            ).togetherWith(
+                slideOutHorizontally(
+                    animationSpec = tween(durationMillis = 500),
+                    targetOffsetX = { fullWidth -> -direction * fullWidth }
+                )
+            )
         },
         label = "page_transition"
     ) { dest ->
