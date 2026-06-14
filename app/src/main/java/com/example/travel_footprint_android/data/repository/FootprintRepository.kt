@@ -301,6 +301,20 @@ class FootprintRepository @Inject constructor(
         locationDao.updateLocationsByFootprint(footprintId, latitude, longitude, index)
     }
 
+    /**
+     * 仅更新运动录制数据字段（轻量级，供 Foreground Service 每秒调用）
+     */
+    suspend fun updateFootprintRecordingData(
+        footprintId: Long,
+        startTime: Date?,
+        duration: Long,
+        distance: Double,
+        speed: Double,
+        calories: Double,
+    ) {
+        footprintDao.updateRecordingData(footprintId, startTime, duration, distance, speed, calories)
+    }
+
     // ==================== 里程碑统计方法 ====================
 
     /**

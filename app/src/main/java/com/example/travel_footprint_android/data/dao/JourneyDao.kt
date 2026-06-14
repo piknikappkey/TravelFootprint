@@ -110,6 +110,13 @@ interface JourneyDao {
      */
     @Query("SELECT * FROM journeys")
     suspend fun getAllJourneysSuspend(): List<Journey>
+
+    /**
+     * 仅获取所有旅程的图片路径列（JSON字符串），用于高效计算图片总数
+     * 避免反序列化整条 Journey 记录（含 Date、地址等无关字段）
+     */
+    @Query("SELECT journeyImagePaths FROM journeys")
+    suspend fun getAllJourneyImagePaths(): List<String>
 }
 
 

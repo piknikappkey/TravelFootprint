@@ -87,6 +87,8 @@ class JourneyMapViewModel @Inject constructor(
     private val _currentLocation = MutableStateFlow<LatLng?>(null)
     // 当前选中的标记
     private val _selectedMarker = MutableStateFlow<Marker?>(null)
+    // 网络错误提示信息（null 表示网络正常）
+    private val _networkError = MutableStateFlow<String?>(null)
 
     // ========== 闪屏状态 ==========
 
@@ -105,6 +107,10 @@ class JourneyMapViewModel @Inject constructor(
     private var animationJob: Job? = null
     // 定位后相机移动动画时长（毫秒）
     private var _aniMoveTime: Long = 0
+    // 是否处于持续跟随模式
+    private var _isFollowMode = false
+    // 进入跟随模式前保存的动画时长，退出时恢复
+    private var _savedAniMoveTime: Long = 0
 
     // 屏幕参数和面板偏移量（用于底部面板补偿定位）
     private var _screenWidthPx: Int = 0
@@ -130,6 +136,7 @@ class JourneyMapViewModel @Inject constructor(
     val currentLocation: StateFlow<LatLng?> = _currentLocation.asStateFlow()
     val showSplash: StateFlow<Boolean> = _showSplash.asStateFlow()
     val showMapScreen: StateFlow<Boolean> = _showMapScreen.asStateFlow()
+    val networkError: StateFlow<String?> = _networkError.asStateFlow()
 
     // ========== 地图初始化 ==========
 
@@ -194,10 +201,13 @@ class JourneyMapViewModel @Inject constructor(
             if (location.errorCode == 0) {
                 val latLng = LatLng(location.latitude, location.longitude)
                 _currentLocation.value = latLng
+                // 定位成功，清除网络错误提示
+                _networkError.value = null
                 val aniTime = _aniMoveTime
-                val spWidth = _screenWidthPx
-                val spHeight = _screenHeightPx
-                val pTopY = _panelTopY
+                // 跟随模式下始终读取最新的面板参数（面板可能被用户拖拽改变）
+                val spWidth = if (_isFollowMode) _storedScreenWidthPx else _screenWidthPx
+                val spHeight = if (_isFollowMode) _storedScreenHeightPx else _screenHeightPx
+                val pTopY = if (_isFollowMode) _storedPanelTopY else _panelTopY
                 // 如果传入了有效的屏幕参数（>0），使用补偿定位；否则回退到标准定位
                 if (aniTime > 0 && spWidth > 0 && spHeight > 0 && pTopY > 0) {
                     animateCameraToPanelCompensatedCenter(aMap, latLng, aniTime, spWidth, spHeight.toFloat(), pTopY.toFloat())
@@ -205,6 +215,13 @@ class JourneyMapViewModel @Inject constructor(
                     aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f), aniTime, null)
                 } else {
                     aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
+                }
+            } else {
+                // 定位失败：检测网络相关错误码
+                val code = location.errorCode
+                if (code == 7 || code == 18 || code == 19) {
+                    // 7=网络异常, 18=网络超时, 19=网络连接异常
+                    _networkError.value = "网络连接不可用，请检查网络"
                 }
             }
         }
@@ -378,6 +395,54 @@ class JourneyMapViewModel @Inject constructor(
         _locationClient.value?.startLocation()
     }
 
+    /** 启动持续跟随模式：定位回调会以面板补偿方式持续移动相机到用户位置 */
+    fun startFollowUser() {
+        val locationClient = _locationClient.value ?: return
+        if (_isFollowMode) return
+        _isFollowMode = true
+
+        // 保存当前动画时长，跟随模式下使用较短时长以获得流畅体验
+        _savedAniMoveTime = _aniMoveTime
+        _aniMoveTime = 1000
+
+        // 确保面板参数可用（使用 JourneyPanel 写入的持久化值）
+        if (_screenWidthPx <= 0) _screenWidthPx = _storedScreenWidthPx
+        if (_screenHeightPx <= 0) _screenHeightPx = _storedScreenHeightPx
+        if (_panelTopY <= 0) _panelTopY = _storedPanelTopY
+
+        // 切换为持续定位模式
+        val option = AMapLocationClientOption().apply {
+            locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
+            isOnceLocation = false
+            interval = 2000L
+        }
+        locationClient.setLocationOption(option)
+        locationClient.startLocation()
+
+        Log.d("JourneyMap3ViewModel", "startFollowUser: panelTopY=$_panelTopY screenH=$_screenHeightPx")
+    }
+
+    /** 停止持续跟随模式，恢复为单次定位 */
+    fun stopFollowUser() {
+        val locationClient = _locationClient.value ?: return
+        if (!_isFollowMode) return
+        _isFollowMode = false
+
+        locationClient.stopLocation()
+
+        // 恢复为单次定位
+        val option = AMapLocationClientOption().apply {
+            locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
+            isOnceLocation = true
+        }
+        locationClient.setLocationOption(option)
+
+        // 恢复之前的动画时长
+        _aniMoveTime = _savedAniMoveTime
+
+        Log.d("JourneyMap3ViewModel", "stopFollowUser: restored aniMoveTime=$_aniMoveTime")
+    }
+
     // ========== 路线绘制 ==========
 
     /**
@@ -400,14 +465,16 @@ class JourneyMapViewModel @Inject constructor(
 
         // 新增路线：在 _routePolylines 中不存在的 index
         for (index in newKeys - existingKeys) {
-            val points = groups[index]!!.map {
+            val locs = groups[index]!!
+            val points = locs.map {
                 LatLng(it.latitude, it.longitude)
             }
             if (points.size >= 2) {
+                val footprintId = locs.first().footprintId
                 val polyline = aMap.addPolyline(
                     PolylineOptions()
                         .addAll(points)
-                        .color(getRouteColor(index))   // 按 index 取不同颜色
+                        .color(getRouteColor(footprintId))
                         .width(8f)
                         .transparency(0.85f)
                         .lineJoinType(PolylineOptions.LineJoinType.LineJoinRound) // 圆角连接
@@ -476,11 +543,12 @@ class JourneyMapViewModel @Inject constructor(
                 val allPoints = locs.map { LatLng(it.latitude, it.longitude) }
                 if (allPoints.size < 2) continue
 
+                val footprintId = locs.first().footprintId
                 // 先绘制前2个点创建 Polyline
                 val polyline = aMap.addPolyline(
                     PolylineOptions()
                         .addAll(allPoints.take(2))
-                        .color(getRouteColor(index))
+                        .color(getRouteColor(footprintId))
                         .width(8f)
                         .transparency(0.85f)
                         .lineJoinType(PolylineOptions.LineJoinType.LineJoinRound)
@@ -507,8 +575,8 @@ class JourneyMapViewModel @Inject constructor(
         _routeAnimationPlayed = false
     }
 
-    /** 根据路线索引返回对应的颜色，最多支持8种颜色循环 */
-    private fun getRouteColor(index: Int): Int {
+    /** 根据足迹ID返回对应的颜色，每个足迹有专属颜色，最多支持8种颜色循环 */
+    private fun getRouteColor(footprintId: Long): Int {
         val colors = listOf(
             0xFFFFA321.toInt(),   // 橙色
             0xFFBE65FF.toInt(),   // 紫色
@@ -519,7 +587,7 @@ class JourneyMapViewModel @Inject constructor(
             0xFF813CFA.toInt(),   // 深紫色
             0xFFDDFC00.toInt(),   // 黄绿色
         )
-        return colors[(index - 1) % colors.size]
+        return colors[((footprintId - 1) % colors.size).toInt()]
     }
 
     // ========== 查询方法 ==========
@@ -543,6 +611,7 @@ class JourneyMapViewModel @Inject constructor(
         _locationClient.value = null
         clearSelectedMarker()
         _currentLocation.value = null
+        _networkError.value = null
         _aMap.value = null
         _mapView.value = null
         _showSplash.value = true
@@ -559,6 +628,7 @@ class JourneyMapViewModel @Inject constructor(
         _locationClient.value = null
         clearSelectedMarker()
         _currentLocation.value = null
+        _networkError.value = null
         _aMap.value = null
         _isInitialized.value = false
     }

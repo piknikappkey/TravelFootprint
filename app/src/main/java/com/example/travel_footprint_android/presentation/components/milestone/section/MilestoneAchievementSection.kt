@@ -2,10 +2,12 @@ package com.example.travel_footprint_android.presentation.components.milestone.s
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -17,8 +19,8 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation.components.milestone.Milestone
 import com.example.travel_footprint_android.presentation.components.milestone.component.Head
-import com.example.travel_footprint_android.presentation.components.milestone.component.UnlockProgress
 import com.example.travel_footprint_android.presentation.components.milestone.component.MilestoneFlowRow
+import com.example.travel_footprint_android.presentation.components.milestone.component.UnlockProgress
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 
 /**
@@ -93,16 +95,22 @@ fun MilestoneAchievementSection(
                     modifier = Modifier.padding(bottom = 8.dp),
                     letterSpacing = TextUnit.Unspecified
                 )
-                MilestoneFlowRow(
-                    Milestones = achievedMilestones,
-                    lightedProvinceCount = lightedProvinceCount,
-                    totalKm = totalKm,
-                    journeyCount = journeyCount,
-                    footprintCount = footprintCount,
-                    coverCount = coverCount,
-                    imageCount = imageCount,
-                    isAchieved = true
-                )
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 200.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    MilestoneFlowRow(
+                        Milestones = achievedMilestones,
+                        lightedProvinceCount = lightedProvinceCount,
+                        totalKm = totalKm,
+                        journeyCount = journeyCount,
+                        footprintCount = footprintCount,
+                        coverCount = coverCount,
+                        imageCount = imageCount,
+                        isAchieved = true
+                    )
+                }
             }
 
             // 未解锁成就列表（含分隔线）

@@ -4,6 +4,8 @@ package com.example.travel_footprint_android.data.repository
 import com.example.travel_footprint_android.data.dao.JourneyDao
 import com.example.travel_footprint_android.data.dao.FootprintDao
 import com.example.travel_footprint_android.data.entity.Journey
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -158,12 +160,20 @@ class JourneyRepository @Inject constructor(
     suspend fun getCoveredJourneyCount(): Int = journeyDao.getCoveredJourneyCount()
 
     /**
-     * 获取所有旅程的图片总数（应用层计算）
+     * 获取所有旅程的图片总数（仅查询 journeyImagePaths 列，避免全表反序列化）
      */
     suspend fun getTotalImageCount(): Int {
-        val journeys = journeyDao.getAllJourneysSuspend()
-        return journeys.sumOf { journey ->
-            journey.journeyImagePaths.count { it.isNotEmpty() }
+        val imagePathsJsonList = journeyDao.getAllJourneyImagePaths()
+        val listType = object : TypeToken<List<String>>() {}.type
+        val gson = Gson()
+        return imagePathsJsonList.sumOf { json ->
+            if (json.isBlank() || json == "null") return@sumOf 0
+            val paths: List<String> = try {
+                gson.fromJson(json, listType)
+            } catch (_: Exception) {
+                emptyList()
+            }
+            paths.count { it.isNotEmpty() }
         }
     }
 

@@ -8,7 +8,7 @@
  * 功能：
  * - 自由拖拽：通过 detectDragGestures 实现单指拖拽，实时更新偏移量
  * - 边界约束：拖拽过程中自动将子内容约束在父容器范围内，不越界
- * - 边缘吸附：松开手指后自动平滑吸附到最近的父容器边缘（支持开关和动画自定义）
+ * - 边缘吸附：松开手指后自动平滑吸附到最近的父容器左右边缘（支持开关和动画自定义）
  * - 尺寸自适应：通过 LaunchedEffect 监听容器和内容的尺寸变化，自动校准位置
  * - 拖拽回调：通过 onDragStart / onDragEnd / onDragCancel / onDrag 向外暴露拖拽生命周期
  * - 完全解耦：不依赖任何业务状态，仅通过 state 回调暴露位置信息
@@ -120,24 +120,13 @@ fun DraggableBox(
                             onDragEnd?.invoke(offsetX.value, offsetY.value)
                             if (enableSnap) {
                                 val maxX = (outerWidth - contentWidth).coerceAtLeast(0f)
-                                val maxY = (outerHeight - contentHeight).coerceAtLeast(0f)
-                                // 计算到四个边缘的距离，找出最近的那条边，仅吸附到该边
+                                // 仅计算到左右边缘的距离，吸附到最近的左或右边
                                 val leftDist = offsetX.value
                                 val rightDist = maxX - offsetX.value
-                                val topDist = offsetY.value
-                                val bottomDist = maxY - offsetY.value
-                                val minDist = minOf(leftDist, rightDist, topDist, bottomDist)
-                                var targetX = offsetX.value
-                                var targetY = offsetY.value
-                                when (minDist) {
-                                    leftDist  -> targetX = 0f
-                                    rightDist -> targetX = maxX
-                                    topDist   -> targetY = 0f
-                                    bottomDist -> targetY = maxY
-                                }
+                                val targetX = if (leftDist <= rightDist) 0f else maxX
+                                val targetY = offsetY.value
                                 scope.launch {
                                     offsetX.animateTo(targetX, snapAnimationSpec)
-                                    offsetY.animateTo(targetY, snapAnimationSpec)
                                 }
                                 onDragEnd?.invoke(targetX, targetY)
                                 onPositionChanged?.invoke(targetX, targetY)

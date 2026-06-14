@@ -151,10 +151,14 @@ class WeatherViewModel @Inject constructor(
                         )
                         checkLoadingComplete() // 检查是否两个请求都已完成
                     } else {
-                        // 请求失败，仅结束加载并设置错误信息
+                        // 请求失败，区分网络错误和其他错误
                         _weatherState.value = _weatherState.value.copy(
                             isLoading = false,
-                            error = "获取实况天气失败"
+                            error = if (rCode == 1800 || rCode == 1801 || rCode == 1802) {
+                                "网络连接不可用，请检查网络"
+                            } else {
+                                "获取实况天气失败"
+                            }
                         )
                     }
                 }
@@ -188,10 +192,14 @@ class WeatherViewModel @Inject constructor(
                         }
                         checkLoadingComplete() // 检查是否两个请求都已完成
                     } else {
-                        // 请求失败，仅结束加载并设置错误信息
+                        // 请求失败，区分网络错误和其他错误
                         _weatherState.value = _weatherState.value.copy(
                             isLoading = false,
-                            error = "获取天气预报失败"
+                            error = if (rCode == 1800 || rCode == 1801 || rCode == 1802) {
+                                "网络连接不可用，请检查网络"
+                            } else {
+                                "获取天气预报失败"
+                            }
                         )
                     }
                 }
@@ -279,11 +287,17 @@ class WeatherViewModel @Inject constructor(
                         queryLiveWeather(adcode)
                         queryForecastWeather(adcode)
                     } else {
-                        // 定位失败：提取错误信息
+                        // 定位失败：根据 errorCode 区分网络错误和其他错误
                         val errorMsg = if (amapLocation != null) {
-                            "定位失败: ${amapLocation.errorCode} ${amapLocation.errorInfo}"
+                            val code = amapLocation.errorCode
+                            if (code == 7 || code == 18 || code == 19) {
+                                // 7=网络异常, 18=网络超时, 19=网络连接异常
+                                "网络连接不可用，请检查网络"
+                            } else {
+                                "定位失败: ${amapLocation.errorCode} ${amapLocation.errorInfo}"
+                            }
                         } else {
-                            "定位失败: 未知错误"
+                            "网络连接不可用，请检查网络"
                         }
                         _weatherState.value = _weatherState.value.copy(
                             isLoading = false,

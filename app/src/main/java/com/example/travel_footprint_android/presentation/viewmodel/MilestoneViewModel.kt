@@ -15,6 +15,7 @@ import com.example.travel_footprint_android.presentation.components.milestone.Un
 import com.example.travel_footprint_android.presentation.components.milestone.calculateMileageFromFootprints
 import com.example.travel_footprint_android.presentation.components.milestone.groupFootprintsByMonth
 import com.example.travel_footprint_android.presentation.components.milestone.milestones
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -60,22 +61,37 @@ class MilestoneViewModel @Inject constructor(
 
     /**
      * 从外部同步数据（由 Screen 层调用）
+     *
+     * 内置去重：仅当输入数据真正变化时才更新状态和发起 DB 查询。
+     * DB 查询使用 async 并行执行，总耗时 = 最慢单次查询。
      */
     fun updateData(
         footprints: List<Footprint>,
         provinceCount: Int,
         cityList: List<LightedCity>
     ) {
+        // 去重：引用相等 + 内容相等，避免 LaunchedEffect 重复触发导致多次 DB 查询
+        val footprintsChanged = _allFootprints.value !== footprints
+        val provinceChanged = _lightedProvinceCount.value != provinceCount
+        val cityChanged = _lightCityList.value !== cityList
+
+        if (!footprintsChanged && !provinceChanged && !cityChanged) return
+
         _allFootprints.value = footprints
         _lightedProvinceCount.value = provinceCount
         _lightCityList.value = cityList
-        
-        // 异步获取新数据
+
+        // 并行发起 DB 查询，总耗时 = 最慢单次查询
         viewModelScope.launch {
-            _journeyCount.value = journeyRepository.getJourneyCount()
-            _footprintCount.value = footprintRepository.getTotalFootprintCount()
-            _coverCount.value = journeyRepository.getCoveredJourneyCount()
-            _imageCount.value = journeyRepository.getTotalImageCount()
+            val journeyCountDeferred = async { journeyRepository.getJourneyCount() }
+            val footprintCountDeferred = async { footprintRepository.getTotalFootprintCount() }
+            val coverCountDeferred = async { journeyRepository.getCoveredJourneyCount() }
+            val imageCountDeferred = async { journeyRepository.getTotalImageCount() }
+
+            _journeyCount.value = journeyCountDeferred.await()
+            _footprintCount.value = footprintCountDeferred.await()
+            _coverCount.value = coverCountDeferred.await()
+            _imageCount.value = imageCountDeferred.await()
         }
     }
 

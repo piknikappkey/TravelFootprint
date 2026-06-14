@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,8 +34,7 @@ import java.util.Locale
  * AllRecordsSection - 全部足迹记录列表
  *
  * 展示按月份分组的全部足迹记录
- * - AllRecordsSection：标题 + 无数据提示 / 月份分组列表
- * - MonthGroupSection：单个月份的分组区块（月份标题 + 记录列表）
+ * 使用单一 LazyColumn 扁平渲染所有月份标题和足迹记录，避免嵌套滚动容器。
  * - FootprintRecordItem：单条足迹记录卡片
  */
 
@@ -46,6 +45,18 @@ import java.util.Locale
  */
 @Composable
 internal fun AllRecordsSection(monthGroups: List<MonthGroup>) {
+    // 将月份分组扁平化为 item 列表：月份标题 + 该月所有足迹
+    val flatItems = remember(monthGroups) {
+        buildList {
+            monthGroups.forEach { group ->
+                add(FlatItem.MonthHeader(group))
+                group.footprints.forEach { footprint ->
+                    add(FlatItem.FootprintRecord(footprint))
+                }
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .background(
@@ -65,7 +76,7 @@ internal fun AllRecordsSection(monthGroups: List<MonthGroup>) {
                 fontSize = 16.sp,
                 color = Color(0xFF1F2937)
             )
-            // 无数据提示 vs 月份分组列表
+            // 无数据提示 vs 扁平化懒加载列表
             if (monthGroups.isEmpty()) {
                 TextMedium(
                     text = "暂无足迹记录",
@@ -75,65 +86,70 @@ internal fun AllRecordsSection(monthGroups: List<MonthGroup>) {
                 )
             } else {
                 Spacer(Modifier.height(12.dp))
-                monthGroups.forEach { group ->
-                    MonthGroupSection(group)
+                LazyColumn {
+                    items(
+                        items = flatItems,
+                        key = { item ->
+                            when (item) {
+                                is FlatItem.MonthHeader -> "header_${item.group.monthKey}"
+                                is FlatItem.FootprintRecord -> "fp_${item.footprint.id}"
+                            }
+                        }
+                    ) { item ->
+                        when (item) {
+                            is FlatItem.MonthHeader -> MonthGroupHeader(item.group)
+                            is FlatItem.FootprintRecord -> FootprintRecordItem(item.footprint)
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+/** 扁平化列表项：月份标题 或 足迹记录 */
+private sealed class FlatItem {
+    data class MonthHeader(val group: MonthGroup) : FlatItem()
+    data class FootprintRecord(val footprint: Footprint) : FlatItem()
+}
+
 /**
- * 单个月份的足迹分组
+ * 月份分组标题行（扁平化后独立为组件）
  *
  * @param group 月份分组数据
  */
 @Composable
-private fun MonthGroupSection(group: MonthGroup) {
+private fun MonthGroupHeader(group: MonthGroup) {
     // 计算该月总里程（米→公里）
-    val groupTotalKm = group.footprints.sumOf { it.distance / 1000.0 }
+    val groupTotalKm = remember(group) {
+        group.footprints.sumOf { it.distance / 1000.0 }
+    }
 
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // 月份标题行：月份名 + 弹性分隔线 + 当月总里程
-        Row(
+        TextMedium(
+            text = group.monthLabel,
+            fontSize = 15.sp,
+            color = Color(0xFF374151)
+        )
+        Spacer(Modifier.width(8.dp))
+        // 灰色弹性分隔线
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextMedium(
-                text = group.monthLabel,
-                fontSize = 15.sp,
-                color = Color(0xFF374151)
-            )
-            Spacer(Modifier.width(8.dp))
-            // 灰色弹性分隔线
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(0.5.dp)
-                    .background(Color(0xFFE5E7EB))
-            )
-            Spacer(Modifier.width(8.dp))
-            TextMedium(
-                text = "${String.format("%.1f", groupTotalKm)} km",
-                fontSize = 12.sp,
-                color = Color(0xFF6B7280),
-            )
-        }
-
-        // 遍历该月每个足迹记录
-        LazyColumn(
-            modifier = Modifier.heightIn(max = 600.dp)
-        ) {
-            items(group.footprints, key = { it.id }) { it ->
-                FootprintRecordItem(it)
-            }
-        }
+                .weight(1f)
+                .height(0.5.dp)
+                .background(Color(0xFFE5E7EB))
+        )
+        Spacer(Modifier.width(8.dp))
+        TextMedium(
+            text = "${String.format("%.1f", groupTotalKm)} km",
+            fontSize = 12.sp,
+            color = Color(0xFF6B7280),
+        )
     }
 }
 

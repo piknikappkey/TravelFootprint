@@ -70,6 +70,7 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark4
+import com.example.travel_footprint_android.ui.theme.MainColor2
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -84,6 +85,7 @@ fun FootprintListItem(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
     Box(
         modifier = Modifier
@@ -100,7 +102,18 @@ fun FootprintListItem(
         BGImgBox(
             R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3,
         ) {
-            Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
+            Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate, isRecording)
+        }
+        // 右上角"记录中..."标签：仅在未展开且正在录制时显示
+        if (isRecording && !isClicked) {
+            TextSmall(
+                text = "记录中...",
+                fontSize = 12.sp,
+                color = MainColor2,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 4.dp, end = 8.dp),
+            )
         }
     }
 }
@@ -112,6 +125,7 @@ fun Content(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
 
     // 按顺序垂直排列各子模块，animateContentSize 使展开/折叠时高度变化平滑过渡
@@ -119,7 +133,7 @@ fun Content(
         modifier = Modifier.animateContentSize()
     ) {
         Spacer(Modifier.height(10.dp))
-        HeadRow(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
+        HeadRow(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate, isRecording)
         Spacer(Modifier.height(10.dp))
         // 足迹描述
         Description(footprint, isClicked)
@@ -141,6 +155,7 @@ fun HeadRow(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically

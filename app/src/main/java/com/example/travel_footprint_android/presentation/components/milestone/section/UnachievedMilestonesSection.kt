@@ -3,12 +3,16 @@ package com.example.travel_footprint_android.presentation.components.milestone.s
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,14 +81,20 @@ fun UnachievedMilestonesSection(
 
     // 根据展开状态显示不同的列表
     val displayMilestones = if (showAll) allUnachievedMilestones else nextUnachievedMilestones
-    MilestoneFlowRow(
-        Milestones = displayMilestones,
-        lightedProvinceCount = lightedProvinceCount,
-        totalKm = totalKm,
-        journeyCount = journeyCount,
-        footprintCount = footprintCount,
-        coverCount = coverCount,
-        imageCount = imageCount,
-        isAchieved = false
-    )
+    Column(
+        modifier = Modifier
+            .heightIn(max = 200.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        MilestoneFlowRow(
+            Milestones = displayMilestones,
+            lightedProvinceCount = lightedProvinceCount,
+            totalKm = totalKm,
+            journeyCount = journeyCount,
+            footprintCount = footprintCount,
+            coverCount = coverCount,
+            imageCount = imageCount,
+            isAchieved = false
+        )
+    }
 }
