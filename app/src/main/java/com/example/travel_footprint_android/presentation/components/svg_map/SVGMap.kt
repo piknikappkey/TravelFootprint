@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.LightedCity
@@ -28,8 +29,8 @@ fun SVGMap(
     navigateRequest: LightenCityMode? = null,
 ) {
     var selectedCityInfo by remember { mutableStateOf<SelectedCityInfo?>(null) }
-    //
     var cityState by remember { mutableStateOf(false) }
+    var pendingCityState by remember { mutableStateOf(false) }
 
     // 地图切换控制
     var showProvinceMap by remember { mutableStateOf(true) }
@@ -90,6 +91,16 @@ fun SVGMap(
         }
     }
 
+    // 延迟一帧再显示 CityBox，避免 WebView JS bridge 回调后立即触发重组竞争
+    LaunchedEffect(pendingCityState) {
+        if (pendingCityState) {
+            // 等待下一帧，让当前帧的 WebView 回调 + Compose 调度完成
+            withFrameNanos {  }
+            cityState = true
+            pendingCityState = false
+        }
+    }
+
     // CityBox 展示 5 秒后自动消失
     LaunchedEffect(cityState) {
         if (cityState) {
@@ -107,10 +118,10 @@ fun SVGMap(
                         adcode = adcode,
                         parentAdcode = parentAdcode
                     )
-                    cityState = true
+                    pendingCityState = true
                 },
                 cityClickState = { visible ->
-                    cityState = visible
+                    pendingCityState = visible
                 },
                 lightedProvinces = lightedProvinces,
                 onZoomChange = { scale -> currentScale = scale }
@@ -123,10 +134,10 @@ fun SVGMap(
                         adcode = adcode,
                         parentAdcode = parentAdcode
                     )
-                    cityState = true
+                    pendingCityState = true
                 },
                 cityClickState = { visible ->
-                    cityState = visible
+                    pendingCityState = visible
                 },
                 lightedProvinces = lightedProvinces,
                 lightedCity =lightedCity ,

@@ -6,10 +6,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
+import android.util.Log
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.amap.api.location.AMapLocationClient
+import com.amap.api.location.AMapLocationClientOption
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import javax.inject.Inject
@@ -20,10 +20,6 @@ import kotlin.coroutines.resume
 class LocationService @Inject constructor(
     private val context: Context
 ) {
-    private val fusedLocationClient: FusedLocationProviderClient by lazy {
-        LocationServices.getFusedLocationProviderClient(context)
-    }
-
     private val geocoder by lazy {
         Geocoder(context, Locale.getDefault())
     }
@@ -44,28 +40,77 @@ class LocationService @Inject constructor(
     }
 
     /**
-     * 获取当前位置
+     * 获取当前位置（使用高德定位 SDK，兼容中国设备）
      */
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(): Location? = suspendCancellableCoroutine { continuation ->
+    suspend fun getCurrentLocation(): LocationData? = suspendCancellableCoroutine { continuation ->
         try {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                continuation.resume(location)
-            }.addOnFailureListener {
-                continuation.resume(null)
+            val locationClient = AMapLocationClient(context)
+            val option = AMapLocationClientOption().apply {
+                locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
+                isOnceLocation = true
+                isOnceLocationLatest = true
+                isNeedAddress = true
+                httpTimeOut = 10000
             }
+            locationClient.setLocationOption(option)
+            locationClient.setLocationListener { amapLocation ->
+                if (amapLocation != null && amapLocation.errorCode == 0) {
+                    continuation.resume(
+                        LocationData(
+                            latitude = amapLocation.latitude,
+                            longitude = amapLocation.longitude,
+                            province = amapLocation.province ?: "",
+                            city = amapLocation.city ?: "",
+                            district = amapLocation.district ?: "",
+                            address = amapLocation.address ?: ""
+                        )
+                    )
+                } else {
+                    val errorCode = amapLocation?.errorCode ?: -1
+                    val errorInfo = amapLocation?.errorInfo ?: "未知错误"
+                    Log.e("LocationService", "定位失败: errorCode=$errorCode, errorInfo=$errorInfo")
+                    continuation.resume(null)
+                }
+                locationClient.onDestroy()
+            }
+            locationClient.startLocation()
         } catch (e: Exception) {
+            Log.e("LocationService", "定位异常: ${e.message}", e)
             continuation.resume(null)
         }
     }
 
+    /**
+     * 高德定位返回的位置数据
+     */
+    data class LocationData(
+        val latitude: Double,
+        val longitude: Double,
+        val province: String,
+        val city: String,
+        val district: String,
+        val address: String
+    )
+
     // ==================== 综合获取方法 ====================
 
     /**
-     * 获取当前位置的详细信息
+     * 获取当前位置的详细信息（优先使用高德返回的地址信息，无需再走 Geocoder）
      */
     suspend fun getCurrentLocationDetail(): LocationDetail? {
         val location = getCurrentLocation() ?: return null
+        // 高德定位已返回地址信息，直接使用，无需 Geocoder 二次查询
+        if (location.address.isNotBlank()) {
+            return LocationDetail(
+                province = location.province.ifBlank { "未知" },
+                city = location.city.ifBlank { "未知" },
+                district = location.district,
+                address = location.address,
+                latitude = location.latitude,
+                longitude = location.longitude
+            )
+        }
         return getLocationDetail(location.latitude, location.longitude)
     }
 
@@ -150,27 +195,33 @@ class LocationService @Inject constructor(
     }
 
     /**
-     * 获取当前位置的省份
+     * 获取当前位置的省份（优先使用高德返回的地址信息）
      */
     suspend fun getCurrentProvince(): String {
-        val location = getCurrentLocation() ?: return "未知"
-        return getProvince(location.latitude, location.longitude)
+        val location = getCurrentLocation()
+        if (location != null && location.province.isNotBlank()) return location.province
+        if (location != null) return getProvince(location.latitude, location.longitude)
+        return "未知"
     }
 
     /**
-     * 获取当前位置的城市
+     * 获取当前位置的城市（优先使用高德返回的地址信息）
      */
     suspend fun getCurrentCity(): String {
-        val location = getCurrentLocation() ?: return "未知"
-        return getCity(location.latitude, location.longitude)
+        val location = getCurrentLocation()
+        if (location != null && location.city.isNotBlank()) return location.city
+        if (location != null) return getCity(location.latitude, location.longitude)
+        return "未知"
     }
 
     /**
-     * 获取当前位置的区县
+     * 获取当前位置的区县（优先使用高德返回的地址信息）
      */
     suspend fun getCurrentDistrict(): String {
-        val location = getCurrentLocation() ?: return ""
-        return getDistrict(location.latitude, location.longitude)
+        val location = getCurrentLocation()
+        if (location != null && location.district.isNotBlank()) return location.district
+        if (location != null) return getDistrict(location.latitude, location.longitude)
+        return ""
     }
 
     // ==================== 原有方法 ====================
@@ -231,12 +282,15 @@ class LocationService @Inject constructor(
     }
 
     /**
-     * 检查位置权限
+     * 检查位置权限（同时检查精确定位和粗略定位）
      */
     fun hasLocationPermission(): Boolean {
-        return android.Manifest.permission.ACCESS_FINE_LOCATION.let { permission ->
-            PackageManager.PERMISSION_GRANTED ==
-                    ContextCompat.checkSelfPermission(context, permission)
-        }
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        return fineGranted || coarseGranted
     }
 }

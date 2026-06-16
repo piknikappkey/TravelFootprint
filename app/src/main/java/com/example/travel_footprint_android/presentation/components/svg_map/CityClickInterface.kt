@@ -30,11 +30,9 @@ class CityClickInterface(
 
 
             // 传递三个参数：城市名、adcode、父级adcode
+            // onCityClick 内部会处理 cityState 更新，无需再单独调用 cityClickState
             onCityClick(cityName, adcode, parentAdcode)
             Log.e("CityClickInterface", "Error5")
-
-            cityClickState(true)
-            Log.e("CityClickInterface", "Error6")
 
         } catch (e: Exception) {
             Log.e("CityClickInterface", "Error handling city click", e)

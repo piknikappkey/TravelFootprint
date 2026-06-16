@@ -97,6 +97,20 @@ class LightenViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LightenUiState())
     val uiState: StateFlow<LightenUiState> = _uiState.asStateFlow()
 
+    /** 当前查看的省份足迹列表（从角落模块"查看足迹"触发） */
+    private val _selectedProvinceFootprints = MutableStateFlow<List<Footprint>>(emptyList())
+    val selectedProvinceFootprints: StateFlow<List<Footprint>> = _selectedProvinceFootprints.asStateFlow()
+
+    /** 当前查看的省份名称 */
+    private val _selectedProvinceName = MutableStateFlow<String?>(null)
+    val selectedProvinceName: StateFlow<String?> = _selectedProvinceName.asStateFlow()
+
+    /** 清除查看的省份足迹 */
+    fun clearSelectedProvinceFootprints() {
+        _selectedProvinceFootprints.value = emptyList()
+        _selectedProvinceName.value = null
+    }
+
 
     //初始化加载数据
     init {
@@ -179,6 +193,9 @@ class LightenViewModel @Inject constructor(
         viewModelScope.launch {
             appService.getAllFootprints().collect { footprints ->
                 Log.d("LightenVM", "allFootprints collected: ${footprints.size} items, totalDist=${footprints.sumOf { it.distance }}m")
+                footprints.forEach { fp ->
+                    Log.d("ViewFootprint", "加载足迹: ${fp.title}, lat=${fp.latitude}, lng=${fp.longitude}, address=${fp.address}")
+                }
                 _allFootprints.value = footprints
             }
         }
@@ -776,6 +793,18 @@ class LightenViewModel @Inject constructor(
                 }
                 Log.e("LightenViewModel", "刷新所有数据失败", e)
             }
+        }
+    }
+
+    /**
+     * 从角落模块的"查看足迹"按钮触发，设置要查看的省份足迹列表
+     */
+    fun navigateToFootprint(footprints: List<Footprint>, provinceName: String) {
+        _selectedProvinceFootprints.value = footprints
+        _selectedProvinceName.value = provinceName
+        Log.d("ViewFootprint", "LightenVM: 设置省份足迹, province=$provinceName, 数量=${footprints.size}")
+        footprints.forEach { fp ->
+            Log.d("ViewFootprint", "  → ${fp.title}, lat=${fp.latitude}, lng=${fp.longitude}")
         }
     }
 

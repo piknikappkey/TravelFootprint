@@ -25,6 +25,10 @@ class RegionRepository @Inject constructor(
 
     suspend fun insertProvinces(provinces: List<Province>) = provinceDao.insertProvinces(provinces)
 
+    suspend fun insertProvince(province: Province) = provinceDao.insertProvince(province)
+
+    suspend fun getAllProvincesList(): List<Province> = provinceDao.getAllProvincesList()
+
     // 城市相关
     fun getAllCities(): Flow<List<City>> = cityDao.getAllCities()
 

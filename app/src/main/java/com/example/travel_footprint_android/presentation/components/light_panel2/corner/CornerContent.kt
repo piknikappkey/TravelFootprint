@@ -1,5 +1,6 @@
 package com.example.travel_footprint_android.presentation.components.light_panel2.corner
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -61,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2Tab
 import kotlinx.coroutines.delay
@@ -88,7 +90,9 @@ data class ProvinceDetail(
     val provinceAdcode: String,
     val cityCount: Int,
     val cityNames: List<String>,
-    val isLighted: Boolean
+    val isLighted: Boolean,
+    val centerLat: Double = 0.0,
+    val centerLng: Double = 0.0
 )
 
 private data class BucketListItem(
@@ -104,7 +108,8 @@ private const val EARTH_RADIUS_KM = 6371.0
 fun CornerContent(
     lightedProvinceCount: Int,
     lightCityList: List<LightedCity>,
-    onViewFootprint: ((LightedCity) -> Unit)? = null,
+    allFootprints: List<Footprint> = emptyList(),
+    onViewFootprint: ((List<Footprint>, String) -> Unit)? = null,
     onGoCheckIn: ((provinceAdcode: String) -> Unit)? = null,
     onExportFootprint: (() -> Unit)? = null
 ) {
@@ -143,16 +148,26 @@ fun CornerContent(
         val lightedAdcodes = provincesData.map { it.provinceAdcode }.toSet()
         val unlightedProvinces = allChineseProvinces
             .filter { it.adcode !in lightedAdcodes }
-            .map { (name, adcode) ->
+            .map { (name, adcode, lat, lng) ->
                 ProvinceDetail(
                     provinceName = name,
                     provinceAdcode = adcode,
                     cityCount = 0,
                     cityNames = emptyList(),
-                    isLighted = false
+                    isLighted = false,
+                    centerLat = lat,
+                    centerLng = lng
                 )
             }
-        provincesData + unlightedProvinces
+        // 为已点亮省份也补充真实经纬度
+        val coordsMap = allChineseProvinces.associate { it.adcode to (it.centerLat to it.centerLng) }
+        val lightedWithCoords = provincesData.map { p ->
+            val coords = coordsMap[p.provinceAdcode]
+            if (coords != null && p.centerLat == 0.0) {
+                p.copy(centerLat = coords.first, centerLng = coords.second)
+            } else p
+        }
+        lightedWithCoords + unlightedProvinces
     }
 
     var selectedRegion by remember { mutableStateOf(ProvinceRegion.ALL) }
@@ -206,6 +221,7 @@ fun CornerContent(
         items(filteredProvinces, key = { it.provinceAdcode }) { data ->
             ProvinceCard(
                 data = data,
+                allFootprints = allFootprints,
                 onViewFootprint = onViewFootprint,
                 onGoCheckIn = onGoCheckIn
             )
@@ -533,7 +549,8 @@ private fun RegionTag(
 @Composable
 private fun ProvinceCard(
     data: ProvinceDetail,
-    onViewFootprint: ((LightedCity) -> Unit)?,
+    allFootprints: List<Footprint>,
+    onViewFootprint: ((List<Footprint>, String) -> Unit)?,
     onGoCheckIn: ((String) -> Unit)?
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -672,7 +689,16 @@ private fun ProvinceCard(
                     ActionButton(
                         text = "查看足迹",
                         icon = Icons.Default.Map,
-                        onClick = { onViewFootprint?.let { /* navigate */ } },
+                        onClick = {
+                            Log.d("ViewFootprint", "点击查看足迹: province=${data.provinceName}, adcode=${data.provinceAdcode}")
+                            Log.d("ViewFootprint", "省份坐标: lat=${data.centerLat}, lng=${data.centerLng}")
+                            Log.d("ViewFootprint", "传入足迹总数: ${allFootprints.size}")
+                            // 查找该省份区域内的所有足迹
+                            val footprintsInProvince = findFootprintsInProvince(
+                                allFootprints, data.provinceAdcode
+                            )
+                            onViewFootprint?.invoke(footprintsInProvince, data.provinceName)
+                        },
                         compact = true
                     )
                     Spacer(Modifier.height(4.dp))
@@ -1092,46 +1118,133 @@ private fun haversineDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Do
     return EARTH_RADIUS_KM * c
 }
 
+/**
+ * 查找在指定省份区域内的所有足迹
+ * 使用省份边界矩形判断足迹是否落在该省份区域内
+ */
+private fun findFootprintsInProvince(
+    footprints: List<Footprint>,
+    provinceAdcode: String
+): List<Footprint> {
+    val tag = "ViewFootprint"
+    Log.d(tag, "===== 查找省份足迹 =====")
+    Log.d(tag, "省份adcode: $provinceAdcode")
+    Log.d(tag, "总足迹数: ${footprints.size}")
+
+    if (footprints.isEmpty()) {
+        Log.w(tag, "足迹列表为空，无法筛选")
+        return emptyList()
+    }
+
+    val bounds = PROVINCE_BOUNDS[provinceAdcode]
+    if (bounds == null) {
+        Log.e(tag, "未找到省份边界数据: adcode=$provinceAdcode")
+        return emptyList()
+    }
+    Log.d(tag, "省份边界: lat[${bounds.minLat}, ${bounds.maxLat}], lng[${bounds.minLng}, ${bounds.maxLng}]")
+
+    // 打印每条足迹的坐标，方便调试
+    footprints.forEachIndexed { index, fp ->
+        Log.d(tag, "  足迹[$index] title=${fp.title}, lat=${fp.latitude}, lng=${fp.longitude}, address=${fp.address}")
+    }
+
+    val result = footprints.filter { fp ->
+        fp.latitude != 0.0 && fp.longitude != 0.0 &&
+                fp.latitude in bounds.minLat..bounds.maxLat &&
+                fp.longitude in bounds.minLng..bounds.maxLng
+    }
+
+    Log.d(tag, "筛选结果: ${result.size} 条足迹在该省份区域内")
+    result.forEach { fp ->
+        Log.d(tag, "  ✓ ${fp.title} (lat=${fp.latitude}, lng=${fp.longitude})")
+    }
+    Log.d(tag, "========================")
+
+    return result
+}
+
+/** 省份边界矩形（minLat, maxLat, minLng, maxLng） */
+private data class ProvinceBounds(val minLat: Double, val maxLat: Double, val minLng: Double, val maxLng: Double)
+
+private val PROVINCE_BOUNDS = mapOf(
+    "110000" to ProvinceBounds(39.4, 40.6, 115.7, 117.1),     // 北京市
+    "120000" to ProvinceBounds(38.6, 39.7, 116.7, 117.9),     // 天津市
+    "130000" to ProvinceBounds(36.0, 42.6, 113.5, 119.9),     // 河北省
+    "140000" to ProvinceBounds(34.6, 40.7, 110.2, 114.6),     // 山西省
+    "150000" to ProvinceBounds(37.4, 53.3, 97.2, 126.1),      // 内蒙古自治区
+    "210000" to ProvinceBounds(38.7, 43.5, 119.0, 125.8),     // 辽宁省
+    "220000" to ProvinceBounds(40.8, 46.3, 121.6, 131.3),     // 吉林省
+    "230000" to ProvinceBounds(43.4, 53.6, 121.2, 135.1),     // 黑龙江省
+    "310000" to ProvinceBounds(30.7, 31.9, 120.9, 122.0),     // 上海市
+    "320000" to ProvinceBounds(30.8, 35.1, 116.4, 121.9),     // 江苏省
+    "330000" to ProvinceBounds(27.1, 31.2, 118.0, 122.4),     // 浙江省
+    "340000" to ProvinceBounds(29.4, 34.6, 114.9, 119.9),     // 安徽省
+    "350000" to ProvinceBounds(23.5, 28.3, 115.8, 120.7),     // 福建省
+    "360000" to ProvinceBounds(24.5, 30.1, 113.6, 118.5),     // 江西省
+    "370000" to ProvinceBounds(34.4, 38.4, 114.8, 122.7),     // 山东省
+    "410000" to ProvinceBounds(31.4, 36.4, 110.4, 116.7),     // 河南省
+    "420000" to ProvinceBounds(29.0, 33.3, 108.4, 116.1),     // 湖北省
+    "430000" to ProvinceBounds(24.6, 30.1, 108.8, 114.3),     // 湖南省
+    "440000" to ProvinceBounds(20.2, 25.5, 109.7, 117.3),     // 广东省
+    "450000" to ProvinceBounds(20.9, 26.4, 104.3, 112.1),     // 广西壮族自治区
+    "460000" to ProvinceBounds(18.2, 20.2, 108.4, 111.1),     // 海南省
+    "500000" to ProvinceBounds(28.1, 32.2, 105.3, 110.2),     // 重庆市
+    "510000" to ProvinceBounds(26.0, 34.3, 97.4, 108.6),      // 四川省
+    "520000" to ProvinceBounds(24.6, 29.2, 103.6, 109.5),     // 贵州省
+    "530000" to ProvinceBounds(21.1, 29.2, 97.5, 106.2),      // 云南省
+    "540000" to ProvinceBounds(26.9, 36.5, 78.4, 99.1),       // 西藏自治区
+    "610000" to ProvinceBounds(31.7, 39.6, 105.5, 111.2),     // 陕西省
+    "620000" to ProvinceBounds(32.6, 42.8, 92.3, 108.7),      // 甘肃省
+    "630000" to ProvinceBounds(31.6, 39.2, 89.4, 103.0),      // 青海省
+    "640000" to ProvinceBounds(35.2, 39.4, 104.3, 107.7),     // 宁夏回族自治区
+    "650000" to ProvinceBounds(34.3, 49.2, 73.5, 96.4),       // 新疆维吾尔自治区
+    "710000" to ProvinceBounds(21.9, 25.3, 120.0, 122.0),     // 台湾省
+    "810000" to ProvinceBounds(22.2, 22.6, 113.8, 114.4),     // 香港特别行政区
+    "820000" to ProvinceBounds(22.1, 22.3, 113.5, 113.7)      // 澳门特别行政区
+)
+
 private data class ChineseProvince(
     val name: String,
-    val adcode: String
+    val adcode: String,
+    val centerLat: Double,
+    val centerLng: Double
 )
 
 private fun getAllChineseProvinces(): List<ChineseProvince> = listOf(
-    ChineseProvince("北京市", "110000"),
-    ChineseProvince("天津市", "120000"),
-    ChineseProvince("河北省", "130000"),
-    ChineseProvince("山西省", "140000"),
-    ChineseProvince("内蒙古自治区", "150000"),
-    ChineseProvince("辽宁省", "210000"),
-    ChineseProvince("吉林省", "220000"),
-    ChineseProvince("黑龙江省", "230000"),
-    ChineseProvince("上海市", "310000"),
-    ChineseProvince("江苏省", "320000"),
-    ChineseProvince("浙江省", "330000"),
-    ChineseProvince("安徽省", "340000"),
-    ChineseProvince("福建省", "350000"),
-    ChineseProvince("江西省", "360000"),
-    ChineseProvince("山东省", "370000"),
-    ChineseProvince("河南省", "410000"),
-    ChineseProvince("湖北省", "420000"),
-    ChineseProvince("湖南省", "430000"),
-    ChineseProvince("广东省", "440000"),
-    ChineseProvince("广西壮族自治区", "450000"),
-    ChineseProvince("海南省", "460000"),
-    ChineseProvince("重庆市", "500000"),
-    ChineseProvince("四川省", "510000"),
-    ChineseProvince("贵州省", "520000"),
-    ChineseProvince("云南省", "530000"),
-    ChineseProvince("西藏自治区", "540000"),
-    ChineseProvince("陕西省", "610000"),
-    ChineseProvince("甘肃省", "620000"),
-    ChineseProvince("青海省", "630000"),
-    ChineseProvince("宁夏回族自治区", "640000"),
-    ChineseProvince("新疆维吾尔自治区", "650000"),
-    ChineseProvince("台湾省", "710000"),
-    ChineseProvince("香港特别行政区", "810000"),
-    ChineseProvince("澳门特别行政区", "820000")
+    ChineseProvince("北京市", "110000", 39.9042, 116.4074),
+    ChineseProvince("天津市", "120000", 39.1422, 117.1767),
+    ChineseProvince("河北省", "130000", 38.0428, 114.5149),
+    ChineseProvince("山西省", "140000", 37.8706, 112.5489),
+    ChineseProvince("内蒙古自治区", "150000", 40.8183, 111.7655),
+    ChineseProvince("辽宁省", "210000", 41.8057, 123.4315),
+    ChineseProvince("吉林省", "220000", 43.8868, 125.3245),
+    ChineseProvince("黑龙江省", "230000", 45.7420, 126.6610),
+    ChineseProvince("上海市", "310000", 31.2304, 121.4737),
+    ChineseProvince("江苏省", "320000", 32.0617, 118.7778),
+    ChineseProvince("浙江省", "330000", 30.2741, 120.1551),
+    ChineseProvince("安徽省", "340000", 31.8612, 117.2830),
+    ChineseProvince("福建省", "350000", 26.0745, 119.2965),
+    ChineseProvince("江西省", "360000", 28.6820, 115.8922),
+    ChineseProvince("山东省", "370000", 36.6683, 116.9972),
+    ChineseProvince("河南省", "410000", 34.7657, 113.7536),
+    ChineseProvince("湖北省", "420000", 30.5928, 114.3055),
+    ChineseProvince("湖南省", "430000", 28.2282, 112.9388),
+    ChineseProvince("广东省", "440000", 23.1317, 113.2664),
+    ChineseProvince("广西壮族自治区", "450000", 22.8170, 108.3665),
+    ChineseProvince("海南省", "460000", 20.0174, 110.3492),
+    ChineseProvince("重庆市", "500000", 29.5630, 106.5516),
+    ChineseProvince("四川省", "510000", 30.5723, 104.0665),
+    ChineseProvince("贵州省", "520000", 26.6470, 106.6302),
+    ChineseProvince("云南省", "530000", 25.0389, 102.7183),
+    ChineseProvince("西藏自治区", "540000", 29.6500, 91.1000),
+    ChineseProvince("陕西省", "610000", 34.2658, 108.9541),
+    ChineseProvince("甘肃省", "620000", 36.0611, 103.8343),
+    ChineseProvince("青海省", "630000", 36.6171, 101.7782),
+    ChineseProvince("宁夏回族自治区", "640000", 38.4872, 106.2309),
+    ChineseProvince("新疆维吾尔自治区", "650000", 43.7930, 87.6271),
+    ChineseProvince("台湾省", "710000", 25.0330, 121.5654),
+    ChineseProvince("香港特别行政区", "810000", 22.3193, 114.1694),
+    ChineseProvince("澳门特别行政区", "820000", 22.1987, 113.5439)
 )
 
 /** 省份中文名 → 英文资源名映射 */

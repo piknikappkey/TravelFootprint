@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,8 +29,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,7 +58,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -62,13 +66,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.dao.LightedProvince
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation.components.back_buttom.city_province_backButtom
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInContent
 import com.example.travel_footprint_android.presentation.components.light_panel2.checkin.CheckInRecord
@@ -77,9 +81,8 @@ import com.example.travel_footprint_android.presentation.components.light_panel2
 import com.example.travel_footprint_android.presentation.components.light_panel2.light_city_edit.LightCityEditScreen
 import com.example.travel_footprint_android.presentation.components.light_panel2.panel_title.PanelTitle
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
-import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
 import com.example.travel_footprint_android.presentation2.screen.LightenCityMode
-import kotlinx.serialization.json.JsonNull.content
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -101,6 +104,8 @@ fun LightPanel2(
     val lightedProvinceCount by lightenViewModel.lightedProvinceCountFlow.collectAsState()
     val dbCheckInRecords by lightenViewModel.checkInRecords.collectAsState()
     val allFootprints by lightenViewModel.allFootprints.collectAsState()
+    val selectedProvinceFootprints by lightenViewModel.selectedProvinceFootprints.collectAsState()
+    val selectedProvinceName by lightenViewModel.selectedProvinceName.collectAsState()
 
     // ✅ 添加 selectionState 状态定义
     var selectionState by remember {
@@ -205,40 +210,51 @@ fun LightPanel2(
         DragPanelContainer(
             screenHeightDp = configuration.screenHeightDp,
             onExpandedChanged = onExpandedChanged,
-        ) { isExpanded, requestExpand ->
-            PanelTitle(
-                modifier = Modifier.fillMaxWidth(),
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-            )
+            titleContent = {
+                PanelTitle(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                )
+            },
+            bodyContent = { isExpanded, requestExpand ->
+                LightPanelBody(
+                    selectedTab = selectedTab,
+                    lightPanel2State = lightPanel2State,
+                    isDeleteMode = isDeleteMode,
+                    isExpanded = isExpanded,
+                    lightCityList = lightCityList,
+                    lightedProvinces = lightedProvinces,
+                    lightedProvinceCount = lightedProvinceCount,
+                    lightenCityMode = lightenCityMode,
+                    checkInRecords = checkInRecords,
+                    selectedProvinceAdcode = selectedProvinceAdcode,
+                    allFootprints = allFootprints,
+                    selectionState = selectionState,
+                    onSelectionChanged = onSelectionChanged,
+                    onAddCheckIn = onAddCheckIn,
+                    onAddCheckInRich = onAddCheckInRich,
+                    onProvinceFilterCleared = onProvinceFilterCleared,
+                    onGoCheckIn = { provinceCode ->
+                        selectedProvinceAdcode = provinceCode
+                        selectedTab = LightPanel2Tab.CHECK_IN
+                        requestExpand()
+                    },
+                    onStateChange = onStateChange,
+                    onDeleteModeChange = onDeleteModeChange,
+                    onSelectionReset = onSelectionReset
+                )
+            })
+    }
 
-            LightPanelBody(
-                selectedTab = selectedTab,
-                lightPanel2State = lightPanel2State,
-                isDeleteMode = isDeleteMode,
-                isExpanded = isExpanded,
-                lightCityList = lightCityList,
-                lightedProvinces = lightedProvinces,
-                lightedProvinceCount = lightedProvinceCount,
-                lightenCityMode = lightenCityMode,
-                checkInRecords = checkInRecords,
-                selectedProvinceAdcode = selectedProvinceAdcode,
-                allFootprints = allFootprints,
-                selectionState = selectionState,
-                onSelectionChanged = onSelectionChanged,
-                onAddCheckIn = onAddCheckIn,
-                onAddCheckInRich = onAddCheckInRich,
-                onProvinceFilterCleared = onProvinceFilterCleared,
-                onGoCheckIn = { provinceCode ->
-                    selectedProvinceAdcode = provinceCode
-                    selectedTab = LightPanel2Tab.CHECK_IN
-                    requestExpand()
-                },
-                onStateChange = onStateChange,
-                onDeleteModeChange = onDeleteModeChange,
-                onSelectionReset = onSelectionReset
-            )
-        }
+    // 省份足迹列表弹窗（从角落模块"查看足迹"触发）
+    if (selectedProvinceName != null) {
+        Log.d("ViewFootprint", "LightPanel2: 弹窗触发, province=$selectedProvinceName, 足迹数=${selectedProvinceFootprints.size}")
+        ProvinceFootprintsDialog(
+            footprints = selectedProvinceFootprints,
+            provinceName = selectedProvinceName!!,
+            onDismiss = { lightenViewModel.clearSelectedProvinceFootprints() }
+        )
     }
 }
 
@@ -250,7 +266,8 @@ fun LightPanel2(
 private fun DragPanelContainer(
     screenHeightDp: Int,
     onExpandedChanged: ((Boolean) -> Unit)?,
-    content: @Composable ColumnScope.(isExpanded: Boolean, requestExpand: () -> Unit) -> Unit
+    titleContent: @Composable () -> Unit,
+    bodyContent: @Composable ColumnScope.(isExpanded: Boolean, requestExpand: () -> Unit) -> Unit
 ) {
     var currentHeightRatio by remember { mutableFloatStateOf(0.4f) }
     var isDragging by remember { mutableStateOf(false) }
@@ -334,34 +351,35 @@ private fun DragPanelContainer(
                 .fillMaxSize()
                 .nestedScroll(nestedScrollConnection)
         ) {
-            // 顶部拖拽手柄（用于直接拖拽缩放面板，不影响 LazyColumn 滚动）
-            DragHandle(
+            // 整个顶部区域（手柄指示条 + tab栏）支持拖拽
+            DragHeader(
                 screenHeightPixels = screenHeightPixels,
                 onDragStart = { isDragging = true },
                 onDrag = { ratioDelta ->
                     currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
                 },
-                onDragEnd = { isDragging = false }
+                onDragEnd = { isDragging = false },
+                titleContent = titleContent
             )
 
-            // 面板内容（ColumnScope 上下文，content 可调用 LightPanelBody 等）
-            content(isExpanded, requestExpand)
+            // 面板主体（ColumnScope 上下文）
+            bodyContent(isExpanded, requestExpand)
         }
     }
 }
 
-// ========== 顶部拖拽手柄 ==========
+// ========== 拖拽头部（手柄指示条 + tab栏） ==========
 @Composable
-private fun DragHandle(
+private fun DragHeader(
     screenHeightPixels: Float,
     onDragStart: () -> Unit,
     onDrag: (Float) -> Unit,
-    onDragEnd: () -> Unit
+    onDragEnd: () -> Unit,
+    titleContent: @Composable () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(20.dp)
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragStart = { onDragStart() },
@@ -371,17 +389,26 @@ private fun DragHandle(
                     },
                     onDragEnd = { onDragEnd() }
                 )
-            },
-        contentAlignment = Alignment.Center
+            }
     ) {
         // 视觉手柄条
         Box(
             modifier = Modifier
-                .width(36.dp)
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(Color(0xFFD1D5DB))
-        )
+                .fillMaxWidth()
+                .height(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(36.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFFD1D5DB))
+            )
+        }
+
+        // tab栏
+        titleContent()
     }
 }
 
@@ -740,61 +767,50 @@ private fun ColumnScope.LightPanelBody(
     onGoCheckIn: (String) -> Unit,
     onStateChange: (LightPanel2State) -> Unit,
     onDeleteModeChange: (Boolean) -> Unit,
-    onSelectionReset: () -> Unit
+    onSelectionReset: () -> Unit,
+    lightenViewModel: LightenViewModel = hiltViewModel()
 ) {
     Box(
         modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
     ) {
-        // 记录所有已显示过的Tab，保持其内容在composition中
-        var displayedTabs by remember { mutableStateOf(setOf<LightPanel2Tab>()) }
-        
-        // 当选择新Tab时，将其添加到已显示集合中
-        if (selectedTab != null && !displayedTabs.contains(selectedTab!!)) {
-            displayedTabs = displayedTabs + selectedTab!!
-        }
+        when (selectedTab) {
+            null -> { /* 没有选中任何 Tab 时显示空白 */ }
 
-        // 渲染所有已显示过的Tab内容，但只显示当前选中的Tab
-        for (tab in displayedTabs) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    // 只显示当前选中的Tab，其他Tab隐藏但保持在composition中
-                    .graphicsLayer { alpha = if (tab == selectedTab) 1f else 0f }
-                    // 使用graphicsLayer而不是visibility，保持组件在composition中
-            ) {
-                when (tab) {
-                    LightPanel2Tab.LIGHT_UP -> {
-                        LightUpContentOnly(
-                            lightPanel2State = lightPanel2State,
-                            lightCityList = lightCityList,
-                            lightedProvinces = lightedProvinces,
-                            lightenCityMode = lightenCityMode,
-                            isDeleteMode = isDeleteMode,
-                            onSelectionChanged = onSelectionChanged
-                        )
-                    }
+            LightPanel2Tab.LIGHT_UP -> {
+                LightUpContentOnly(
+                    lightPanel2State = lightPanel2State,
+                    lightCityList = lightCityList,
+                    lightedProvinces = lightedProvinces,
+                    lightenCityMode = lightenCityMode,
+                    isDeleteMode = isDeleteMode,
+                    onSelectionChanged = onSelectionChanged
+                )
+            }
 
-                    LightPanel2Tab.CORNER -> {
-                        CornerContent(
-                            lightedProvinceCount = lightedProvinceCount,
-                            lightCityList = lightCityList,
-                            onGoCheckIn = onGoCheckIn
-                        )
-                    }
+            LightPanel2Tab.CORNER -> {
+                CornerContent(
+                    lightedProvinceCount = lightedProvinceCount,
+                    lightCityList = lightCityList,
+                    allFootprints = allFootprints,
+                    onViewFootprint = { footprints, provinceName ->
+                        Log.d("ViewFootprint", "LightPanel2回调: province=$provinceName, 匹配足迹数=${footprints.size}")
+                        lightenViewModel.navigateToFootprint(footprints, provinceName)
+                    },
+                    onGoCheckIn = onGoCheckIn
+                )
+            }
 
-                    LightPanel2Tab.CHECK_IN -> {
-                        CheckInContent(
-                            lightCityList = lightCityList,
-                            checkInRecords = checkInRecords,
-                            currentProvinceAdcode = selectedProvinceAdcode,
-                            onAddCheckIn = onAddCheckIn,
-                            onAddCheckInRich = onAddCheckInRich,
-                            onProvinceFilterCleared = onProvinceFilterCleared
-                        )
-                    }
-                }
+            LightPanel2Tab.CHECK_IN -> {
+                CheckInContent(
+                    lightCityList = lightCityList,
+                    checkInRecords = checkInRecords,
+                    currentProvinceAdcode = selectedProvinceAdcode,
+                    onAddCheckIn = onAddCheckIn,
+                    onAddCheckInRich = onAddCheckInRich,
+                    onProvinceFilterCleared = onProvinceFilterCleared
+                )
             }
         }
     }
@@ -1108,6 +1124,225 @@ private fun ProvinceDetailDialog(
                         color = Color.White
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * 省份足迹列表弹窗
+ * 展示某省份区域内的所有足迹列表，无足迹时显示"暂无足迹"
+ */
+@Composable
+private fun ProvinceFootprintsDialog(
+    footprints: List<Footprint>,
+    provinceName: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .fillMaxSize(0.7f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+            ) {
+                // 标题栏
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "$provinceName 足迹",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1F2937)
+                        )
+                        Text(
+                            text = if (footprints.isEmpty()) "暂无足迹" else "共 ${footprints.size} 个足迹",
+                            fontSize = 12.sp,
+                            color = if (footprints.isEmpty()) Color(0xFFEF4444) else Color(0xFF9CA3AF)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF3F4F6))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = onDismiss
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✕",
+                            fontSize = 16.sp,
+                            color = Color(0xFF6B7280),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                if (footprints.isEmpty()) {
+                    // 暂无足迹提示
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "暂无足迹",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF9CA3AF)
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "该省份下还没有记录足迹哦",
+                                fontSize = 13.sp,
+                                color = Color(0xFFD1D5DB)
+                            )
+                        }
+                    }
+                } else {
+                    // 足迹列表
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(footprints, key = { it.id }) { footprint ->
+                            FootprintListItem(footprint = footprint)
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // 关闭按钮
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF3B82F6))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onDismiss
+                        )
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "关闭",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 足迹列表项
+ */
+@Composable
+private fun FootprintListItem(footprint: Footprint) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFFF9FAFB))
+            .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(10.dp))
+            .padding(12.dp)
+    ) {
+        Column {
+            // 标题
+            Text(
+                text = footprint.title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1F2937)
+            )
+
+            // 地址
+            if (footprint.address.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFF3B82F6),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = footprint.address,
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // 底部信息行
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 创建时间
+                Text(
+                    text = footprint.getFormattedTime(),
+                    fontSize = 11.sp,
+                    color = Color(0xFF9CA3AF)
+                )
+
+                // 评分
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    repeat(5) { index ->
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = if (index < footprint.rating) Color(0xFFF59E0B) else Color(0xFFE5E7EB),
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+            }
+
+            // 描述（如果有）
+            if (footprint.description.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = footprint.description,
+                    fontSize = 11.sp,
+                    color = Color(0xFF9CA3AF),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
