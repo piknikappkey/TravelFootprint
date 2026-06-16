@@ -105,6 +105,8 @@ class JourneyMapViewModel @Inject constructor(
     private var animationJob: Job? = null
     // 定位后相机移动动画时长（毫秒）
     private var _aniMoveTime: Long = 0
+    // 定位重试计数
+    private var _locationRetryCount: Int = 0
 
     // 屏幕参数和面板偏移量（用于底部面板补偿定位）
     private var _screenWidthPx: Int = 0
@@ -182,18 +184,24 @@ class JourneyMapViewModel @Inject constructor(
             e.printStackTrace()
         }
 
-        // 配置定位参数：高精度模式 + 单次定位
+        // 配置定位参数：高精度模式 + 单次定位 + 返回地址信息 + 超时设置
         val locationOption = AMapLocationClientOption().apply {
             locationMode = AMapLocationClientOption.AMapLocationMode.Hight_Accuracy
             isOnceLocation = true
+            isOnceLocationLatest = true
+            isNeedAddress = true
+            httpTimeOut = 15000
+            isLocationCacheEnable = true
         }
         locationClient.setLocationOption(locationOption)
 
-        // 设置定位结果监听：成功后将相机移动到定位位置
+        // 设置定位结果监听：成功后将相机移动到定位位置，失败时记录错误并重试
         locationClient.setLocationListener { location ->
             if (location.errorCode == 0) {
+                Log.d("JourneyMap3ViewModel", "定位成功: lat=${location.latitude}, lng=${location.longitude}, address=${location.address}")
                 val latLng = LatLng(location.latitude, location.longitude)
                 _currentLocation.value = latLng
+                _locationRetryCount = 0 // 定位成功，重置重试计数
                 val aniTime = _aniMoveTime
                 val spWidth = _screenWidthPx
                 val spHeight = _screenHeightPx
@@ -206,8 +214,26 @@ class JourneyMapViewModel @Inject constructor(
                 } else {
                     aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
                 }
+            } else {
+                Log.e("JourneyMap3ViewModel", "定位失败: errorCode=${location.errorCode}, errorInfo=${location.errorInfo}, locationDetail=${location.locationDetail}")
+                // 自动重试（最多 3 次，间隔 2 秒）
+                if (_locationRetryCount < MAX_LOCATION_RETRY) {
+                    _locationRetryCount++
+                    Log.w("JourneyMap3ViewModel", "定位重试: 第 ${_locationRetryCount}/$MAX_LOCATION_RETRY 次")
+                    viewModelScope.launch {
+                        delay(2000)
+                        _locationClient.value?.startLocation()
+                    }
+                } else {
+                    Log.e("JourneyMap3ViewModel", "定位重试次数已用完，放弃定位")
+                    _locationRetryCount = 0
+                }
             }
         }
+    }
+
+    companion object {
+        private const val MAX_LOCATION_RETRY = 3
     }
 
     /**

@@ -17,6 +17,9 @@ interface ProvinceDao {
     @Query("SELECT * FROM provinces ORDER BY sortOrder, name")
     fun getAllProvinces(): Flow<List<Province>>
 
+    @Query("SELECT * FROM provinces ORDER BY sortOrder, name")
+    suspend fun getAllProvincesList(): List<Province>
+
     @Query("SELECT * FROM provinces WHERE adcode = :adcode")
     suspend fun getProvinceByAdcode(adcode: String): Province?
 

@@ -228,6 +228,7 @@ LaunchedEffect(selectedCityCodes, unselectedCityCodes,
 
 **当前重构已取得的成果（已验证）：**
 
+
 - ✅ 选中状态合并：4 个独立 `mutableStateOf` → 1 个 `SelectionState` data class
 - ✅ Lambda 全部 `remember` 稳定化
 - ✅ `LightPanelBody` 提取为独立 Composable

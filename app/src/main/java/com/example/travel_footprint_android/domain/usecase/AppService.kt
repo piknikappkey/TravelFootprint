@@ -245,7 +245,7 @@ class AppService @Inject constructor(
 
     // ==================== 位置相关 ====================
 
-    suspend fun getCurrentLocation(): android.location.Location? {
+    suspend fun getCurrentLocation(): LocationService.LocationData? {
         return withContext(Dispatchers.IO) {
             locationService.getCurrentLocation()
         }
@@ -539,6 +539,8 @@ class AppService @Inject constructor(
             val count = regionRepository.getProvinceCount()
             if (count > 0) {
                 Log.d("AppService", "省份数据已存在（${count}条），跳过初始化")
+                // 修复已有省份的经纬度（补充真实坐标）
+                fixProvinceCoordinates()
                 return@withContext
             }
 
@@ -548,17 +550,19 @@ class AppService @Inject constructor(
                     .bufferedReader().use { it.readText() }
                 val json = org.json.JSONObject(jsonString)
 
-                // 解析省份
+                // 解析省份（使用真实省份中心经纬度）
                 val provincesArray = json.getJSONArray("provinces")
                 val provinces = mutableListOf<Province>()
                 for (i in 0 until provincesArray.length()) {
                     val obj = provincesArray.getJSONObject(i)
+                    val adcode = obj.getInt("adcode").toString()
+                    val coords = PROVINCE_COORDS[adcode]
                     provinces.add(
                         Province(
-                            adcode = obj.getInt("adcode").toString(),
+                            adcode = adcode,
                             name = obj.getString("name"),
-                            centerLat = obj.optDouble("centerLat", 0.0),
-                            centerLng = obj.optDouble("centerLng", 0.0),
+                            centerLat = coords?.first ?: obj.optDouble("centerLat", 0.0),
+                            centerLng = coords?.second ?: obj.optDouble("centerLng", 0.0),
                             sortOrder = i
                         )
                     )
@@ -615,6 +619,80 @@ class AppService @Inject constructor(
                 Log.e("AppService", "修复省份名称失败", e)
             }
         }
+    }
+
+    /**
+     * 修复已有省份记录中缺失的经纬度坐标
+     * 遍历所有 provinces 记录，将 centerLat/centerLng 为 0 的记录更新为真实坐标
+     */
+    suspend fun fixProvinceCoordinates() {
+        withContext(Dispatchers.IO) {
+            try {
+                val allProvinces = regionRepository.getAllProvincesList()
+                var fixedCount = 0
+                for (province in allProvinces) {
+                    if (province.centerLat == 0.0 && province.centerLng == 0.0) {
+                        val coords = PROVINCE_COORDS[province.adcode]
+                        if (coords != null) {
+                            val updatedProvince = province.copy(
+                                centerLat = coords.first,
+                                centerLng = coords.second
+                            )
+                            regionRepository.insertProvince(updatedProvince)
+                            fixedCount++
+                        }
+                    }
+                }
+                if (fixedCount > 0) {
+                    Log.d("AppService", "省份经纬度修复完成: 修复${fixedCount}条")
+                }
+                else{
+                    Log.d("经纬度ch","")
+                }
+            } catch (e: Exception) {
+                Log.e("AppService", "修复省份经纬度失败", e)
+            }
+        }
+    }
+
+    /** 中国各省份中心经纬度坐标（adcode → Pair(lat, lng)） */
+    companion object {
+        val PROVINCE_COORDS = mapOf(
+            "110000" to (39.9042 to 116.4074),   // 北京市
+            "120000" to (39.1422 to 117.1767),   // 天津市
+            "130000" to (38.0428 to 114.5149),   // 河北省
+            "140000" to (37.8706 to 112.5489),   // 山西省
+            "150000" to (40.8183 to 111.7655),   // 内蒙古自治区
+            "210000" to (41.8057 to 123.4315),   // 辽宁省
+            "220000" to (43.8868 to 125.3245),   // 吉林省
+            "230000" to (45.7420 to 126.6610),   // 黑龙江省
+            "310000" to (31.2304 to 121.4737),   // 上海市
+            "320000" to (32.0617 to 118.7778),   // 江苏省
+            "330000" to (30.2741 to 120.1551),   // 浙江省
+            "340000" to (31.8612 to 117.2830),   // 安徽省
+            "350000" to (26.0745 to 119.2965),   // 福建省
+            "360000" to (28.6820 to 115.8922),   // 江西省
+            "370000" to (36.6683 to 116.9972),   // 山东省
+            "410000" to (34.7657 to 113.7536),   // 河南省
+            "420000" to (30.5928 to 114.3055),   // 湖北省
+            "430000" to (28.2282 to 112.9388),   // 湖南省
+            "440000" to (23.1317 to 113.2664),   // 广东省
+            "450000" to (22.8170 to 108.3665),   // 广西壮族自治区
+            "460000" to (20.0174 to 110.3492),   // 海南省
+            "500000" to (29.5630 to 106.5516),   // 重庆市
+            "510000" to (30.5723 to 104.0665),   // 四川省
+            "520000" to (26.6470 to 106.6302),   // 贵州省
+            "530000" to (25.0389 to 102.7183),   // 云南省
+            "540000" to (29.6500 to 91.1000),    // 西藏自治区
+            "610000" to (34.2658 to 108.9541),   // 陕西省
+            "620000" to (36.0611 to 103.8343),   // 甘肃省
+            "630000" to (36.6171 to 101.7782),   // 青海省
+            "640000" to (38.4872 to 106.2309),   // 宁夏回族自治区
+            "650000" to (43.7930 to 87.6271),    // 新疆维吾尔自治区
+            "710000" to (25.0330 to 121.5654),   // 台湾省
+            "810000" to (22.3193 to 114.1694),   // 香港特别行政区
+            "820000" to (22.1987 to 113.5439)    // 澳门特别行政区
+        )
     }
 
     // ==================== 点亮省份相关 ====================
