@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- ==================== 前台服务权限（Android 14+ 高德定位 APSService 必需） ==================== -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
     <!-- ==================== 相机权限 ==================== -->
     <uses-permission android:name="android.permission.CAMERA" />
 
@@ -51,8 +55,10 @@
             android:name="com.amap.api.v2.apikey"
             android:value="83279a23557952f6b018e06064b2ed24"/>
 
-        <!-- 开启持续定位服 务-->
-        <service android:name="com.amap.api.location.APSService" />
+        <!-- 开启持续定位服务（Android 14+ 必须声明 foregroundServiceType） -->
+        <service
+            android:name="com.amap.api.location.APSService"
+            android:foregroundServiceType="location" />
 
         <activity
             android:name=".MainActivity"
