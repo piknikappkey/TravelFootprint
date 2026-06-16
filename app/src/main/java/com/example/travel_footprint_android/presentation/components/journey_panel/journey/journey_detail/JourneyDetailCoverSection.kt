@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare2
+import com.example.travel_footprint_android.presentation.components.image_square.ImageSquare
 import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 
 @Composable
@@ -15,7 +15,7 @@ fun JourneyDetailCoverSection(
     updateJourney: (Journey) -> Unit,
 ) {
     Column {
-        ImageSquare2(
+        ImageSquare(
             imgPath = journey.coverImagePath,
             updateImgPath = { file ->
                 journey.coverImagePath = file.absolutePath

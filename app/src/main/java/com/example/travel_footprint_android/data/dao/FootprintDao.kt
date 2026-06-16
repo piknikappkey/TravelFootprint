@@ -89,6 +89,34 @@ interface FootprintDao {
     @Query("SELECT * FROM footprints WHERE id = :footprintId")
     suspend fun getFootprintById(footprintId: Long): Footprint?
 
+    /**
+     * 仅更新运动录制数据字段（轻量级更新，避免覆盖其他字段）
+     */
+    @Query("""
+        UPDATE footprints SET
+            startTime = :startTime,
+            duration = :duration,
+            distance = :distance,
+            speed = :speed,
+            calories = :calories
+        WHERE id = :footprintId
+    """)
+    suspend fun updateRecordingData(
+        footprintId: Long,
+        startTime: Date?,
+        duration: Long,
+        distance: Double,
+        speed: Double,
+        calories: Double,
+    )
+
+    // ==================== 统计查询 ====================
+
+    /**
+     * 获取足迹总数
+     */
+    @Query("SELECT COUNT(*) FROM footprints")
+    suspend fun getFootprintCount(): Int
 
 }
 

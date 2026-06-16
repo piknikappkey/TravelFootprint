@@ -34,10 +34,17 @@ package com.example.travel_footprint_android.presentation.screen.nav_screen
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -64,10 +71,14 @@ import com.example.travel_footprint_android.presentation.components.journey_map.
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherCard
 import com.example.travel_footprint_android.presentation.components.journey_panel.JourneyPanel
+import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_list.DraggableRecordingIndicator
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 
 // 旅程主界面 Composable 函数：作为应用核心页面，整合地图、面板、特效层
 // 通过 Hilt 注入 JourneyViewModel（页面级作用域）和 JourneyMapViewModel（Activity 级作用域）
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun JourneyScreen(
     // journeyViewModel：管理旅程/足迹的增删改查，key="journey" 确保同一 ViewModel 实例
@@ -77,6 +88,10 @@ fun JourneyScreen(
         viewModelStoreOwner = LocalContext.current as ComponentActivity,
         key = "JourneyMap3"
     ),
+    // recordingViewModel：管理录制状态，全局共享
+    recordingViewModel: RecordingViewModel = hiltViewModel(),
+    // journeyPanelViewModel：管理面板导航状态，全局共享
+    journeyPanelViewModel: JourneyPanelViewModel = hiltViewModel(),
 ) {
     // journeyUiState：收集旅程 UI 状态流，包含旅程列表、足迹计数、位置列表等数据
     val journeyUiState by journeyViewModel.uiState.collectAsState()
@@ -117,6 +132,9 @@ fun JourneyScreen(
     val showSplash by journeyMapViewModel.showSplash.collectAsState()
     // showMapScreen：是否显示地图主界面，闪屏结束后由 ViewModel 控制
     val showMapScreen by journeyMapViewModel.showMapScreen.collectAsState()
+
+    // 录制状态：用于控制可拖拽录制指示器的显示
+    val recordingState by recordingViewModel.uiState.collectAsState()
 
     // ===== 主布局：Box 容器实现多层叠加效果 =====
     Box(
@@ -171,9 +189,25 @@ fun JourneyScreen(
             journeyViewModel = journeyViewModel,
         )
         // ===== 天气卡片：位于面板上方（z-order），避免被面板遮挡 =====
-        WeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
+        if(hasLocationPermission) {
+            WeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
+
+        }
         // ===== 图片雨特效层：覆盖在整个页面上方，作为装饰性背景特效 =====
         ImageRain()
+
+        // ===== 可拖拽录制指示器：仅在录制时显示，带出场/消失动画 =====
+        AnimatedVisibility(
+            visible = recordingState.isRecording,
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut(),
+        ) {
+            DraggableRecordingIndicator(
+                recordingState = recordingState,
+                journeys = journeyUiState.journeys,
+                journeyPanelViewModel = journeyPanelViewModel,
+            )
+        }
     }
 }
 

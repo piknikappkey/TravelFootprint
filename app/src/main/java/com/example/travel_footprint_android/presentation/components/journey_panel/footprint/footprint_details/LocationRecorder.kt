@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.amap.api.location.AMapLocation
 import com.amap.api.location.AMapLocationClient
@@ -28,33 +28,38 @@ fun LocationRecorder(
     updateLocation: (Double, Double) -> Unit = { latitude, longitude -> },
 ) {
     val context = LocalContext.current
+    var locationClient: AMapLocationClient? = null
 
-    // 使用 remember 持久化 locationClient，避免重组时被重置为 null
-    val locationClient = remember {
-        createLocationClient(context) { location ->
-            if (location.errorCode == 0) {
-                Log.d("LocationRecorder", "定位成功 - 纬度: ${location.latitude}, 经度: ${location.longitude}")
-                updateLocation(location.latitude, location.longitude)
-            } else {
-                Log.e("LocationRecorder", "定位失败 - 错误码: ${location.errorCode}, 错误信息: ${location.errorInfo}")
-            }
-        }
-    }
-
-    // DisposableEffect 统一管理定位的启动和停止
+    // 创建定位客户端
     DisposableEffect(isRecord) {
         if (isRecord) {
-            locationClient.startLocation()
+            locationClient = createLocationClient(context) { location ->
+                if (location.errorCode == 0) {
+                    Log.d("LocationRecorder", "定位成功 - 纬度: ${location.latitude}, 经度: ${location.longitude}")
+                    updateLocation(location.latitude, location.longitude) // 将位置信息传出
+                } else {
+                    Log.e("LocationRecorder", "定位失败 - 错误码: ${location.errorCode}, 错误信息: ${location.errorInfo}")
+                }
+            }
+            locationClient?.startLocation()
             Log.d("LocationRecorder", "开始持续定位...")
-        } else {
-            locationClient.stopLocation()
-            Log.d("LocationRecorder", "暂停定位")
         }
 
         onDispose {
-            locationClient.stopLocation()
-            locationClient.onDestroy()
+            locationClient?.stopLocation()
+            locationClient?.onDestroy()
             Log.d("LocationRecorder", "停止定位并释放资源")
+        }
+    }
+
+    // 监听 isRecord 状态变化
+    LaunchedEffect(isRecord) {
+        if (isRecord) {
+            locationClient?.startLocation()
+            Log.d("LocationRecorder", "重新开始持续定位")
+        } else {
+            locationClient?.stopLocation()
+            Log.d("LocationRecorder", "暂停定位")
         }
     }
 }

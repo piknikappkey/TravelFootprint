@@ -18,7 +18,7 @@ fun ButtonMain(
     modifier: Modifier = Modifier,
     bgColor: Color = BtnBgColorMain0,
     paddingValues: PaddingValues = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-    roundedCornerShape: RoundedCornerShape = RoundedCornerShape(8.dp),
+    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -26,12 +26,12 @@ fun ButtonMain(
         modifier = modifier
             .shadow(
                 elevation = 2.dp,
-                shape = roundedCornerShape,
+                shape = shape,
                 clip = false
             )
             .background(
                 color = bgColor,
-                shape = roundedCornerShape
+                shape = shape
             )
             .clickable(onClick = onClick)
             .padding(paddingValues)

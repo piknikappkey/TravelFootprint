@@ -104,6 +104,9 @@ dependencies {
     // ================== 序列化 ==================
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
 
+    // ================== 网络请求 ==================
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     // ================== 测试 ==================
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

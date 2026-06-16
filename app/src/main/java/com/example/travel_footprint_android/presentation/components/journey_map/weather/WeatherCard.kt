@@ -6,11 +6,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,7 +105,7 @@ fun WeatherCard(
                     ) {
                         Headline(
                             text = "${live.temperature}°",
-                            fontSize = 22.sp
+                            fontSize = 20.sp
                         )
                         TextMedium(
                             text = live.weather,
@@ -109,6 +113,30 @@ fun WeatherCard(
                             color = FontDark5
                         )
                     }
+                }
+            } else if (weatherState.error != null) {
+                // 天气请求失败：显示错误图标 + 错误信息 + 重试按钮
+                Icon(
+                    imageVector = Icons.Outlined.CloudOff,
+                    contentDescription = null,
+                    tint = FontDark5,
+                    modifier = Modifier.width(24.dp)
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    TextMedium(
+                        text = weatherState.error!!,
+                        fontSize = 12.sp,
+                        color = FontDark5
+                    )
+                    TextMedium(
+                        text = "点击重试",
+                        fontSize = 11.sp,
+                        color = Color(0xFF2196F3),
+                        modifier = Modifier.clickable {
+                            weatherViewModel.loadWeatherForCurrentLocation()
+                        }
+                    )
                 }
             } else {
                 TextMedium(

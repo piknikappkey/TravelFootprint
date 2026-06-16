@@ -39,8 +39,15 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
  * 6. 组件销毁(onDispose)时停止记录、清除地图路线、释放定位资源
  */
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -56,22 +63,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Footprint
-import com.example.travel_footprint_android.data.entity.Location
-import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
-import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
-import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_details.LocationRecorder
+import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
+import com.example.travel_footprint_android.presentation.service.RecordingForegroundService
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 import com.example.travel_footprint_android.ui.theme.FontDark4
-import com.example.travel_footprint_android.ui.theme.FontDark5
 import com.example.travel_footprint_android.ui.theme.MainColor2
-import kotlinx.coroutines.delay
+import com.example.travel_footprint_android.ui.theme.SecondColor1
+import com.example.travel_footprint_android.ui.theme.SecondColor2
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,294 +90,197 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 // 主面板组件：展示某个足迹的运动记录面板，支持开始/暂停/结束控制
+// 录制逻辑已迁移到 RecordingForegroundService，本组件仅负责 UI 展示和控制指令发送
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FootprintListPanel(
     footprint: Footprint,                               // 目标足迹对象，携带初始运动数据(duration/distance等)
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),           // 旅程数据ViewModel（共享同一实例）
     journeyMapViewModel: JourneyMapViewModel = hiltViewModel(key = "JourneyMap3"), // 地图ViewModel（用于清除路线）
+    recordingViewModel: RecordingViewModel = hiltViewModel(),                      // 录制状态ViewModel
 ) {
+    val context = LocalContext.current
+
+    // 从 RecordingViewModel 收集录制状态
+    val recordingState by recordingViewModel.uiState.collectAsState()
+
     // 从 JourneyViewModel 的 UI 状态中获取位置数据列表
     val journeyUiState by journeyViewModel.uiState.collectAsState()
     val locationList = journeyUiState.LocationList
 
-    // 调试日志：打印 locationList 的加载情况
-    LaunchedEffect(locationList) {
-        if(locationList.size == 0) {
-            Log.d("FootprintListPanel", "locationList = ${locationList}")
-        } else {
-            Log.d("FootprintListPanel", "locationList = ${locationList.first()}, size = ${locationList.size}")
-        }
-    }
-
-    // 调试日志：打印 footprint 数据
-    LaunchedEffect(footprint) {
-        Log.d("FootprintListPanel", "footprint = ${footprint}")
-    }
-
-    // 路线索引（用于标记Location属于哪段路线，最小值为1，每次开始记录时递增）
-    var locationIndex by remember { mutableStateOf(1) }
-
-    // 面板状态机：START=记录中 / PAUSE=已暂停 / STOP=已停止
-    var panelState by remember { mutableStateOf(FootprintListPanelState.STOP) }
-    // 上一状态快照，用于判断路线是否已结束，决定 locationIndex 是否递增
-    var panelStateOld by remember { mutableStateOf(FootprintListPanelState.STOP) }
-
-    // 本次记录的开始时间戳（首次START时记录，用于计算持续时间）
-    var startTime by remember { mutableStateOf<Long>(0) }
-
-    // 当前持续时间 = 历史持续时间 + 本次已记录时间（毫秒）
-    var durationTime by remember { mutableStateOf<Long>(footprint.duration) }
-
-    // 当前累计位移距离（米）
-    var displacementDistance by remember { mutableStateOf(footprint.distance) }
-
-    // 当前移动速度（米/秒）
-    var speed by remember { mutableStateOf(footprint.speed) }
-
-    // 当前消耗卡路里
-    var calories by remember { mutableStateOf(footprint.calories) }
-
-    // 是否正在记录GPS定位（控制 LocationRecorder 的启停）
-    var isRecord by remember { mutableStateOf(false) }
-
-    // 上一个有效的定位点（用于与当前点计算距离差值）
-    var lastLatitude by remember { mutableStateOf<Double?>(null) }
-    var lastLongitude by remember { mutableStateOf<Double?>(null) }
-
-    // 累计暂停时长（毫秒），用于从持续时间中扣除暂停时间
-    var pausedDuration by remember { mutableStateOf<Long>(0) }
-    // 本次暂停开始的时间戳，用于计算当前暂停段持续了多久
-    var pauseStartTime by remember { mutableStateOf<Long?>(null) }
-
-    // 监听 panelState 变化，执行状态对应的逻辑
-    LaunchedEffect(panelState) {
-        when(panelState) {
-            FootprintListPanelState.START -> {
-                // 首次进入START时记录开始时间
-                if (startTime == 0L) {
-                    startTime = System.currentTimeMillis()
-                }
-                // 如果是从暂停恢复，将暂停时长累加到 pausedDuration
-                pauseStartTime?.let { pauseStart ->
-                    pausedDuration += System.currentTimeMillis() - pauseStart
-                    pauseStartTime = null
-                }
-                isRecord = true
-
-                // 计算当前路线段的 locationIndex
-                if(locationList.size == 0) { // 足迹还没有任何历史路线
-                    locationIndex = 1
-                }else if(panelStateOld == FootprintListPanelState.STOP) {
-                    // 上一个状态是STOP，说明开始了一段新路线，index递增
-                    locationIndex = locationList.last().index + 1
-                } else {
-                    // 上一个状态是PAUSE或START，继续使用最后一段路线的index
-                    locationIndex = locationList.last().index
-                }
-
-                panelStateOld = FootprintListPanelState.START
-
-                // 每秒循环：更新持续时间、计算速度、持久化到数据库
-                while (panelState == FootprintListPanelState.START) {
-                    val currentTime = System.currentTimeMillis()
-                    // 持续时间 = 当前时间 - 开始时间 - 暂停累计 + 足迹初始持续时间
-                    durationTime = currentTime - startTime - pausedDuration + footprint.duration
-                    if (durationTime > 0) {
-                        speed = (displacementDistance / (durationTime / 1000.0))
-                    }
-                    // 将实时运动数据写入数据库
-                    if(footprint.startTime.time == 0L) {
-                        // 如果足迹还没有开始时间，同时保存 startTime
-                        journeyViewModel.updateFootprint(
-                            footprint.copy(
-                                startTime = Date(startTime),
-                                duration = durationTime,
-                                distance = displacementDistance,
-                                speed = speed,
-                                calories = calories
-                            )
-                        )
-                    } else {
-                        journeyViewModel.updateFootprint(
-                            footprint.copy(
-                                duration = durationTime,
-                                distance = displacementDistance,
-                                speed = speed,
-                                calories = calories
-                            )
-                        )
-                    }
-
-                    delay(1000) // 每秒更新一次
-                }
-            }
-            FootprintListPanelState.PAUSE -> {
-                // 进入暂停状态：记录暂停开始时间，停止GPS定位
-                pauseStartTime = System.currentTimeMillis()
-                isRecord = false
-
-                panelStateOld = FootprintListPanelState.PAUSE
-            }
-            FootprintListPanelState.STOP -> {
-                // 结束记录：停止GPS定位
-                isRecord = false
-
-                panelStateOld = FootprintListPanelState.STOP
-            }
-        }
-    }
-
     // 组件挂载时加载该足迹的历史位置数据（用于在地图上绘制路线）
     LaunchedEffect(Unit) {
         journeyViewModel.getLocation(footprint)
-        Log.d("FootprintListPanel", "journeyViewModel.getLocation(footprint)")
     }
 
-    // 组件销毁时的清理工作
+    // 组件销毁时的清理工作（仅清理地图路线，不停止录制——录制由 Service 管理）
     DisposableEffect(Unit) {
         onDispose {
             Log.d("FootprintListPanel", "onDispose")
-            isRecord = false
-            journeyMapViewModel.clearAllRoutes()         // 清除地图上的路线
-            journeyViewModel.getLocation(footprint.copy(id = 0)) // 清空位置列表（id=0表示查询空数据）
+            journeyMapViewModel.clearAllRoutes()
         }
     }
 
-    // GPS定位记录器：当 isRecord=true 时持续回调经纬度
-    LocationRecorder(isRecord = isRecord) { latitude, longitude ->
-        // 如果有上一个定位点，计算两点间距离
-        lastLatitude?.let { prevLat ->
-            lastLongitude?.let { prevLon ->
-                val distance = calculateDistance(prevLat, prevLon, latitude, longitude)
-                // 过滤 >100m 的跳变（GPS噪声），保留有效移动距离
-                if (distance < 100) {
-                    displacementDistance += distance
-                    calories = displacementDistance * 60    // 线性卡路里估算
-                    // 将当前定位点存入数据库
-                    journeyViewModel.addLocation(
-                        Location(
-                            footprintId = footprint.id,
-                            latitude = latitude,
-                            longitude = longitude,
-                            index = locationIndex,
-                        )
-                    )
-                }
-            }
-        }
-        // 更新上一个定位点为当前点
-        lastLatitude = latitude
-        lastLongitude = longitude
+    // 判断当前足迹是否正在被录制
+    val isThisFootprintRecording = recordingState.isRecording &&
+            recordingState.recordingFootprintId == footprint.id
+
+    // 推导面板显示状态
+    val displayState = when {
+        !isThisFootprintRecording -> FootprintListPanelState.STOP
+        recordingState.isPaused -> FootprintListPanelState.PAUSE
+        else -> FootprintListPanelState.START
+    }
+
+    // 路线索引（用于标记Location属于哪段路线）
+    var locationIndex by remember { mutableStateOf(1) }
+
+    // 开始录制
+    val startRecording = {
+        // 计算 locationIndex
+        locationIndex = if (locationList.isEmpty()) 1
+        else if (!isThisFootprintRecording) locationList.last().index + 1
+        else locationList.last().index
+
+        context.startForegroundService(
+            RecordingForegroundService.startIntent(context, footprint, locationIndex)
+        )
+        recordingViewModel.startRecording(footprint.id, footprint.title, footprint.journeyId)
+        Unit
+    }
+
+    // 暂停录制
+    val pauseRecording = {
+        context.startForegroundService(RecordingForegroundService.pauseIntent(context))
+        recordingViewModel.pauseRecording()
+        Unit
+    }
+
+    // 恢复录制
+    val resumeRecording = {
+        context.startForegroundService(RecordingForegroundService.resumeIntent(context))
+        recordingViewModel.resumeRecording()
+        Unit
+    }
+
+    // 停止录制
+    val stopRecording = {
+        context.startForegroundService(RecordingForegroundService.stopIntent(context))
+        recordingViewModel.stopRecording()
+        Unit
     }
 
     // 面板UI：用 BGBox 包裹内容，显示运动数据和操作按钮
-    BGBox(
-        modifier = Modifier
-            .padding(horizontal = 15.dp)
+    Column(
+        modifier = Modifier.padding(5.dp, 5.dp, 5.dp, 0.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp),
-        ) {
-            // 标题栏：左侧"记录足迹"标题 + 右侧状态提示
-            Row {
+        // 标题栏：左侧"记录足迹"标题 + 右侧状态提示
+        Row {
+            Headline(
+                text = "足迹路线",
+                fontSize = 16.sp,
+                color = FontDark4
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            // 根据状态显示"正在记录中..."或"已暂停"
+            if (displayState == FootprintListPanelState.START) {
                 TextMedium(
-                    text = "记录足迹",
-                    fontSize = 18.sp,
-                    color = FontDark4
+                    text = "路线正在记录中...",
+                    color = MainColor2
                 )
+            } else if (displayState == FootprintListPanelState.PAUSE) {
+                TextMedium(
+                    text = "记录已暂停",
+                    color = MainColor2
+                )
+            }
+        }
 
-                Spacer(Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-                // 根据状态显示"正在记录中..."或"已暂停"
-                if (panelState == FootprintListPanelState.START) {
-                    TextMedium(
-                        text = "正在记录中...",
-                        color = MainColor2
-                    )
-                } else if (panelState == FootprintListPanelState.PAUSE) {
-                    TextMedium(
-                        text = "已暂停",
-                        color = MainColor2
-                    )
-                }
+        // 数据行1：开始时间 + 持续时间
+        DataRow2(
+            "开始时间：",
+            if (footprint.startTime.time > 0) formatDateTime(footprint.startTime.time) else "未开始",
+            "持续时间：",
+            if (isThisFootprintRecording) formatDuration(recordingState.durationTime)
+            else formatDuration(footprint.duration)
+        )
+
+        // 数据行2：移动距离 + 移动速度
+        DataRow2(
+            "移动距离：",
+            if (isThisFootprintRecording) formatDistance(recordingState.displacementDistance)
+            else formatDistance(footprint.distance),
+            "移动速度：",
+            if (isThisFootprintRecording) String.format(java.util.Locale.CHINA, "%.2f m/s", recordingState.speed)
+            else String.format(java.util.Locale.CHINA, "%.2f m/s", footprint.speed)
+        )
+
+        // 数据行3：消耗卡路里（单行显示）
+        DataRow2(
+            "消耗卡路里",
+            if (isThisFootprintRecording) formatCalories(recordingState.calories)
+            else formatCalories(footprint.calories),
+            null,
+            null
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 底部按钮行：开始/暂停切换 + 结束按钮
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 开始/暂停按钮：STOP或PAUSE时显示"开始"，START时显示"暂停"
+            ButtonMain(
+                onClick = {
+                    if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) {
+                        if (isThisFootprintRecording) {
+                            resumeRecording()
+                        } else {
+                            startRecording()
+                        }
+                    } else {
+                        pauseRecording()
+                    }
+                },
+                paddingValues = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                bgColor = SecondColor2
+            ) {
+                TextMedium(
+                    text = if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) "${if(locationList.isNotEmpty() && locationList.last().index >= 1) "继续" else "开始"}记录" else "暂停记录",
+                    fontSize = 15.sp,
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.weight(1f))
 
-            // 数据行1：开始时间 + 持续时间
-            DataRow2(
-                "开始时间：",
-                if (footprint.startTime.time > 0) formatDateTime(footprint.startTime.time) else "未开始",
-                "持续时间：",
-                formatDuration(durationTime)
-            )
-
-            // 数据行2：移动距离 + 移动速度
-            DataRow2(
-                "移动距离：",
-                formatDistance(displacementDistance),
-                "移动速度：",
-                String.format(Locale.CHINA, "%.2f m/s", speed)
-            )
-
-            // 数据行3：消耗卡路里（单行显示）
-            DataRow2(
-                "消耗卡路里",
-                formatCalories(calories),
-                null,
-                null
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 底部按钮行：开始/暂停切换 + 结束按钮
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            // 结束按钮：仅在非STOP状态时显示，带有淡入淡出动画
+            AnimatedVisibility(
+                visible = displayState != FootprintListPanelState.STOP,
+                enter = fadeIn(
+                    animationSpec = tween(durationMillis = 300)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(durationMillis = 300)
+                )
             ) {
-                // 开始/暂停按钮：STOP或PAUSE时显示"开始"，START时显示"暂停"
                 ButtonMain(
-                    onClick = {
-                        if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) {
-                            panelState = FootprintListPanelState.START
-                        } else {
-                            panelState = FootprintListPanelState.PAUSE
-                        }
-                    }
+                    onClick = { stopRecording() },
+                    paddingValues = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    bgColor = SecondColor2
                 ) {
                     TextMedium(
-                        text = if(panelState == FootprintListPanelState.STOP || panelState == FootprintListPanelState.PAUSE) "开始" else "暂停",
+                        text = "结束记录",
                         fontSize = 15.sp
                     )
                 }
-
-                Spacer(Modifier.weight(1f))
-
-                // 结束按钮：仅在非STOP状态时显示，点击后数据重置为足迹初始值
-                if(panelState != FootprintListPanelState.STOP) {
-                    ButtonMain(
-                        onClick = {
-                            panelState = FootprintListPanelState.STOP
-                            startTime = 0
-                            durationTime = footprint.duration
-                            displacementDistance = footprint.distance
-                            speed = footprint.speed
-                            calories = footprint.calories
-                            pausedDuration = footprint.duration
-                            pauseStartTime = null
-                            lastLatitude = null
-                            lastLongitude = null
-                        }
-                    ) {
-                        TextMedium(
-                            text = "结束",
-                            fontSize = 15.sp
-                        )
-                    }
-                }
             }
-            Spacer(modifier = Modifier.height(5.dp))
         }
     }
 }
@@ -390,13 +301,13 @@ private fun DataRow2(
             TextSmall(
                 text = label,
                 fontSize = 15.sp,
-                color = FontDark5
+                color = FontDark4
             )
             Spacer(Modifier.width(0.dp))
             TextSmall(
                 text = value,
                 fontSize = 15.sp,
-                color = FontDark5
+                color = FontDark4
             )
         }
         // 如果 label2 和 value2 都不为null，显示右侧数据
@@ -407,13 +318,13 @@ private fun DataRow2(
                 TextSmall(
                     text = label2,
                     fontSize = 15.sp,
-                    color = FontDark5
+                    color = FontDark4
                 )
                 Spacer(Modifier.width(0.dp))
                 TextSmall(
                     text = value2,
                     fontSize = 15.sp,
-                    color = FontDark5
+                    color = FontDark4
                 )
             }
         }

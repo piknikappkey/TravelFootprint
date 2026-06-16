@@ -46,54 +46,68 @@
 package com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit
 
 // Android 系统组件
-import android.widget.Toast                                // 轻提示组件，用于显示校验失败信息
 
 // Compose 基础组件
-import androidx.compose.foundation.Image                   // 图片显示组件
-import androidx.compose.foundation.clickable               // 点击修饰符
-import androidx.compose.foundation.gestures.detectVerticalDragGestures  // 垂直拖拽手势检测
-import androidx.compose.foundation.layout.Column           // 垂直线性布局
-import androidx.compose.foundation.layout.PaddingValues    // 内边距值
-import androidx.compose.foundation.layout.Row              // 水平线性布局
-import androidx.compose.foundation.layout.Spacer           // 空白占位符
-import androidx.compose.foundation.layout.padding          // 内边距修饰符
-import androidx.compose.foundation.layout.size             // 固定尺寸修饰符
-import androidx.compose.foundation.layout.width            // 宽度修饰符
-import androidx.compose.foundation.rememberScrollState     // 记住滚动状态
-import androidx.compose.foundation.verticalScroll          // 垂直滚动修饰符
 
 // Compose 运行时
-import androidx.compose.runtime.Composable                 // 声明 Composable 函数
-import androidx.compose.runtime.getValue                   // 读取 State 值
-import androidx.compose.runtime.mutableStateOf             // 创建可变状态
-import androidx.compose.runtime.remember                   // 记住状态值避免重组时丢失
-import androidx.compose.runtime.setValue                   // 修改 State 值
+
+// Compose UI 组件
 
 // Compose UI 修饰符
-import androidx.compose.ui.Alignment                       // 对齐方式枚举
-import androidx.compose.ui.Modifier                        // UI 修饰符链
-import androidx.compose.ui.graphics.ColorFilter            // 图片颜色滤镜
-import androidx.compose.ui.input.pointer.pointerInput      // 指针输入处理
-import androidx.compose.ui.platform.LocalContext           // 获取当前 Android Context
-import androidx.compose.ui.res.painterResource             // 从资源加载图片
-import androidx.compose.ui.unit.dp                         // 密度无关像素单位
+
+// Hilt 依赖注入
 
 // 项目内部组件和数据
-import com.example.travel_footprint_android.R              // 应用资源引用
-import com.example.travel_footprint_android.data.entity.Journey  // 旅程实体类
-import com.example.travel_footprint_android.presentation.components.bg_box.BGBox       // 带阴影的背景容器
-import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox     // 带背景图的容器
-import com.example.travel_footprint_android.presentation.components.button.button_delete.ButtonDelete  // 删除按钮组件
-import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave      // 保存按钮组件
-import com.example.travel_footprint_android.presentation.components.journey_panel.confirm_delete_dialog.ConfirmDeleteDialog  // 删除确认弹窗
-import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton  // 面板高度切换按钮
-import com.example.travel_footprint_android.presentation.components.line_between.LineBetween                        // 虚线分隔线
-import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State                     // 面板状态枚举
-import com.example.travel_footprint_android.presentation.components.text.headline.Headline                                          // 标题文字组件
-import com.example.travel_footprint_android.ui.theme.SecondColor3      // 主题色（用于返回按钮箭头颜色）
 
 // Java 标准库
-import java.util.Date                                                 // 日期类（新建旅程的默认日期）
+import android.widget.Toast
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.travel_footprint_android.R
+import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
+import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation.components.button.button_delete.ButtonDelete
+import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
+import com.example.travel_footprint_android.presentation.components.dialog.ConfirmDeleteDialog
+import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.ai_assistant_dialog.AiAssistantDialog
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.ai_assistant_dialog.components.AiGenerateViewModel
+import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.text.headline.Headline
+import com.example.travel_footprint_android.ui.theme.SecondColor3
+import java.util.Date
 
 /**
  * 旅程新增/编辑主 Composable 函数
@@ -125,7 +139,14 @@ fun JourneyEdit(
     setJourneyPanelOffset: (Boolean) -> Unit,
     setIsDragging: (Boolean) -> Unit,
     onDragDelta: (Float) -> Unit,
+    aiGenerateViewModel: AiGenerateViewModel = hiltViewModel(),
     ) {
+    // 获取当前 Context，用于 Toast 提示
+    val context = LocalContext.current
+
+    // 观察 AI 生成状态
+    val aiState by aiGenerateViewModel.state.collectAsState()
+
     // 本地编辑的旅程状态，支持通过 remember 保存
     // 编辑模式：深拷贝 journeySelected 以避免直接修改原始数据
     // 新建模式：创建带默认值的空白 Journey 对象
@@ -146,44 +167,70 @@ fun JourneyEdit(
     // 删除确认弹窗是否显示的状态
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // 垂直布局：顶部操作栏 + 可滚动表单内容
-    Column {
-        // 顶部操作栏：返回按钮、标题（可拖拽）、保存按钮、高度切换按钮
-        JourneyHead(
-            journey,
-            journeySelected,
-            navigate,
-            addJourney,
-            updateJourney,
-            journeyPanelExpandedState,
-            setJourneyPanelOffset,
-            setIsDragging = setIsDragging,
-            onDragDelta = onDragDelta,
-        )
-        // 可滚动的表单内容区：标题/封面/描述/地址/图片编辑
-        JourneyContent(
-            modifier,
-            journey,
-            journeySelected,
-            // 更新 journey 状态用：通过 copy() 创建新对象触发重组
-            { j -> journey = j.copy() },
-            // 触发删除确认弹窗
-            { showDeleteDialog = true },
-        )
+    // 监听 AI 生成错误，显示 Toast
+    aiState.error?.let { error ->
+        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        aiGenerateViewModel.clearError()
+    }
 
-        // 删除确认弹窗：仅在编辑模式（journeySelected != null）且弹窗开启时显示
-        if (showDeleteDialog && journeySelected != null) {
-            ConfirmDeleteDialog(
-                title = "删除旅程",
-                message = "确定要删除「${journeySelected.title}」吗？此操作不可撤销。",
-                onConfirm = {
-                    deleteJourney(journeySelected)
-                    navigate(JourneyPanel2State.JOURNEY_LIST, null)
-                    showDeleteDialog = false
-                },
-                onDismiss = { showDeleteDialog = false }  // 取消：仅关闭弹窗
+    // 监听涂鸦错误，显示 Toast
+    aiState.paintError?.let { error ->
+        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        aiGenerateViewModel.clearPaintError()
+    }
+
+    // Box 包裹，用于定位 FAB 按钮
+    Box(modifier = modifier.fillMaxSize()) {
+        // 垂直布局：顶部操作栏 + 可滚动表单内容
+        Column {
+            // 顶部操作栏：返回按钮、标题（可拖拽）、保存按钮、高度切换按钮
+            JourneyHead(
+                journey,
+                journeySelected,
+                navigate,
+                addJourney,
+                updateJourney,
+                journeyPanelExpandedState,
+                setJourneyPanelOffset,
+                setIsDragging = setIsDragging,
+                onDragDelta = onDragDelta,
             )
+            // 可滚动的表单内容区：标题/封面/描述/地址/图片编辑
+            JourneyContent(
+                modifier,
+                journey,
+                journeySelected,
+                // 更新 journey 状态用：通过 copy() 创建新对象触发重组
+                { j -> journey = j.copy() },
+                // 触发删除确认弹窗
+                { showDeleteDialog = true },
+            )
+
+            // 删除确认弹窗：仅在编辑模式（journeySelected != null）且弹窗开启时显示
+            if (showDeleteDialog && journeySelected != null) {
+                ConfirmDeleteDialog(
+                    title = "删除旅程",
+                    message = "确定要删除「${journeySelected.title}」吗？此操作不可撤销。",
+                    onConfirm = {
+                        deleteJourney(journeySelected)
+                        navigate(JourneyPanel2State.JOURNEY_LIST, null)
+                        showDeleteDialog = false
+                    },
+                    onDismiss = { showDeleteDialog = false }  // 取消：仅关闭弹窗
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
         }
+
+        // AI 助手组件（FAB + 弹窗 + 确认逻辑）
+        AiAssistantDialog(
+            modifier = Modifier.fillMaxSize(),
+            aiState = aiState,
+            journey = journey,
+            aiGenerateViewModel = aiGenerateViewModel,
+            onJourneyUpdate = { j -> journey = j.copy() },
+        )
     }
 }
 
@@ -205,7 +252,7 @@ fun JourneyEdit(
  * @param onDragDelta 拖拽位移量回调
  */
 @Composable
-fun JourneyHead(
+private fun JourneyHead(
     journey: Journey,
     journeySelected: Journey? = null,
     navigate: (JourneyPanel2State, Journey?) -> Unit,
@@ -293,6 +340,7 @@ fun JourneyHead(
  * 旅程编辑表单内容区（可滚动）
  *
  * 按顺序展示各编辑字段：标题 → 封面 → 描述 → 地址 → 图片 → 删除按钮（仅编辑模式）
+ * AI 功能已移至右下角 FAB 按钮弹窗中
  *
  * @param modifier 外部 Modifier
  * @param journey 当前编辑中的旅程数据
@@ -301,7 +349,7 @@ fun JourneyHead(
  * @param deleteJourney 触发删除确认弹窗的回调
  */
 @Composable
-fun JourneyContent(
+private fun JourneyContent(
     modifier: Modifier = Modifier,
     journey: Journey,
     journeySelected: Journey? = null,
@@ -309,101 +357,111 @@ fun JourneyContent(
     deleteJourney: (Journey) -> Unit,
 ) {
     // 可垂直滚动的表单容器
-    Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())  // 支持滚动，内容可能超出屏幕
-    ) {
-        Spacer(Modifier.padding(2.dp))
+    val scrollState = rememberScrollState()
 
-        // 外层背景容器（带阴影 + 圆角）
-        BGBox(
-            modifier = Modifier.padding(horizontal = 10.dp)
+    Box(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)  // 支持滚动，内容可能超出屏幕
         ) {
-            // 内层背景图片容器（随机选择背景图之一）
-            BGImgBox(
-                R.drawable.bg_rectangular_1__2__1,  // 背景图2
-                R.drawable.bg_rectangular_1__2__2,  // 背景图3
+            Spacer(Modifier.padding(2.dp))
+
+            // 外层背景容器（带阴影 + 圆角）
+            BGBox(
+                modifier = Modifier.padding(horizontal = 10.dp)
             ) {
-                Column {
-                    Spacer(Modifier.padding(3.dp))
+                // 内层背景图片容器（随机选择背景图之一）
+                BGImgBox(
+                    R.drawable.bg_rectangular_1__2__1,  // 背景图2
+                    R.drawable.bg_rectangular_1__2__2,  // 背景图3
+                ) {
+                    Column {
+                        Spacer(Modifier.padding(3.dp))
 
-                    // ======== 旅程标题编辑 ========
-                    // 使用 InputText3 文本输入框，最长 20 字
-                    JourneyEditTitle(
-                        journey = journey,
-                        onValueChange = { text -> setJourney(journey.copy(title = text)) }
-                    )
-                    // 虚线分隔线（默认样式：SecondColor2 颜色，95%宽度）
-                    LineBetween()
+                        // ======== 旅程标题编辑 ========
+                        // 使用 InputText3 文本输入框，最长 20 字
+                        JourneyEditTitle(
+                            journey = journey,
+                            onValueChange = { text -> setJourney(journey.copy(title = text)) }
+                        )
+                        // 虚线分隔线（默认样式：SecondColor2 颜色，95%宽度）
+                        LineBetween()
 
-                    // ======== 封面图片编辑 ========
-                    // 使用 ImageSquare2 组件选择/替换/删除封面图片
-                    JourneyEditCover(
-                        journey = journey,
-                        updateImgPath = { file ->
-                            setJourney(journey.copy(coverImagePath = file.absolutePath))  // 保存图片绝对路径
-                            file  // 返回 File 供 ImageSquare2 内部使用
-                        },
-                        deleteImgPath = { imgPath ->
-                            setJourney(journey.copy(coverImagePath = ""))  // 清空封面路径
-                        }
-                    )
-                    LineBetween()
-
-                    // ======== 旅程描述编辑 ========
-                    // 使用 InputText3 多行文本输入框，最长 1024 字
-                    JourneyEditDescription(
-                        journey = journey,
-                        onValueChange = { text -> setJourney(journey.copy(description = text)) }
-                    )
-                    LineBetween()
-
-                    // ======== 旅程地址 ========
-                    // 使用 LocationSearch 组件地图选点，显示位置信息面板
-                    JourneyEditLocation(
-                        journey = journey,
-                        setJourney = { j ->
-                            setJourney(j.copy())  // 通过 copy 触发重组
-                        }
-                    )
-                    LineBetween()
-
-                    // ======== 回忆编辑 ========
-                    // Management
-
-                    // 使用 Reminiscence 组件管理多张旅程回忆图片
-                    JourneyEditImages(
-                        journey = journey,
-                        updateJourney = { j ->
-                            // 触发 UI 更新：通过 copy 生成新列表对象，强制 Compose 重组
-                            // 先清空再赋值的技巧确保 State 检测到变化
-                            val newList =
-                                List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i] })
-                            setJourney(j.copy(journeyImagePaths = List(0, { i -> "" })))
-                            setJourney(j.copy(journeyImagePaths = newList))
-                        }
-                    )
-                    Spacer(Modifier.padding(10.dp))
-
-                    // ======== 删除按钮（仅编辑模式） ========
-                    // 只有编辑已有旅程时显示，新建模式下隐藏
-                    if (journeySelected != null) {
-                        Row {
-                            Spacer(Modifier.weight(1f))  // 将按钮推到右侧
-                            ButtonDelete(
-                                title = "删除该旅程",
-                                paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
-                            ) {
-                                deleteJourney(journeySelected)  // 触发删除确认弹窗
+                        // ======== 封面图片编辑 ========
+                        // 使用 ImageSquare2 组件选择/替换/删除封面图片
+                        JourneyEditCover(
+                            journey = journey,
+                            updateImgPath = { file ->
+                                setJourney(journey.copy(coverImagePath = file.absolutePath))  // 保存图片绝对路径
+                                file  // 返回 File 供 ImageSquare2 内部使用
+                            },
+                            deleteImgPath = { imgPath ->
+                                setJourney(journey.copy(coverImagePath = ""))  // 清空封面路径
                             }
-                            Spacer(Modifier.width(10.dp))
-                        }
+                        )
+                        LineBetween()
 
+                        // ======== 旅程描述编辑 ========
+                        // 使用 InputText3 多行文本输入框，最长 1024 字
+                        JourneyEditDescription(
+                            journey = journey,
+                            onValueChange = { text -> setJourney(journey.copy(description = text)) }
+                        )
+                        LineBetween()
+
+                        // ======== 旅程地址 ========
+                        // 使用 LocationSearch 组件地图选点，显示位置信息面板
+                        JourneyEditLocation(
+                            journey = journey,
+                            setJourney = { j ->
+                                setJourney(j.copy())  // 通过 copy 触发重组
+                            }
+                        )
+                        LineBetween()
+
+                        // ======== 回忆编辑 ========
+                        // Management
+
+                        // 使用 Reminiscence 组件管理多张旅程回忆图片
+                        JourneyEditImages(
+                            journey = journey,
+                            updateJourney = { j ->
+                                // 触发 UI 更新：通过 copy 生成新列表对象，强制 Compose 重组
+                                // 先清空再赋值的技巧确保 State 检测到变化
+                                val newList =
+                                    List(j.journeyImagePaths.size, { i -> j.journeyImagePaths[i] })
+                                setJourney(j.copy(journeyImagePaths = List(0, { i -> "" })))
+                                setJourney(j.copy(journeyImagePaths = newList))
+                            }
+                        )
                         Spacer(Modifier.padding(10.dp))
+
+                        // ======== 删除按钮（仅编辑模式） ========
+                        // 只有编辑已有旅程时显示，新建模式下隐藏
+                        if (journeySelected != null) {
+                            Row {
+                                Spacer(Modifier.weight(1f))  // 将按钮推到右侧
+                                ButtonDelete(
+                                    title = "删除该旅程",
+                                    paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                                ) {
+                                    deleteJourney(journeySelected)  // 触发删除确认弹窗
+                                }
+                                Spacer(Modifier.width(10.dp))
+                            }
+                            Spacer(Modifier.padding(5.dp))
+                        }
                     }
                 }
             }
+            Spacer(Modifier.padding(30.dp))  // 底部留白，避免内容贴边
         }
-        Spacer(Modifier.padding(10.dp))  // 底部留白，避免内容贴边
+
+        VerticalCustomScrollbar(
+            scrollState = scrollState,
+            modifier = Modifier
+                .align(Alignment.CenterEnd),
+        )
     }
 }

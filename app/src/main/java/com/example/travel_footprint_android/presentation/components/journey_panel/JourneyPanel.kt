@@ -42,6 +42,8 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
 
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateIntAsState
@@ -91,30 +93,29 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.JOURNEY_EDIT
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.JOURNEY_LIST
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 
 // =========================================================================
 // JourneyPanel Composable: 旅程底部面板根组件，管理 Y 轴偏移拖拽 + 5 个子页面路由
 // =========================================================================
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun JourneyPanel(
     modifier: Modifier,                                        // 外部 Modifier，用于整体布局定位
     aniTime: Int,                                              // 页面切换动画时长(毫秒)，控制 fadeIn/slideIn 过渡速度
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"), // Hilt 注入的 JourneyViewModel，管理旅程/足迹数据
+    journeyPanelViewModel: JourneyPanelViewModel = hiltViewModel(),      // 面板导航状态 ViewModel
 ) {
     // ===== 1. 从 JourneyViewModel 收集 UI 状态 =====
     val journeyUiState by journeyViewModel.uiState.collectAsState()
     val journeyList = journeyUiState.journeys
 
-    // ===== 面板状态管理（内部状态，无需外部传入） =====
-    var panelState by remember { mutableStateOf(JourneyPanelState()) }
+    // ===== 面板状态管理（从 JourneyPanelViewModel 收集） =====
+    val panelState by journeyPanelViewModel.panelState.collectAsState()
     val onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit = { page, journey, footprint ->
-        panelState = JourneyPanelState(
-            currentPage = page,
-            selectedJourney = journey,
-            selectedFootprint = footprint,
-        )
+        journeyPanelViewModel.navigate(page, journey, footprint)
     }
 
     // ===== 2. 从 panelState 解构当前页面与选中数据 =====

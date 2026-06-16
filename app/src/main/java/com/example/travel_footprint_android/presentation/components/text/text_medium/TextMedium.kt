@@ -77,6 +77,7 @@ fun TextMedium(
         ),
         fontFamily = FFRuanMengChuLianTi,
     ),
+    letterSpacing: TextUnit = TextUnit.Unspecified,
 ) {
     // 委托给 Material3 Text 进行实际的文本渲染
     Text(
@@ -88,6 +89,7 @@ fun TextMedium(
         textAlign = textAlign,
         maxLines = maxLines,
         minLines = minLines,
-        style = style
+        style = style,
+        letterSpacing = letterSpacing,
     )
 }

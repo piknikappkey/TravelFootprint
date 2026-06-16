@@ -37,7 +37,7 @@
  * 【调用场景】
  * 被 JourneyEdit 等编辑/管理页面调用，在用户点击删除图标时弹出确认弹窗
  */
-package com.example.travel_footprint_android.presentation.components.journey_panel.confirm_delete_dialog
+package com.example.travel_footprint_android.presentation.components.dialog
 
 import androidx.compose.foundation.layout.Arrangement // 子组件排列方式（间距）
 import androidx.compose.foundation.layout.Column // 垂直布局容器
@@ -51,10 +51,7 @@ import androidx.compose.ui.Modifier // Compose 修饰符
 import androidx.compose.ui.text.style.TextAlign // 文本对齐方式
 import androidx.compose.ui.unit.dp // dp 尺寸单位
 import androidx.compose.ui.unit.sp // sp 字体尺寸单位
-import androidx.compose.ui.window.Dialog // Compose 模态对话框
 import com.example.travel_footprint_android.R // 项目资源引用（drawable 图片 ID）
-import com.example.travel_footprint_android.presentation.components.bg_box.BGBox // 通用圆角阴影背景容器
-import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox // 随机背景图片容器
 import com.example.travel_footprint_android.presentation.components.button.button_delete.ButtonDelete // 删除风格按钮
 import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave // 保存风格按钮（此处用作取消按钮）
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline // 标题文字组件
@@ -69,56 +66,49 @@ fun ConfirmDeleteDialog(
     onDismiss: () -> Unit, // 用户点击"取消"或点击弹窗外围时触发的回调（关闭弹窗）
 ) {
     // 创建模态 Dialog，点击弹窗外部区域时触发 onDismiss 关闭弹窗
-    Dialog(
+    DialogBox(
+        R.drawable.bg_rectangular_2__1__0,
+        R.drawable.bg_rectangular_2__1__1,
         onDismissRequest = onDismiss
     ) {
-        // BGBox：最外层的圆角阴影背景容器，提供浅杏色底色和阴影效果
-        BGBox {
-            // BGImgBox：在背景上随机渲染一张装饰图片（带半透明遮罩），提升视觉层次感
-            BGImgBox(
-                // 从两张矩形背景图中随机选取一张作为弹窗装饰背景
-                R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1,
+        // Column 垂直排列弹窗内容：标题 → 消息 → 按钮行
+        Column(
+            // 设置内容区左右 30dp、上下 24dp 的内边距
+            modifier = Modifier.padding(horizontal = 30.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally // 所有子组件水平居中
+        ) {
+            // 弹窗标题：使用 Headline 组件，20sp 字号，居中对齐
+            Headline(
+                text = title,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+            )
+            // 标题与消息之间的垂直间距 10dp
+            Spacer(Modifier.height(10.dp))
+            // 弹窗消息正文：使用 TextMedium 组件，居中对齐
+            TextMedium(
+                text = message,
+                textAlign = TextAlign.Center,
+            )
+            // 消息与按钮行之间的垂直间距 15dp
+            Spacer(Modifier.height(15.dp))
+            // Row 水平排列"取消"和"删除!"两个按钮
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(50.dp) // 两按钮间距 50dp
             ) {
-                // Column 垂直排列弹窗内容：标题 → 消息 → 按钮行
-                Column(
-                    // 设置内容区左右 30dp、上下 24dp 的内边距
-                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally // 所有子组件水平居中
-                ) {
-                    // 弹窗标题：使用 Headline 组件，20sp 字号，居中对齐
-                    Headline(
-                        text = title,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    // 标题与消息之间的垂直间距 10dp
-                    Spacer(Modifier.height(10.dp))
-                    // 弹窗消息正文：使用 TextMedium 组件，居中对齐
-                    TextMedium(
-                        text = message,
-                        textAlign = TextAlign.Center,
-                    )
-                    // 消息与按钮行之间的垂直间距 15dp
-                    Spacer(Modifier.height(15.dp))
-                    // Row 水平排列"取消"和"删除!"两个按钮
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(50.dp) // 两按钮间距 50dp
-                    ) {
-                        // "取消"按钮：使用 ButtonSave 组件（保存风格），
-                        // 背景色改为金色 SecondColor2，点击关闭弹窗
-                        ButtonSave(
-                            title = "取消",
-                            color = SecondColor2,
-                            onClick = onDismiss
-                        )
-                        // "删除!"按钮：使用 ButtonDelete 组件（删除风格，红色底），
-                        // 点击执行删除确认回调
-                        ButtonDelete(
-                            title = "删除!",
-                            onClick = onConfirm
-                        )
-                    }
-                }
+                // "取消"按钮：使用 ButtonSave 组件（保存风格），
+                // 背景色改为金色 SecondColor2，点击关闭弹窗
+                ButtonSave(
+                    title = "取消",
+                    color = SecondColor2,
+                    onClick = onDismiss
+                )
+                // "删除!"按钮：使用 ButtonDelete 组件（删除风格，红色底），
+                // 点击执行删除确认回调
+                ButtonDelete(
+                    title = "删除!",
+                    onClick = onConfirm
+                )
             }
         }
     }

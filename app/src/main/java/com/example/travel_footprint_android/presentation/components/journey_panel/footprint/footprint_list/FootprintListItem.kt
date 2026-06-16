@@ -34,6 +34,8 @@
  */
 package com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_list
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -67,9 +69,11 @@ import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark4
+import com.example.travel_footprint_android.ui.theme.MainColor2
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -77,6 +81,7 @@ import java.util.Locale
 // 动画持续时间：展开/收起动画的基础时长（400毫秒）
 private const val ANIMATION_DURATION = 400
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FootprintListItem(
     footprint: Footprint,
@@ -84,6 +89,7 @@ fun FootprintListItem(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
     Box(
         modifier = Modifier
@@ -100,11 +106,23 @@ fun FootprintListItem(
         BGImgBox(
             R.drawable.bg_rectangular_2__1__0, R.drawable.bg_rectangular_2__1__1, R.drawable.bg_rectangular_2__1__2, R.drawable.bg_rectangular_2__1__3,
         ) {
-            Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
+            Content(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate, isRecording)
+        }
+        // 右上角"记录中..."标签：仅在未展开且正在录制时显示
+        if (isRecording && !isClicked) {
+            TextSmall(
+                text = "记录中...",
+                fontSize = 12.sp,
+                color = MainColor2,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 4.dp, end = 8.dp),
+            )
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Content(
     footprint: Footprint,
@@ -112,6 +130,7 @@ fun Content(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
 
     // 按顺序垂直排列各子模块，animateContentSize 使展开/折叠时高度变化平滑过渡
@@ -119,14 +138,16 @@ fun Content(
         modifier = Modifier.animateContentSize()
     ) {
         Spacer(Modifier.height(10.dp))
-        HeadRow(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate)
+        HeadRow(footprint, footprintClick, isClicked, journeySelected, onPanelNavigate, isRecording)
         Spacer(Modifier.height(10.dp))
         // 足迹描述
         Description(footprint, isClicked)
-        Spacer(Modifier.height(10.dp))
         // 仅展开时显示足迹状态面板（运动数据记录）
         if(isClicked) {
+            LineBetween()
             FootprintListPanel(footprint)
+        } else {
+            Spacer(Modifier.height(10.dp))
         }
         // 底部信息（足迹创建时间、足迹开始地址）
         BottomContent(footprint, isClicked)
@@ -141,6 +162,7 @@ fun HeadRow(
     isClicked: Boolean,
     journeySelected: Journey,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    isRecording: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically

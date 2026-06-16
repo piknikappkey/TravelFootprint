@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
+import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
 import com.example.travel_footprint_android.presentation.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
@@ -66,10 +69,12 @@ fun JourneyDetail(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            val detailScrollState = rememberScrollState()
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(detailScrollState)
             ) {
                 Content(journey = journey, updateJourney = updateJourney)
             }
@@ -84,6 +89,12 @@ fun JourneyDetail(
                     onPanelNavigate = onPanelNavigate
                 )
             }
+
+            VerticalCustomScrollbar(
+                scrollState = detailScrollState,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd),
+            )
         }
     }
 }
@@ -152,6 +163,7 @@ private fun Content(
     ) {
         BGImgBox(R.drawable.bg_rectangular_1__2__1, R.drawable.bg_rectangular_1__2__2) {
             Column {
+                Spacer(Modifier.height(5.dp))
                 JourneyDetailTitle(
                     title = journey.title,
                 )

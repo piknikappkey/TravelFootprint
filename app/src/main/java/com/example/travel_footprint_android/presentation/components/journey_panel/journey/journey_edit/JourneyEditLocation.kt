@@ -115,6 +115,19 @@ fun JourneyEditLocation(
         }
     }
 
+    // 监听 journey 变化（AI 自动生成时会通过 setJourney 更新 address/latitude/longitude）
+    // 当地址变化时，同步更新本地状态以显示位置面板
+    LaunchedEffect(journey.address, journey.latitude, journey.longitude) {
+        if (journey.address.isNotEmpty()) {
+            isSelectedLocation = true
+            name = journey.address.split("\n").firstOrNull() ?: ""
+            address = journey.address.split("\n").lastOrNull() ?: ""
+            latitude = journey.latitude
+            longitude = journey.longitude
+            showButton = false  // AI 自动生成的地址视为已确认状态
+        }
+    }
+
     // 标签文字
     TextMedium(
         text = "旅程地址：",

@@ -11,12 +11,13 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- ==================== 前台服务权限（Android 14+ 高德定位 APSService 必需） ==================== -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-
     <!-- ==================== 相机权限 ==================== -->
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- ==================== 前台服务权限 ==================== -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- ==================== 存储权限 ==================== -->
     <!-- Android 12 及以下 -->
@@ -48,6 +49,7 @@
         android:theme="@style/Theme.Travelfootprintandroid"
         android:hardwareAccelerated="true"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <!-- 高德地图 API Key -->
@@ -55,10 +57,14 @@
             android:name="com.amap.api.v2.apikey"
             android:value="83279a23557952f6b018e06064b2ed24"/>
 
-        <!-- 开启持续定位服务（Android 14+ 必须声明 foregroundServiceType） -->
+        <!-- 开启持续定位服务 -->
+        <service android:name="com.amap.api.location.APSService" />
+
+        <!-- 足迹录制前台服务 -->
         <service
-            android:name="com.amap.api.location.APSService"
-            android:foregroundServiceType="location" />
+            android:name=".presentation.service.RecordingForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

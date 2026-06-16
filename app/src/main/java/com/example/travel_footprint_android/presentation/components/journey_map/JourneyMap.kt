@@ -53,21 +53,41 @@ package com.example.travel_footprint_android.presentation.components.journey_map
 
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.amap.api.maps.TextureMapView
 import com.example.travel_footprint_android.data.entity.Location
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 import kotlinx.coroutines.delay
 
 @Composable
@@ -78,9 +98,14 @@ fun JourneyMap(
         viewModelStoreOwner = LocalContext.current as ComponentActivity,
         key = "JourneyMap3"
     ), // Hilt 注入地图 ViewModel（Activity 级作用域，页面切换时不销毁）
+    recordingViewModel: RecordingViewModel = hiltViewModel(),
 ) {
     // 监听地图初始化状态（ViewModel 中 initializeMap 完成后设为 true）
     val isInitialized by journeyMapViewModel.isInitialized.collectAsState()
+    // 监听网络错误状态
+    val networkError by journeyMapViewModel.networkError.collectAsState()
+    // 监听录制状态，用于切换地图跟随模式
+    val recordingState by recordingViewModel.uiState.collectAsState()
     // 获取当前 Activity Context，用于创建 MapView（TextureMapView 需要 Activity Context）
     val context = LocalContext.current
 
@@ -121,6 +146,37 @@ fun JourneyMap(
             modifier = Modifier
                 .fillMaxSize()
         )
+
+        // 网络错误提示浮层：顶部半透明横幅，网络恢复后自动消失
+        AnimatedVisibility(
+            visible = networkError != null,
+            enter = expandVertically(expandFrom = Alignment.Top),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
+            Row(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xCC333333))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.WifiOff,
+                    contentDescription = null,
+                    tint = Color.White,
+                )
+                Text(
+                    text = networkError ?: "",
+                    color = Color.White,
+                    fontSize = 13.sp
+                )
+            }
+        }
     }
 
     // ========== 初始化后启动定位 ==========
@@ -148,6 +204,18 @@ fun JourneyMap(
                 journeyMapViewModel.updateRoutesWithAnimation(locationList)
             } else {
                 journeyMapViewModel.clearAllRoutes()
+            }
+        }
+    }
+
+    // ========== 录制状态变化时切换地图跟随模式 ==========
+    // 录制开始 → 持续跟随用户（带面板补偿），录制结束 → 恢复为单次定位模式
+    LaunchedEffect(isInitialized, recordingState.isRecording) {
+        if (isInitialized) {
+            if (recordingState.isRecording) {
+                journeyMapViewModel.startFollowUser()
+            } else {
+                journeyMapViewModel.stopFollowUser()
             }
         }
     }

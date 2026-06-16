@@ -16,13 +16,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.ui.theme.SecondColor3
+import com.example.travel_footprint_android.ui.theme.MainColor2
 
 @Composable
 fun IconClose(
     iconSize: Int = 16,
     shape: Shape = RoundedCornerShape(50.dp),
-    bgColor: Color = SecondColor3,
+    bgColor: Color = MainColor2,
     paddingValues: PaddingValues = PaddingValues(1.dp),
     modifier: Modifier = Modifier,
     onClick: () -> Unit,

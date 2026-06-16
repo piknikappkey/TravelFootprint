@@ -90,6 +90,33 @@ interface JourneyDao {
     // 获取所有有经纬度的旅程（用于地图显示）
     @Query("SELECT * FROM journeys WHERE latitude != 0.0 AND longitude != 0.0")
     fun getAllJourneysWithCoordinates(): Flow<List<Journey>>
+
+    // ==================== 统计查询 ====================
+
+    /**
+     * 获取旅程总数
+     */
+    @Query("SELECT COUNT(*) FROM journeys")
+    suspend fun getJourneyCount(): Int
+
+    /**
+     * 获取有封面的旅程数量
+     */
+    @Query("SELECT COUNT(*) FROM journeys WHERE coverImagePath != ''")
+    suspend fun getCoveredJourneyCount(): Int
+
+    /**
+     * 获取所有旅程（suspend版本，用于应用层计算图片数量）
+     */
+    @Query("SELECT * FROM journeys")
+    suspend fun getAllJourneysSuspend(): List<Journey>
+
+    /**
+     * 仅获取所有旅程的图片路径列（JSON字符串），用于高效计算图片总数
+     * 避免反序列化整条 Journey 记录（含 Date、地址等无关字段）
+     */
+    @Query("SELECT journeyImagePaths FROM journeys")
+    suspend fun getAllJourneyImagePaths(): List<String>
 }
 
 

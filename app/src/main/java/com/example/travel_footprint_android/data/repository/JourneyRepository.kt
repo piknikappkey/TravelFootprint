@@ -4,6 +4,8 @@ package com.example.travel_footprint_android.data.repository
 import com.example.travel_footprint_android.data.dao.JourneyDao
 import com.example.travel_footprint_android.data.dao.FootprintDao
 import com.example.travel_footprint_android.data.entity.Journey
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -143,6 +145,36 @@ class JourneyRepository @Inject constructor(
     //获取所有有坐标的旅程（用于地图）
     fun getAllJourneysWithCoordinates(): Flow<List<Journey>> {
         return journeyDao.getAllJourneysWithCoordinates()
+    }
+
+    // ==================== 里程碑统计方法 ====================
+
+    /**
+     * 获取旅程总数
+     */
+    suspend fun getJourneyCount(): Int = journeyDao.getJourneyCount()
+
+    /**
+     * 获取有封面的旅程数量
+     */
+    suspend fun getCoveredJourneyCount(): Int = journeyDao.getCoveredJourneyCount()
+
+    /**
+     * 获取所有旅程的图片总数（仅查询 journeyImagePaths 列，避免全表反序列化）
+     */
+    suspend fun getTotalImageCount(): Int {
+        val imagePathsJsonList = journeyDao.getAllJourneyImagePaths()
+        val listType = object : TypeToken<List<String>>() {}.type
+        val gson = Gson()
+        return imagePathsJsonList.sumOf { json ->
+            if (json.isBlank() || json == "null") return@sumOf 0
+            val paths: List<String> = try {
+                gson.fromJson(json, listType)
+            } catch (_: Exception) {
+                emptyList()
+            }
+            paths.count { it.isNotEmpty() }
+        }
     }
 
 }

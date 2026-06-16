@@ -35,7 +35,9 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
  *  - 6. FootprintListAddIcon 位于 BottomEnd，点击导航至 FOOTPRINT_EDIT 页面
  */
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -69,14 +71,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation.components.dialog.TipDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
-import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FootprintList(
     journeySelected: Journey,
@@ -86,12 +92,17 @@ fun FootprintList(
     onDragDelta: (Float) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
     journeyViewModel: JourneyViewModel = hiltViewModel(key = "journey"),
+    recordingViewModel: RecordingViewModel = hiltViewModel(),
+    journeyPanelViewModel: JourneyPanelViewModel = hiltViewModel(),
 ) {
     // 从 ViewModel 收集 UI 状态，获取足迹数据
     val journeyUiState by journeyViewModel.uiState.collectAsState()
-
-    // 从 ViewModel 状态中读取当前旅程的足迹列表
     val footprints = journeyUiState.footprints
+
+    // 录制状态
+    val recordingState by recordingViewModel.uiState.collectAsState()
+    // 自动展开的足迹 ID
+    val autoExpandId by journeyPanelViewModel.autoExpandFootprintId.collectAsState()
 
     // 当选中旅程变化时，自动加载对应的足迹数据
     LaunchedEffect(journeySelected) {
@@ -101,7 +112,29 @@ fun FootprintList(
     // 跟踪当前被点击（展开）的足迹条目索引，-1 表示无选中项
     var clickItemIndex by remember { mutableStateOf(-1) }
 
+    // 自动展开正在录制的足迹
+    LaunchedEffect(footprints, autoExpandId) {
+        if (footprints.isNotEmpty() && autoExpandId > 0) {
+            val index = footprints.indexOfFirst { it.id == autoExpandId }
+            if (index >= 0) {
+                clickItemIndex = index
+                journeyPanelViewModel.clearAutoExpandFootprintId()
+            }
+        }
+    }
+
+    // 冲突对话框状态
+    var showConflictDialog by remember { mutableStateOf(false) }
+
     Log.d("FootprintList", "footprints = ${footprints}")
+
+    // 冲突提示对话框
+    if (showConflictDialog) {
+        TipDialog(
+            title = "提示",
+            message = "当前有正在记录中的足迹\n请先结束当前正在记录的足迹，再打开其他足迹",
+        ) { showConflictDialog = false }
+    }
 
     // 垂直布局：间距 + 标题行 + 分隔线 + 内容区
     Column {
@@ -119,8 +152,19 @@ fun FootprintList(
             footprints,
             journeySelected,
             clickItemIndex,
-            { i -> clickItemIndex = i},
+            { i ->
+                // 冲突检查：如果正在录制且点击的不是正在录制的足迹，弹出提示
+                val clickedIndex = i ?: -1
+                val hasConflict = recordingState.isRecording && clickedIndex >= 0 && clickedIndex < footprints.size &&
+                        footprints[clickedIndex].id != recordingState.recordingFootprintId
+                if (hasConflict) {
+                    showConflictDialog = true
+                } else {
+                    clickItemIndex = i
+                }
+            },
             onPanelNavigate = onPanelNavigate,
+            recordingFootprintId = if (recordingState.isRecording) recordingState.recordingFootprintId else null,
         )
     }
 }
@@ -171,6 +215,7 @@ private fun HeadRow(
 }
 
 // 内容区组件：足迹列表或空状态提示，以及右下角的添加按钮
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun Content(
     footprints: List<Footprint>,
@@ -178,6 +223,7 @@ private fun Content(
     clickItemIndex: Int,
     setClickItemIndex: (Int) -> Unit,
     onPanelNavigate: (JourneyPanel2State, Journey?, Footprint?) -> Unit,
+    recordingFootprintId: Long? = null,
 ) {
     // Box 容器：最小高度 200dp，叠加列表和添加按钮
     Box(
@@ -210,6 +256,7 @@ private fun Content(
                         (index == clickItemIndex),
                         journeySelected,
                         onPanelNavigate = onPanelNavigate,
+                        isRecording = recordingFootprintId == footprint.id,
                     )
                 }
                 // 列表底部留白，避免被添加按钮遮挡

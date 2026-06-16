@@ -32,7 +32,7 @@ import com.example.travel_footprint_android.data.entity.Tag
         City::class,
         CheckInRecordEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -147,6 +147,167 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // 版本 7 到 8 的迁移：重建所有表以匹配当前实体定义
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 重建 journeys 表
+                database.execSQL("DROP TABLE IF EXISTS `journeys`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `journeys` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `description` TEXT NOT NULL,
+                        `startDate` INTEGER NOT NULL,
+                        `endDate` INTEGER NOT NULL,
+                        `coverStyle` TEXT NOT NULL,
+                        `coverImagePath` TEXT NOT NULL,
+                        `journeyImagePaths` TEXT NOT NULL,
+                        `address` TEXT NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `latitude` REAL NOT NULL
+                    )
+                """)
+
+                // 重建 footprints 表
+                database.execSQL("DROP TABLE IF EXISTS `footprints`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `footprints` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `journeyId` INTEGER NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `description` TEXT NOT NULL,
+                        `createTime` INTEGER NOT NULL,
+                        `address` TEXT NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `rating` INTEGER NOT NULL,
+                        `startTime` INTEGER NOT NULL,
+                        `duration` INTEGER NOT NULL,
+                        `distance` REAL NOT NULL,
+                        `speed` REAL NOT NULL,
+                        `calories` REAL NOT NULL,
+                        FOREIGN KEY(`journeyId`) REFERENCES `journeys`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_footprints_journeyId` ON `footprints` (`journeyId`)")
+
+                // 重建 locations 表
+                database.execSQL("DROP TABLE IF EXISTS `locations`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `locations` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `footprintId` INTEGER NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `idx` INTEGER NOT NULL,
+                        FOREIGN KEY(`footprintId`) REFERENCES `footprints`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_locations_footprintId` ON `locations` (`footprintId`)")
+
+                // 重建 media_attachments 表
+                database.execSQL("DROP TABLE IF EXISTS `media_attachments`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `media_attachments` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `footprintId` INTEGER NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `localPath` TEXT NOT NULL,
+                        `thumbnailPath` TEXT NOT NULL,
+                        `createTime` INTEGER NOT NULL,
+                        `caption` TEXT NOT NULL,
+                        FOREIGN KEY(`footprintId`) REFERENCES `footprints`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_media_attachments_footprintId` ON `media_attachments` (`footprintId`)")
+
+                // 重建 tags 表
+                database.execSQL("DROP TABLE IF EXISTS `tags`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `tags` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `color` TEXT NOT NULL,
+                        `usageCount` INTEGER NOT NULL
+                    )
+                """)
+
+                // 重建 footprint_tag_cross_ref 表
+                database.execSQL("DROP TABLE IF EXISTS `footprint_tag_cross_ref`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `footprint_tag_cross_ref` (
+                        `footprintId` INTEGER NOT NULL,
+                        `tagId` INTEGER NOT NULL,
+                        PRIMARY KEY(`footprintId`, `tagId`),
+                        FOREIGN KEY(`footprintId`) REFERENCES `footprints`(`id`) ON DELETE CASCADE,
+                        FOREIGN KEY(`tagId`) REFERENCES `tags`(`id`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_footprint_tag_cross_ref_tagId` ON `footprint_tag_cross_ref` (`tagId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_footprint_tag_cross_ref_footprintId` ON `footprint_tag_cross_ref` (`footprintId`)")
+
+                // 重建 lighted_cities 表
+                database.execSQL("DROP TABLE IF EXISTS `lighted_cities`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `lighted_cities` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `cityAdcode` TEXT NOT NULL,
+                        `cityName` TEXT NOT NULL,
+                        `provinceAdcode` TEXT NOT NULL,
+                        `provinceName` TEXT NOT NULL,
+                        `lightedTime` INTEGER NOT NULL,
+                        `latitude` REAL NOT NULL,
+                        `longitude` REAL NOT NULL,
+                        `remark` TEXT NOT NULL
+                    )
+                """)
+
+                // 重建 provinces 表
+                database.execSQL("DROP TABLE IF EXISTS `provinces`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `provinces` (
+                        `adcode` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `centerLat` REAL NOT NULL,
+                        `centerLng` REAL NOT NULL,
+                        `sortOrder` INTEGER NOT NULL,
+                        PRIMARY KEY(`adcode`)
+                    )
+                """)
+
+                // 重建 cities 表
+                database.execSQL("DROP TABLE IF EXISTS `cities`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `cities` (
+                        `adcode` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `provinceAdcode` TEXT NOT NULL,
+                        `centerLat` REAL NOT NULL,
+                        `centerLng` REAL NOT NULL,
+                        `sortOrder` INTEGER NOT NULL,
+                        PRIMARY KEY(`adcode`),
+                        FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_cities_provinceAdcode` ON `cities` (`provinceAdcode`)")
+
+                // 重建 check_in_records 表
+                database.execSQL("DROP TABLE IF EXISTS `check_in_records`")
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `check_in_records` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `cityAdcode` TEXT NOT NULL,
+                        `cityName` TEXT NOT NULL,
+                        `note` TEXT NOT NULL,
+                        `time` INTEGER NOT NULL,
+                        `tags` TEXT NOT NULL,
+                        `photoPaths` TEXT NOT NULL
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_check_in_records_cityAdcode` ON `check_in_records` (`cityAdcode`)")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -154,7 +315,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "travel_journal.db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

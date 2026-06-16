@@ -34,6 +34,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.travel_footprint_android.domain.service.RecordingStateHolder
 import com.example.travel_footprint_android.presentation.screen.MainScreen2
 import com.example.travel_footprint_android.utils.DebugHelper
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,6 +54,13 @@ class MainActivity : ComponentActivity() {
     lateinit var debugHelper: DebugHelper
 
     /**
+     * 通过 Hilt 注入 RecordingStateHolder
+     * 用于在应用启动时清除残留的录制状态
+     */
+    @Inject
+    lateinit var recordingStateHolder: RecordingStateHolder
+
+    /**
      * Activity 生命周期：创建时调用
      * - 安装并配置闪屏
      * - 启用沉浸式全屏显示
@@ -66,10 +74,14 @@ class MainActivity : ComponentActivity() {
         // 启用 Edge-to-Edge 模式，让内容延伸到状态栏和导航栏下方
         enableEdgeToEdge()
 
+        // 应用启动时清除上次的录制状态，进程被杀后不恢复录制
+        recordingStateHolder.clearAll()
+
         // 设置 Compose 内容，MainScreen2 为应用主界面
         // 当前 debugHelper 传 null，故调试悬浮面板不会显示
         setContent {
             MainScreen2(debugHelper = null)
         }
     }
+
 }
