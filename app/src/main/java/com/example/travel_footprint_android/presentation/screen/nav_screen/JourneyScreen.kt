@@ -34,10 +34,12 @@ package com.example.travel_footprint_android.presentation.screen.nav_screen
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -75,6 +77,7 @@ import com.example.travel_footprint_android.presentation.viewmodel.RecordingView
 
 // 旅程主界面 Composable 函数：作为应用核心页面，整合地图、面板、特效层
 // 通过 Hilt 注入 JourneyViewModel（页面级作用域）和 JourneyMapViewModel（Activity 级作用域）
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun JourneyScreen(
     // journeyViewModel：管理旅程/足迹的增删改查，key="journey" 确保同一 ViewModel 实例
@@ -185,7 +188,10 @@ fun JourneyScreen(
             journeyViewModel = journeyViewModel,
         )
         // ===== 天气卡片：位于面板上方（z-order），避免被面板遮挡 =====
-        WeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
+        if(hasLocationPermission) {
+            WeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
+
+        }
         // ===== 图片雨特效层：覆盖在整个页面上方，作为装饰性背景特效 =====
         ImageRain()
 

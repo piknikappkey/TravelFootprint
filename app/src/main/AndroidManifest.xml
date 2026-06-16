@@ -49,6 +49,7 @@
         android:theme="@style/Theme.Travelfootprintandroid"
         android:hardwareAccelerated="true"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
         <!-- 高德地图 API Key -->

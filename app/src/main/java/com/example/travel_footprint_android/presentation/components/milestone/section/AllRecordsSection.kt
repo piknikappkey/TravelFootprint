@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -34,7 +32,6 @@ import java.util.Locale
  * AllRecordsSection - 全部足迹记录列表
  *
  * 展示按月份分组的全部足迹记录
- * 使用单一 LazyColumn 扁平渲染所有月份标题和足迹记录，避免嵌套滚动容器。
  * - FootprintRecordItem：单条足迹记录卡片
  */
 
@@ -86,16 +83,8 @@ internal fun AllRecordsSection(monthGroups: List<MonthGroup>) {
                 )
             } else {
                 Spacer(Modifier.height(12.dp))
-                LazyColumn {
-                    items(
-                        items = flatItems,
-                        key = { item ->
-                            when (item) {
-                                is FlatItem.MonthHeader -> "header_${item.group.monthKey}"
-                                is FlatItem.FootprintRecord -> "fp_${item.footprint.id}"
-                            }
-                        }
-                    ) { item ->
+                Column {
+                    flatItems.forEach { item ->
                         when (item) {
                             is FlatItem.MonthHeader -> MonthGroupHeader(item.group)
                             is FlatItem.FootprintRecord -> FootprintRecordItem(item.footprint)

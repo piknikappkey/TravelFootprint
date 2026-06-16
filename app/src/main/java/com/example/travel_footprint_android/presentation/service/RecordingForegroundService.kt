@@ -137,13 +137,17 @@ class RecordingForegroundService : Service() {
                 displacementDistance = intent.getDoubleExtra(EXTRA_FOOTPRINT_DISTANCE, 0.0)
                 speed = intent.getDoubleExtra(EXTRA_FOOTPRINT_SPEED, 0.0)
                 calories = intent.getDoubleExtra(EXTRA_FOOTPRINT_CALORIES, 0.0)
-                val savedStartTime = intent.getLongExtra(EXTRA_FOOTPRINT_START_TIME, 0L)
                 locationIndex = intent.getIntExtra(EXTRA_LOCATION_INDEX, 1)
 
-                startTime = if (savedStartTime > 0L) savedStartTime else System.currentTimeMillis()
-                pausedDuration = if (historicalDuration > 0L) historicalDuration else 0L
+                // 修复：始终使用当前时间作为本次录制的开始时间
+                // historicalDuration 已保存之前录制的时长，会在计算中累加
+                startTime = System.currentTimeMillis()
+                pausedDuration = 0L
                 isRecording = true
                 isPaused = false
+
+                // 调试日志
+                Log.d("RecordingService", "ACTION_START: footprintId=$footprintId, historicalDuration=$historicalDuration, startTime=$startTime, pausedDuration=$pausedDuration")
 
                 // 同步状态到 RecordingStateHolder
                 stateHolder.setRecording(true)
@@ -217,6 +221,10 @@ class RecordingForegroundService : Service() {
                 if (!isPaused) {
                     val currentTime = System.currentTimeMillis()
                     val durationTime = currentTime - startTime - pausedDuration + historicalDuration
+                    // 调试日志：每10秒输出一次计算过程
+                    if ((currentTime / 1000) % 10 == 0L) {
+                        Log.d("RecordingService", "Timer: currentTime=$currentTime, startTime=$startTime, pausedDuration=$pausedDuration, historicalDuration=$historicalDuration, durationTime=$durationTime")
+                    }
                     if (durationTime > 0) {
                         speed = displacementDistance / (durationTime / 1000.0)
                     }
@@ -230,11 +238,19 @@ class RecordingForegroundService : Service() {
                             speed = speed,
                             calories = calories,
                         )
+                        // 调试日志：记录数据库更新的值
+                        if ((currentTime / 1000) % 10 == 0L) {
+                            Log.d("RecordingService", "DB更新: footprintId=$footprintId, startTime=${Date(startTime)}, duration=$durationTime, distance=$displacementDistance")
+                        }
                     } catch (e: Exception) {
                         Log.e("RecordingService", "更新录制数据失败", e)
                     }
                     // 同步到 StateHolder
                     stateHolder.updateRecordingData(durationTime, displacementDistance, speed, calories)
+                    // 调试日志：记录StateHolder更新的值
+                    if ((currentTime / 1000) % 10 == 0L) {
+                        Log.d("RecordingService", "StateHolder更新: durationTime=$durationTime")
+                    }
                     // 更新通知
                     updateNotification("正在记录: $footprintTitle - ${formatDuration(durationTime)}")
                 }

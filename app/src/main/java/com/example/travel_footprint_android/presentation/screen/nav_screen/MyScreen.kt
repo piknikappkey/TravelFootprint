@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.button.button_image_setting.ButtonImageSetting
+import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.image_random.setting_dialog.RainSettingDialog
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
@@ -65,30 +67,40 @@ fun MyScreen(
         BGBox(
             modifier = Modifier.fillMaxSize(),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(48.dp))
+            val myScrollState = rememberScrollState()
 
-                Headline(
-                    text = "我的",
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                )
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(myScrollState)
+                        .padding(16.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Headline(
+                        text = "我的",
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
 
-                MilestoneContent(
-                    milestoneViewModel = milestoneViewModel
-                )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    MilestoneContent(
+                        milestoneViewModel = milestoneViewModel
+                    )
 
-                SettingView(
-                    weatherViewModel = weatherViewModel,
-                    onOpenRainSettings = { showRainDialog = true },
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingView(
+                        weatherViewModel = weatherViewModel,
+                        onOpenRainSettings = { showRainDialog = true },
+                    )
+                }
+
+                VerticalCustomScrollbar(
+                    scrollState = myScrollState,
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd),
                 )
             }
         }

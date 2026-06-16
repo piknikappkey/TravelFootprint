@@ -4,16 +4,19 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -34,13 +38,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation.components.button.button_delete.ButtonDelete
 import com.example.travel_footprint_android.presentation.components.button.button_save.ButtonSave
+import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
+import com.example.travel_footprint_android.presentation.components.dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
-import com.example.travel_footprint_android.presentation.components.journey_panel.confirm_delete_dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
-import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark8
@@ -115,6 +121,7 @@ fun FootprintEdit(
         Spacer(Modifier.height(10.dp))
 
         Content(
+            modifier = Modifier.weight(1f),
             footprint,
             footprintSelected,
             journeySelected,
@@ -212,6 +219,7 @@ private fun HeadRow(
 
 @Composable
 private fun Content(
+    modifier: Modifier = Modifier,
     footprint: Footprint,
     footprintSelected: Footprint?,
     journeySelected: Journey,
@@ -220,65 +228,86 @@ private fun Content(
     latitude: Double?,
     longitude: Double?,
 ) {
-    Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-    ) {
-        // 编辑内容区域
-        Spacer(Modifier.padding(3.dp))
+    val scrollState = rememberScrollState()
 
-        // 足迹标题编辑
-        FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+        ) {
+            BGImgBox(
+                R.drawable.bg_rectangular_1__2__1,  // 背景图2
+                R.drawable.bg_rectangular_1__2__2,  // 背景图3
+                modifier = Modifier
+                    .padding(10.dp, 10.dp)
+                    .shadow(
+                        elevation = 1.dp,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Column {
+                    // 编辑内容区域
+                    Spacer(Modifier.padding(3.dp))
 
-        LineBetween()
+                    // 足迹标题编辑
+                    FootprintEditCover(footprint, { text -> setFootprint(footprint.copy(title = text)) })
 
-        // 足迹描述编辑
-        FootprintEditDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
+                    LineBetween()
 
-        LineBetween()
+                    // 足迹描述编辑
+                    FootprintEditDescription(footprint, { text -> setFootprint(footprint.copy(description = text)) })
 
-        // 足迹地址编辑
-        FootprintEditLocation(
-            footprint,
-            setFootprint = { f -> setFootprint(f.copy())},
-        )
+                    LineBetween()
 
-        // 当前经纬度
-        if(latitude != null && longitude != null) {
-            Row {
-                Spacer(Modifier.weight(1f))
-                TextSmall(
-                    text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
-                    color = FontDark8,
-                    fontSize = 12.sp
+                    // 足迹地址编辑
+                    FootprintEditLocation(
+                        footprint,
+                        setFootprint = { f -> setFootprint(f.copy())},
+                    )
 
-                )
-                Spacer(Modifier.width(10.dp))
-            }
-        }
+                    // 当前经纬度
+                    if(latitude != null && longitude != null) {
+                        Row {
+                            Spacer(Modifier.weight(1f))
+                            TextSmall(
+                                text = "${String.format("%.4f", latitude)} - ${String.format("%.4f", longitude)}",
+                                color = FontDark8,
+                                fontSize = 12.sp
 
-        LineBetween()
+                            )
+                            Spacer(Modifier.width(10.dp))
+                        }
+                    }
 
-        // 个人评分编辑
-        FootprintEditRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
+                    LineBetween()
 
-        LineBetween()
+                    // 个人评分编辑
+                    FootprintEditRating(footprint, { rating -> setFootprint(footprint.copy(rating = rating)) })
 
-        Spacer(Modifier.padding(10.dp))
-
-        if(footprintSelected != null) {
-            Row {
-                Spacer(Modifier.weight(1f))
-                ButtonDelete(
-                    title = "删除该足迹",
-                    paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
-                ) {
-                    deleteFootprint(footprintSelected)
+                    if(footprintSelected != null) {
+                        LineBetween()
+                        Spacer(Modifier.padding(10.dp))
+                        Row {
+                            Spacer(Modifier.weight(1f))
+                            ButtonDelete(
+                                title = "删除该足迹",
+                                paddingValues = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                            ) {
+                                deleteFootprint(footprintSelected)
+                            }
+                            Spacer(Modifier.width(10.dp))
+                        }
+                    }
+                    Spacer(Modifier.padding(10.dp))
                 }
-                Spacer(Modifier.width(10.dp))
             }
-
-            Spacer(Modifier.padding(10.dp))
         }
+
+        VerticalCustomScrollbar(
+            scrollState = scrollState,
+            modifier = Modifier
+                .align(Alignment.CenterEnd),
+        )
     }
 }

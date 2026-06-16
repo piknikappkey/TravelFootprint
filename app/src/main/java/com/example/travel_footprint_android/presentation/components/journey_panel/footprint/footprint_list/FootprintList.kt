@@ -35,7 +35,9 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
  *  - 6. FootprintListAddIcon 位于 BottomEnd，点击导航至 FOOTPRINT_EDIT 页面
  */
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -51,9 +53,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,16 +71,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
-import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
-import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
-import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
+import com.example.travel_footprint_android.presentation.components.dialog.TipDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
-import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
+import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
+import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 import com.example.travel_footprint_android.ui.theme.SecondColor3
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FootprintList(
     journeySelected: Journey,
@@ -129,16 +130,10 @@ fun FootprintList(
 
     // 冲突提示对话框
     if (showConflictDialog) {
-        AlertDialog(
-            onDismissRequest = { showConflictDialog = false },
-            title = { Text("提示") },
-            text = { Text("请先结束当前正在记录的足迹，再打开其他足迹") },
-            confirmButton = {
-                Button(onClick = { showConflictDialog = false }) {
-                    Text("知道了")
-                }
-            }
-        )
+        TipDialog(
+            title = "提示",
+            message = "当前有正在记录中的足迹\n请先结束当前正在记录的足迹，再打开其他足迹",
+        ) { showConflictDialog = false }
     }
 
     // 垂直布局：间距 + 标题行 + 分隔线 + 内容区
@@ -220,6 +215,7 @@ private fun HeadRow(
 }
 
 // 内容区组件：足迹列表或空状态提示，以及右下角的添加按钮
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun Content(
     footprints: List<Footprint>,

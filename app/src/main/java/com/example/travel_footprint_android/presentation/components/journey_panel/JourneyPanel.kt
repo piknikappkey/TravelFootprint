@@ -42,6 +42,8 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
 
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateIntAsState
@@ -97,6 +99,7 @@ import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewMo
 // =========================================================================
 // JourneyPanel Composable: 旅程底部面板根组件，管理 Y 轴偏移拖拽 + 5 个子页面路由
 // =========================================================================
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun JourneyPanel(

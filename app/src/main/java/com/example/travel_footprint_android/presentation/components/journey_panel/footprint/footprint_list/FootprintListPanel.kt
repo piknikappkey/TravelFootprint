@@ -42,7 +42,12 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -63,17 +68,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.data.entity.Footprint
-import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.button.button_main.ButtonMain
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
+import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.presentation.service.RecordingForegroundService
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 import com.example.travel_footprint_android.ui.theme.FontDark4
-import com.example.travel_footprint_android.ui.theme.FontDark5
 import com.example.travel_footprint_android.ui.theme.MainColor2
+import com.example.travel_footprint_android.ui.theme.SecondColor1
+import com.example.travel_footprint_android.ui.theme.SecondColor2
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -165,108 +171,116 @@ fun FootprintListPanel(
     }
 
     // 面板UI：用 BGBox 包裹内容，显示运动数据和操作按钮
-    BGBox(
-        modifier = Modifier
-            .padding(horizontal = 15.dp)
+    Column(
+        modifier = Modifier.padding(5.dp, 5.dp, 5.dp, 0.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = 5.dp, horizontal = 10.dp),
-        ) {
-            // 标题栏：左侧"记录足迹"标题 + 右侧状态提示
-            Row {
+        // 标题栏：左侧"记录足迹"标题 + 右侧状态提示
+        Row {
+            Headline(
+                text = "足迹路线",
+                fontSize = 16.sp,
+                color = FontDark4
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            // 根据状态显示"正在记录中..."或"已暂停"
+            if (displayState == FootprintListPanelState.START) {
                 TextMedium(
-                    text = "记录足迹",
-                    fontSize = 18.sp,
-                    color = FontDark4
+                    text = "路线正在记录中...",
+                    color = MainColor2
                 )
+            } else if (displayState == FootprintListPanelState.PAUSE) {
+                TextMedium(
+                    text = "记录已暂停",
+                    color = MainColor2
+                )
+            }
+        }
 
-                Spacer(Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(8.dp))
 
-                // 根据状态显示"正在记录中..."或"已暂停"
-                if (displayState == FootprintListPanelState.START) {
-                    TextMedium(
-                        text = "正在记录中...",
-                        color = MainColor2
-                    )
-                } else if (displayState == FootprintListPanelState.PAUSE) {
-                    TextMedium(
-                        text = "已暂停",
-                        color = MainColor2
-                    )
-                }
+        // 数据行1：开始时间 + 持续时间
+        DataRow2(
+            "开始时间：",
+            if (footprint.startTime.time > 0) formatDateTime(footprint.startTime.time) else "未开始",
+            "持续时间：",
+            if (isThisFootprintRecording) formatDuration(recordingState.durationTime)
+            else formatDuration(footprint.duration)
+        )
+
+        // 数据行2：移动距离 + 移动速度
+        DataRow2(
+            "移动距离：",
+            if (isThisFootprintRecording) formatDistance(recordingState.displacementDistance)
+            else formatDistance(footprint.distance),
+            "移动速度：",
+            if (isThisFootprintRecording) String.format(java.util.Locale.CHINA, "%.2f m/s", recordingState.speed)
+            else String.format(java.util.Locale.CHINA, "%.2f m/s", footprint.speed)
+        )
+
+        // 数据行3：消耗卡路里（单行显示）
+        DataRow2(
+            "消耗卡路里",
+            if (isThisFootprintRecording) formatCalories(recordingState.calories)
+            else formatCalories(footprint.calories),
+            null,
+            null
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 底部按钮行：开始/暂停切换 + 结束按钮
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 开始/暂停按钮：STOP或PAUSE时显示"开始"，START时显示"暂停"
+            ButtonMain(
+                onClick = {
+                    if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) {
+                        if (isThisFootprintRecording) {
+                            resumeRecording()
+                        } else {
+                            startRecording()
+                        }
+                    } else {
+                        pauseRecording()
+                    }
+                },
+                paddingValues = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                bgColor = SecondColor2
+            ) {
+                TextMedium(
+                    text = if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) "${if(locationList.isNotEmpty() && locationList.last().index >= 1) "继续" else "开始"}记录" else "暂停记录",
+                    fontSize = 15.sp,
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.weight(1f))
 
-            // 数据行1：开始时间 + 持续时间
-            DataRow2(
-                "开始时间：",
-                if (footprint.startTime.time > 0) formatDateTime(footprint.startTime.time) else "未开始",
-                "持续时间：",
-                if (isThisFootprintRecording) formatDuration(recordingState.durationTime)
-                else formatDuration(footprint.duration)
-            )
-
-            // 数据行2：移动距离 + 移动速度
-            DataRow2(
-                "移动距离：",
-                if (isThisFootprintRecording) formatDistance(recordingState.displacementDistance)
-                else formatDistance(footprint.distance),
-                "移动速度：",
-                if (isThisFootprintRecording) String.format(java.util.Locale.CHINA, "%.2f m/s", recordingState.speed)
-                else String.format(java.util.Locale.CHINA, "%.2f m/s", footprint.speed)
-            )
-
-            // 数据行3：消耗卡路里（单行显示）
-            DataRow2(
-                "消耗卡路里",
-                if (isThisFootprintRecording) formatCalories(recordingState.calories)
-                else formatCalories(footprint.calories),
-                null,
-                null
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 底部按钮行：开始/暂停切换 + 结束按钮
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            // 结束按钮：仅在非STOP状态时显示，带有淡入淡出动画
+            AnimatedVisibility(
+                visible = displayState != FootprintListPanelState.STOP,
+                enter = fadeIn(
+                    animationSpec = tween(durationMillis = 300)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(durationMillis = 300)
+                )
             ) {
-                // 开始/暂停按钮：STOP或PAUSE时显示"开始"，START时显示"暂停"
                 ButtonMain(
-                    onClick = {
-                        if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) {
-                            if (isThisFootprintRecording) {
-                                resumeRecording()
-                            } else {
-                                startRecording()
-                            }
-                        } else {
-                            pauseRecording()
-                        }
-                    }
+                    onClick = { stopRecording() },
+                    paddingValues = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    bgColor = SecondColor2
                 ) {
                     TextMedium(
-                        text = if (displayState == FootprintListPanelState.STOP || displayState == FootprintListPanelState.PAUSE) "${if(locationList.isNotEmpty() && locationList.last().index >= 1) "继续" else "开始"}记录" else "暂停记录",
+                        text = "结束记录",
                         fontSize = 15.sp
                     )
                 }
-
-                Spacer(Modifier.weight(1f))
-
-                // 结束按钮：仅在非STOP状态时显示
-                if (displayState != FootprintListPanelState.STOP) {
-                    ButtonMain(onClick = { stopRecording() }) {
-                        TextMedium(
-                            text = "结束记录",
-                            fontSize = 15.sp
-                        )
-                    }
-                }
             }
-            Spacer(modifier = Modifier.height(5.dp))
         }
     }
 }
@@ -287,13 +301,13 @@ private fun DataRow2(
             TextSmall(
                 text = label,
                 fontSize = 15.sp,
-                color = FontDark5
+                color = FontDark4
             )
             Spacer(Modifier.width(0.dp))
             TextSmall(
                 text = value,
                 fontSize = 15.sp,
-                color = FontDark5
+                color = FontDark4
             )
         }
         // 如果 label2 和 value2 都不为null，显示右侧数据
@@ -304,13 +318,13 @@ private fun DataRow2(
                 TextSmall(
                     text = label2,
                     fontSize = 15.sp,
-                    color = FontDark5
+                    color = FontDark4
                 )
                 Spacer(Modifier.width(0.dp))
                 TextSmall(
                     text = value2,
                     fontSize = 15.sp,
-                    color = FontDark5
+                    color = FontDark4
                 )
             }
         }

@@ -12,9 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.travel_footprint_android.R
-import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
-import com.example.travel_footprint_android.presentation.components.bg_box.BGImgBox
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainSettings
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
@@ -27,46 +24,42 @@ fun RainSettingDialogContent(
     onClearCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    BGBox {
-        BGImgBox(R.drawable.bg_rectangular_1__2__3) {
-            Column(
-                modifier = modifier
-                    .padding(10.dp, 12.dp, 10.dp, 6.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Headline(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "涂鸦雨设置",
-                    fontSize = 20.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
+    Column(
+        modifier = modifier
+            .padding(10.dp, 12.dp, 10.dp, 6.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Headline(
+            modifier = Modifier.fillMaxWidth(),
+            text = "涂鸦雨设置",
+            fontSize = 20.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
 
-                Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(12.dp))
 
-                RainSwitchSettings(
-                    settings = settings,
-                    imageRainViewModel = imageRainViewModel,
-                    isClearing = isClearing,
-                    onClearCheckedChange = onClearCheckedChange,
-                )
+        RainSwitchSettings(
+            settings = settings,
+            imageRainViewModel = imageRainViewModel,
+            isClearing = isClearing,
+            onClearCheckedChange = onClearCheckedChange,
+        )
 
-                Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(8.dp))
 
-                RainNumberSettings(
-                    settings = settings,
-                    imageRainViewModel = imageRainViewModel,
-                )
+        RainNumberSettings(
+            settings = settings,
+            imageRainViewModel = imageRainViewModel,
+        )
 
-                Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(8.dp))
 
-                RainRangeSettings(
-                    settings = settings,
-                    imageRainViewModel = imageRainViewModel,
-                )
+        RainRangeSettings(
+            settings = settings,
+            imageRainViewModel = imageRainViewModel,
+        )
 
-                Spacer(Modifier.height(8.dp))
-            }
-        }
+        Spacer(Modifier.height(8.dp))
     }
 }

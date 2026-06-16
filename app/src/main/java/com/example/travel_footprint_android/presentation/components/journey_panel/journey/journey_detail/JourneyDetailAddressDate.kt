@@ -47,12 +47,12 @@ fun JourneyDetailAddressDate(
                     firstLine = 0,
                     modifier = Modifier.padding(horizontal = 15.dp)
                 )
-                TextSmall(
-                    text = region,
-                    firstLine = 2,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(horizontal = 15.dp),
-                )
+//                TextSmall(
+//                    text = region,
+//                    firstLine = 2,
+//                    fontSize = 11.sp,
+//                    modifier = Modifier.padding(horizontal = 15.dp),
+//                )
             }
         }
         LineBetween()
