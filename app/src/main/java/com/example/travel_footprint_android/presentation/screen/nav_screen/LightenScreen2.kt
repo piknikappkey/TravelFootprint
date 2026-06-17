@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +27,7 @@ import com.example.travel_footprint_android.presentation.viewmodel.LightenViewMo
 import com.example.travel_footprint_android.presentation.components.bg_animotion.RainEffect
 import com.example.travel_footprint_android.presentation.components.bg_animotion.SnowEffect
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
+import com.example.travel_footprint_android.presentation.components.lighten.LightenWeatherCard
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2
 import com.example.travel_footprint_android.presentation.components.svg_map.SVGMap
 import com.example.travel_footprint_android.presentation.components.svg_map.ShowMapMode
@@ -65,7 +68,6 @@ fun LightenScreen2(
                 contentScale = ContentScale.Crop
             )
 
-
             // 地图区域（填充整个屏幕）
             SVGMap(
                 modifier = Modifier.fillMaxSize(),
@@ -92,6 +94,7 @@ fun LightenScreen2(
 //            intensity = 1.2f,      // 雨势强度
 //            enableSplash = true    // 启用溅射效果
 //        )
+            LightenWeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
 //            //外层天气动效
             SnowEffect(isSnowing = true)
 //

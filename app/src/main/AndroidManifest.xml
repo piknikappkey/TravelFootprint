@@ -44,7 +44,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.Travelfootprintandroid"
         android:hardwareAccelerated="true"
@@ -55,7 +55,7 @@
         <!-- 高德地图 API Key -->
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="83279a23557952f6b018e06064b2ed24"/>
+            android:value="85bd74686f69a76852e16c547bd19dbb"/>
 
         <!-- 开启持续定位服务 -->
         <service android:name="com.amap.api.location.APSService" />
