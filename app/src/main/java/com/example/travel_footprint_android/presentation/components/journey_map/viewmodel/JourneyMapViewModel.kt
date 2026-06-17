@@ -217,12 +217,24 @@ class JourneyMapViewModel @Inject constructor(
                     aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f))
                 }
             } else {
-                // 定位失败：检测网络相关错误码
+                // 定位失败：输出详细错误信息到 Logcat 并显示给用户
                 val code = location.errorCode
-                if (code == 7 || code == 18 || code == 19) {
-                    // 7=网络异常, 18=网络超时, 19=网络连接异常
-                    _networkError.value = "网络连接不可用，请检查网络"
+                val errorInfo = location.errorInfo
+                val locationDetail = location.locationDetail
+                Log.e("JourneyMap3ViewModel", "定位失败: errorCode=$code, errorInfo=$errorInfo, locationDetail=$locationDetail")
+
+                // 根据错误码给出用户可理解的提示
+                val message = when (code) {
+                    1 -> "高德Key鉴权失败，请检查API Key配置"
+                    2 -> "高德Key配置错误，请检查包名和SHA1"
+                    7 -> "网络异常，无法连接定位服务"
+                    12 -> "缺少定位权限，请在系统设置中授权"
+                    13 -> "GPS未开启或无卫星信号"
+                    18 -> "网络超时，定位服务响应超时"
+                    19 -> "网络连接异常，无法访问定位服务"
+                    else -> "定位失败($code): $errorInfo"
                 }
+                _networkError.value = message
             }
         }
     }
