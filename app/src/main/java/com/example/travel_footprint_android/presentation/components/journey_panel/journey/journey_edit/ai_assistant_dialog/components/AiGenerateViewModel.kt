@@ -6,8 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.network.AiService
+import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit.ai_assistant_dialog_for_footprint.components.AiFillFieldForFootprint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -217,6 +219,137 @@ class AiGenerateViewModel @Inject constructor(
                         Log.d(TAG, "调用 onResult 回调...")
                         onResult(addressName, latitude, longitude, aiResult.title, aiResult.description)
                         Log.d(TAG, "========== AI 生成流程完成 ==========")
+                    },
+                    onFailure = { e ->
+                        Log.e(TAG, "步骤5失败: AI 生成失败", e)
+                        Log.e(TAG, "错误类型: ${e.javaClass.simpleName}")
+                        Log.e(TAG, "错误信息: ${e.message}")
+                        _state.update {
+                            it.copy(isLoading = false, error = "AI 生成失败: ${e.message}")
+                        }
+                    }
+                )
+
+            } catch (e: Exception) {
+                Log.e(TAG, "生成过程发生异常", e)
+                Log.e(TAG, "异常类型: ${e.javaClass.simpleName}")
+                Log.e(TAG, "异常信息: ${e.message}")
+                Log.e(TAG, "异常堆栈: ${e.stackTraceToString()}")
+                _state.update {
+                    it.copy(isLoading = false, error = "生成失败: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * 执行 AI 自动生成足迹信息
+     *
+     * @param footprint 当前编辑中的足迹数据
+     * @param journey 所属旅程数据（提供上下文信息）
+     * @param selectedFields 用户选择要生成的字段集合
+     * @param customPrompt 自定义提示词（可选）
+     * @param onResult 回调函数，返回更新后的地址信息和 AI 生成结果
+     */
+    fun generateForFootprint(
+        footprint: Footprint,
+        journey: Journey,
+        selectedFields: Set<AiFillFieldForFootprint>,
+        customPrompt: String? = null,
+        onResult: (locationName: String, latitude: Double, longitude: Double, title: String, description: String, rating: Int) -> Unit
+    ) {
+        // 如果正在加载中，直接返回防止重复请求
+        if (_state.value.isLoading) {
+            Log.w(TAG, "正在加载中，忽略重复请求")
+            return
+        }
+
+        // 如果没有选中任何字段，直接返回（由调用方处理提示）
+        if (selectedFields.isEmpty()) {
+            Log.w(TAG, "未选择任何字段，忽略请求")
+            return
+        }
+
+        Log.d(TAG, "========== AI 足迹生成流程开始 ==========")
+        Log.d(TAG, "选中的字段: $selectedFields")
+        Log.d(TAG, "当前足迹标题: '${footprint.title}'")
+        Log.d(TAG, "当前足迹描述: '${footprint.description}'")
+
+        viewModelScope.launch {
+            // 1. 设置加载状态
+            Log.d(TAG, "步骤1: 设置加载状态 isLoading=true")
+            _state.update { it.copy(isLoading = true, error = null) }
+
+            try {
+                // 2. 如果选中了地址字段，通过高德 SDK 获取当前位置和详细地址
+                var latitude = footprint.latitude
+                var longitude = footprint.longitude
+                var addressName = footprint.address.split("\n").firstOrNull() ?: ""
+
+                if (AiFillFieldForFootprint.ADDRESS in selectedFields) {
+                    Log.d(TAG, "步骤2: 开始通过高德 SDK 获取当前位置...")
+                    val locationResult = getAmapLocation()
+
+                    if (locationResult == null) {
+                        Log.e(TAG, "步骤2失败: 无法获取位置")
+                        _state.update {
+                            it.copy(isLoading = false, error = "无法获取位置，请检查定位权限和网络")
+                        }
+                        return@launch
+                    }
+
+                    latitude = locationResult.first
+                    longitude = locationResult.second
+                    addressName = locationResult.third
+                    Log.d(TAG, "步骤2成功: 获取到位置 lat=$latitude, lng=$longitude")
+                    Log.d(TAG, "高德返回的详细地址: '$addressName'")
+
+                    // 3. 更新状态（保存地址信息）
+                    Log.d(TAG, "步骤3: 更新状态保存地址信息")
+                    _state.update { it.copy(locationName = addressName) }
+                } else {
+                    Log.d(TAG, "步骤2: 跳过定位（未选中地址字段）")
+                }
+
+                // 4. 构造 prompt 并调用 AI 服务
+                Log.d(TAG, "步骤4: 开始调用 AI 服务...")
+                Log.d(TAG, "传入参数: lat=$latitude, lng=$longitude, address='$addressName'")
+                val startTime = System.currentTimeMillis()
+
+                val result = aiService.generateFootprintInfo(
+                    latitude = latitude,
+                    longitude = longitude,
+                    addressName = addressName,
+                    journeyTitle = journey.title,
+                    journeyDescription = journey.description,
+                    existingTitle = footprint.title.takeIf { it.isNotBlank() },
+                    existingDescription = footprint.description.takeIf { it.isNotBlank() },
+                    existingRating = footprint.rating.takeIf { it > 0 },
+                    customPrompt = customPrompt
+                )
+
+                val endTime = System.currentTimeMillis()
+                Log.d(TAG, "步骤4完成: AI 服务调用耗时 ${endTime - startTime}ms")
+
+                // 5. 处理结果
+                Log.d(TAG, "步骤5: 处理 AI 返回结果")
+                result.fold(
+                    onSuccess = { aiResult ->
+                        Log.d(TAG, "步骤5成功: AI 生成成功")
+                        Log.d(TAG, "生成的标题: '${aiResult.title}'")
+                        Log.d(TAG, "生成的描述: '${aiResult.description}'")
+                        Log.d(TAG, "生成的评分: ${aiResult.rating}")
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                generatedTitle = aiResult.title,
+                                generatedDescription = aiResult.description
+                            )
+                        }
+                        // 通过回调返回结果（调用方会根据 selectedFields 决定哪些字段写入）
+                        Log.d(TAG, "调用 onResult 回调...")
+                        onResult(addressName, latitude, longitude, aiResult.title, aiResult.description, aiResult.rating)
+                        Log.d(TAG, "========== AI 足迹生成流程完成 ==========")
                     },
                     onFailure = { e ->
                         Log.e(TAG, "步骤5失败: AI 生成失败", e)

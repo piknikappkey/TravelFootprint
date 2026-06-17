@@ -1,7 +1,9 @@
 package com.example.travel_footprint_android.presentation.components.image_random.setting_dialog
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainSettings
 import com.example.travel_footprint_android.presentation.components.image_random.viewmodel.ImageRainViewModel
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
@@ -24,42 +27,52 @@ fun RainSettingDialogContent(
     onClearCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .padding(10.dp, 12.dp, 10.dp, 6.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Headline(
-            modifier = Modifier.fillMaxWidth(),
-            text = "涂鸦雨设置",
-            fontSize = 20.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+    val scrollState = rememberScrollState()
+
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp, 12.dp, 10.dp, 6.dp)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Headline(
+                modifier = Modifier.fillMaxWidth(),
+                text = "涂鸦雨设置",
+                fontSize = 20.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            RainSwitchSettings(
+                settings = settings,
+                imageRainViewModel = imageRainViewModel,
+                isClearing = isClearing,
+                onClearCheckedChange = onClearCheckedChange,
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            RainNumberSettings(
+                settings = settings,
+                imageRainViewModel = imageRainViewModel,
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            RainRangeSettings(
+                settings = settings,
+                imageRainViewModel = imageRainViewModel,
+            )
+
+            Spacer(Modifier.height(8.dp))
+        }
+
+        VerticalCustomScrollbar(
+            scrollState = scrollState,
+            modifier = Modifier.align(Alignment.CenterEnd)
         )
-
-        Spacer(Modifier.height(12.dp))
-
-        RainSwitchSettings(
-            settings = settings,
-            imageRainViewModel = imageRainViewModel,
-            isClearing = isClearing,
-            onClearCheckedChange = onClearCheckedChange,
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        RainNumberSettings(
-            settings = settings,
-            imageRainViewModel = imageRainViewModel,
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        RainRangeSettings(
-            settings = settings,
-            imageRainViewModel = imageRainViewModel,
-        )
-
-        Spacer(Modifier.height(8.dp))
     }
 }

@@ -27,15 +27,17 @@ import kotlin.random.Random
 /**
  * AI 进度条组件
  *
- * 不规则随机增长到 99%（1分钟内），若 AI 仍未完成则停在 99%，
+ * 不规则随机增长到 99%（预计加载时间内），若 AI 仍未完成则停在 99%，
  * AI 完成时跳到 100% 并短暂停留后消失。
  *
  * @param isActive AI 是否正在运行
+ * @param estimatedLoadTimeMs 预计加载时间（毫秒），实际会在 80%~120% 之间随机浮动
  * @param modifier 外部 Modifier
  */
 @Composable
 fun AiProgressBar(
     isActive: Boolean,
+    estimatedLoadTimeMs: Long = 60_000L,
     modifier: Modifier = Modifier,
 ) {
     var progress by remember { mutableFloatStateOf(0f) }
@@ -47,18 +49,22 @@ fun AiProgressBar(
 
     LaunchedEffect(isActive) {
         if (isActive) {
+            // 在预计时间的 80%~120% 之间随机取一个实际目标时间
+            val randomFactor = 0.8f + Random.nextFloat() * 0.4f
+            val actualTargetTimeMs = (estimatedLoadTimeMs * randomFactor).toLong().coerceAtLeast(1000L)
+
             // 开始：从 0 向 99% 不规则增长
             progress = 0f
             val startTime = System.currentTimeMillis()
 
             while (progress < 0.99f) {
                 val elapsed = System.currentTimeMillis() - startTime
-                // 基于时间的上限：1分钟内线性增长到 99%
-                val timeBasedMax = (elapsed / 60_000f * 0.99f).coerceAtMost(0.99f)
+                // 基于随机化后的目标时间线性增长到 99%
+                val timeBasedMax = (elapsed.toFloat() / actualTargetTimeMs * 0.99f).coerceAtMost(0.99f)
 
                 // 随机增量：有时快有时慢，模拟"不规则"感
-                val randomFactor = 0.5f + Random.nextFloat() * 1.0f
-                val increment = (timeBasedMax - progress) * 0.15f * randomFactor
+                val randomIncrementFactor = 0.5f + Random.nextFloat() * 1.0f
+                val increment = (timeBasedMax - progress) * 0.15f * randomIncrementFactor
                 progress = (progress + increment.coerceAtLeast(0.005f))
                     .coerceAtMost(timeBasedMax.coerceAtMost(0.99f))
 

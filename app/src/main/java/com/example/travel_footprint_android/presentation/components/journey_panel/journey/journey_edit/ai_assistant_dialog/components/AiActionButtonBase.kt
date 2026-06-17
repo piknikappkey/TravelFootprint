@@ -53,6 +53,7 @@ import com.example.travel_footprint_android.ui.theme.MainColor3
  * @param tipText 提示说明文字
  * @param footerText 底部脚注文字，如 "注：由豆包(doubao-seedream)生成~"
  * @param isLoading 是否正在加载
+ * @param estimatedLoadTimeMs 进度条预计加载时间（毫秒），默认 1 分钟
  * @param autoShowTipOnClick 点击按钮后是否自动展开提示区
  * @param onButtonClick 按钮点击回调
  * @param extraContent 额外内容插槽，插入在按钮行和提示区之间
@@ -66,7 +67,8 @@ fun AiActionButtonBase(
     tipText: String,
     footerText: String,
     isLoading: Boolean,
-    autoShowTipOnClick: Boolean = false,
+    estimatedLoadTimeMs: Long = 60_000L,
+    autoShowTipOnClick: Boolean = true,
     onButtonClick: () -> Unit,
     extraContent: @Composable () -> Unit = {},
 ) {
@@ -108,7 +110,8 @@ fun AiActionButtonBase(
         AiTipSection(
             showTip = showTip,
             tipText = tipText,
-            isLoading = isLoading
+            isLoading = isLoading,
+            estimatedLoadTimeMs,
         )
 
         // 额外内容（如风格选择区）
@@ -209,6 +212,7 @@ private fun AiTipSection(
     showTip: Boolean,
     tipText: String,
     isLoading: Boolean,
+    estimatedLoadTimeMs: Long,
 ) {
     AnimatedVisibility(
         visible = showTip,
@@ -225,6 +229,7 @@ private fun AiTipSection(
             )
             AiProgressBar(
                 isActive = isLoading,
+                estimatedLoadTimeMs = estimatedLoadTimeMs,
                 modifier = Modifier
                     .padding(horizontal = 15.dp, vertical = 4.dp),
             )

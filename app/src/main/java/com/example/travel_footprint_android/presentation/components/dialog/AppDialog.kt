@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +59,7 @@ fun AppDialog(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    // 弹窗打开时触发动画
+    // 弹窗打开时触发动画，并请求根容器焦点以截断焦点传递链
     LaunchedEffect(Unit) {
         visible = true
         focusRequester.requestFocus()
@@ -109,6 +110,7 @@ fun AppDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .focusRequester(focusRequester)
+                .focusable()
         ) {
             // 遮罩层：全屏覆盖，拦截点击事件
             Box(

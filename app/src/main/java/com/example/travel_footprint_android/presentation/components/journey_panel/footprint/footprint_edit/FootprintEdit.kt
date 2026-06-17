@@ -45,6 +45,8 @@ import com.example.travel_footprint_android.presentation.components.custom_scrol
 import com.example.travel_footprint_android.presentation.components.dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.journey_map.viewmodel.JourneyMapViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.ic_journey_height_button.IcJourneyHeightButton
+import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit.ai_assistant_dialog_for_footprint.AiAssistantDialogForFootprint
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.ai_assistant_dialog.components.AiGenerateViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
@@ -69,6 +71,11 @@ fun FootprintEdit(
     val journeyMapViewModel: JourneyMapViewModel = hiltViewModel(key = "JourneyMap3")
     val currentLatLng by journeyMapViewModel.currentLocation.collectAsState()
 
+    // AI ViewModel
+    val aiGenerateViewModel: AiGenerateViewModel = hiltViewModel()
+    val aiState by aiGenerateViewModel.state.collectAsState()
+    val context = LocalContext.current
+
     var footprint by remember {
         mutableStateOf(
             footprintSelected?.copy()
@@ -87,6 +94,12 @@ fun FootprintEdit(
     }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // 监听 AI 生成错误，显示 Toast
+    aiState.error?.let { error ->
+        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        aiGenerateViewModel.clearError()
+    }
+
     LaunchedEffect(currentLatLng) {
         if (footprintSelected == null && currentLatLng != null) {
             footprint = footprint.copy(
@@ -100,49 +113,62 @@ fun FootprintEdit(
         journeyMapViewModel.startLocation()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Spacer(Modifier.height(10.dp))
-        // 顶部导航栏
-        HeadRow(
-            footprintSelected,
-            footprint,
-            journeySelected,
-            addFootprint,
-            updateFootprint,
-            journeyPanelExpandedState,
-            setJourneyPanelOffset,
-            setIsDragging = setIsDragging,
-            onDragDelta = onDragDelta,
-            onPanelNavigate = onPanelNavigate,
-        )
-        Spacer(Modifier.height(10.dp))
-
-        Content(
-            modifier = Modifier.weight(1f),
-            footprint,
-            footprintSelected,
-            journeySelected,
-            { f -> footprint = f.copy() },
-            { showDeleteDialog = true },
-            currentLatLng?.latitude,
-            currentLatLng?.longitude
-        )
-
-        if (showDeleteDialog && footprintSelected != null) {
-            ConfirmDeleteDialog(
-                title = "删除足迹",
-                message = "确定要删除「${footprintSelected.title}」吗？此操作不可撤销。",
-                onConfirm = {
-                    deleteFootprint(footprintSelected)
-                    onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
-                    showDeleteDialog = false
-                },
-                onDismiss = { showDeleteDialog = false }
+    // 用 Box 包裹，用于定位右下角 AI FAB 按钮
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Spacer(Modifier.height(10.dp))
+            // 顶部导航栏
+            HeadRow(
+                footprintSelected,
+                footprint,
+                journeySelected,
+                addFootprint,
+                updateFootprint,
+                journeyPanelExpandedState,
+                setJourneyPanelOffset,
+                setIsDragging = setIsDragging,
+                onDragDelta = onDragDelta,
+                onPanelNavigate = onPanelNavigate,
             )
+            Spacer(Modifier.height(10.dp))
+
+            Content(
+                modifier = Modifier.weight(1f),
+                footprint,
+                footprintSelected,
+                journeySelected,
+                { f -> footprint = f.copy() },
+                { showDeleteDialog = true },
+                currentLatLng?.latitude,
+                currentLatLng?.longitude
+            )
+
+            if (showDeleteDialog && footprintSelected != null) {
+                ConfirmDeleteDialog(
+                    title = "删除足迹",
+                    message = "确定要删除「${footprintSelected.title}」吗？此操作不可撤销。",
+                    onConfirm = {
+                        deleteFootprint(footprintSelected)
+                        onPanelNavigate(JourneyPanel2State.FOOTPRINT_LIST, journeySelected, null)
+                        showDeleteDialog = false
+                    },
+                    onDismiss = { showDeleteDialog = false }
+                )
+            }
         }
+
+        // AI 助手组件（FAB + 弹窗）
+        AiAssistantDialogForFootprint(
+            modifier = Modifier.fillMaxSize(),
+            aiState = aiState,
+            footprint = footprint,
+            journey = journeySelected,
+            aiGenerateViewModel = aiGenerateViewModel,
+            onFootprintUpdate = { f -> footprint = f.copy() },
+        )
     }
 }
 

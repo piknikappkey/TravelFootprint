@@ -1,7 +1,6 @@
 package com.example.travel_footprint_android.presentation.components.milestone.section
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.presentation.components.bg_box.BGBox
 import com.example.travel_footprint_android.presentation.components.milestone.MonthGroup
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
@@ -54,18 +53,11 @@ internal fun AllRecordsSection(monthGroups: List<MonthGroup>) {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .background(
-                color = Color(0x99FFFFFF),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(horizontal = 10.dp)
-    ) {
+    BGBox {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp)
+                .padding(10.dp, 16.dp, 10.dp, 10.dp)
         ) {
             // 区域标题
             Headline(
@@ -154,17 +146,14 @@ private fun FootprintRecordItem(footprint: Footprint) {
     // 距离从米转为公里
     val distanceKm = footprint.distance / 1000.0
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF8FAFC))
-            .clickable { }
-            .padding(12.dp)
+    BGBox(
+        modifier = Modifier.padding(vertical = 4.dp),
+        bgColor = Color(0xFFFDF7F4),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 蓝色圆点装饰

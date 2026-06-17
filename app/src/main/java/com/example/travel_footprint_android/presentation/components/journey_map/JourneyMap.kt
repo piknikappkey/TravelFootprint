@@ -201,6 +201,8 @@ fun JourneyMap(
                 Log.d("JourneyMap3Routes", "locationList = ${locationList.first()}, size = ${locationList.size}")
             }
             if (locationList.isNotEmpty()) {
+                // 执行定位逻辑，将地图中心移动到locationList的第一个坐标（带面板补偿）
+                journeyMapViewModel.moveCameraToFirstLocation(locationList, aniMoveTime = 800)
                 journeyMapViewModel.updateRoutesWithAnimation(locationList)
             } else {
                 journeyMapViewModel.clearAllRoutes()

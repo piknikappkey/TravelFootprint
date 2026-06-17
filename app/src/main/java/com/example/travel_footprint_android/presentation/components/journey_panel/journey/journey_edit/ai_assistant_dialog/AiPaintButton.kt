@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,6 +103,7 @@ fun AiPaintButton(
         tipText = "选择喜欢的风格（可多选组合），点击「开始涂鸦」生成效果。生成时间较长，请耐心等待 3-5 分钟。",
         footerText = "注：由豆包(doubao-seedream)生成~",
         isLoading = isLoading,
+        estimatedLoadTimeMs  = 300_000L,
         onButtonClick = {
             val prompt = if (customPrompt.isNotBlank()) {
                 "把上传照片按提示词要求转化，使用以下提示词：${customPrompt}"
@@ -147,7 +149,8 @@ private fun FieldSelectionFlow(
         FlowRow(
             modifier = Modifier
                 .widthIn(min = 100.dp)
-                .padding(horizontal = 8.dp, vertical = 0.dp),
+                .padding(horizontal = 8.dp, vertical = 0.dp)
+                .align(Alignment.TopCenter),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
