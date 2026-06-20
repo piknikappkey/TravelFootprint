@@ -60,6 +60,7 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
 // 项目内部组件和数据
 
 // Java 标准库
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -223,13 +224,17 @@ fun JourneyEdit(
             Spacer(Modifier.height(20.dp))
         }
 
-        // AI 助手组件（FAB + 弹窗 + 确认逻辑）
+        // AI 助手组件（FAB + 弹窗 + 后台运行支持）
         AiAssistantDialog(
             modifier = Modifier.fillMaxSize(),
             aiState = aiState,
             journey = journey,
             aiGenerateViewModel = aiGenerateViewModel,
-            onJourneyUpdate = { j -> journey = j.copy() },
+            onDialogOpenChange = { open -> aiGenerateViewModel.setDialogOpen(open) },
+            onTitleChange = { text -> journey = journey.copy(title = text) },
+            onDescriptionChange = { text -> journey = journey.copy(description = text) },
+            onAddressChange = { name, lat, lng -> journey = journey.copy(address = name, latitude = lat, longitude = lng) },
+            onCoverPathChange = { path -> journey = journey.copy(coverImagePath = path) },
         )
     }
 }
@@ -305,22 +310,36 @@ private fun JourneyHead(
         // 右侧：保存按钮（带表单验证）
         ButtonSave(
             onClick = {
+                Log.d("JourneyEdit_Debug", "保存按钮被点击 — journeySelected==null?${journeySelected == null}, journey.id=${journey.id}, journey.title=${journey.title}")
                 // 三重表单验证
                 val titleValid = journey.title.isNotBlank() && journey.title != "新的开始"
                 val coverValid = journey.coverImagePath.isNotBlank()
                 val descValid = journey.description.isNotBlank() && journey.description != "这是一段新的旅程"
 
                 when {
-                    !titleValid -> Toast.makeText(context, "请输入有效的旅程标题", Toast.LENGTH_SHORT).show()
-                    !coverValid -> Toast.makeText(context, "请选择封面图片", Toast.LENGTH_SHORT).show()
-                    !descValid -> Toast.makeText(context, "请输入有效的旅程描述", Toast.LENGTH_SHORT).show()
+                    !titleValid -> {
+                        Log.w("JourneyEdit_Debug", "保存失败: 标题无效 — title='${journey.title}'")
+                        Toast.makeText(context, "请输入有效的旅程标题", Toast.LENGTH_SHORT).show()
+                    }
+                    !coverValid -> {
+                        Log.w("JourneyEdit_Debug", "保存失败: 封面无效 — coverImagePath='${journey.coverImagePath}'")
+                        Toast.makeText(context, "请选择封面图片", Toast.LENGTH_SHORT).show()
+                    }
+                    !descValid -> {
+                        Log.w("JourneyEdit_Debug", "保存失败: 描述无效 — description='${journey.description}'")
+                        Toast.makeText(context, "请输入有效的旅程描述", Toast.LENGTH_SHORT).show()
+                    }
                     else -> {
+                        Log.d("JourneyEdit_Debug", "保存表单验证通过，开始执行保存操作")
                         // 校验通过：新建或更新旅程
                         if (journeySelected == null) {
+                            Log.d("JourneyEdit_Debug", "调用 addJourney (新建模式)")
                             addJourney(journey)    // 新建模式
                         } else {
+                            Log.d("JourneyEdit_Debug", "调用 updateJourney (编辑模式)")
                             updateJourney(journey) // 编辑模式
                         }
+                        Log.d("JourneyEdit_Debug", "调用 navigate 返回 JOURNEY_LIST")
                         navigate(JourneyPanel2State.JOURNEY_LIST, null)  // 保存后返回列表
                     }
                 }

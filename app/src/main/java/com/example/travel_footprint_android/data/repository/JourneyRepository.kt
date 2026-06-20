@@ -164,7 +164,7 @@ class JourneyRepository @Inject constructor(
      */
     suspend fun getTotalImageCount(): Int {
         val imagePathsJsonList = journeyDao.getAllJourneyImagePaths()
-        val listType = object : TypeToken<List<String>>() {}.type
+        val listType = TypeToken.getParameterized(List::class.java, String::class.java).type
         val gson = Gson()
         return imagePathsJsonList.sumOf { json ->
             if (json.isBlank() || json == "null") return@sumOf 0

@@ -22,13 +22,15 @@ fun DialogBox(
     paddingValues: PaddingValues = PaddingValues(15.dp),
     elevation: Dp = 1.dp, // 阴影大小
     shape: RoundedCornerShape = RoundedCornerShape(8.dp), // 圆角
+    interceptDismissOnClick: (() -> Boolean)? = null, // 拦截点击关闭的回调
     content: @Composable () -> Unit,
 ) {
     AppDialog(
         onDismissRequest,
         maskAlpha,
         maskColor,
-        animationDurationMs
+        animationDurationMs,
+        interceptDismissOnClick
     ) {
         Box(
             modifier = Modifier.padding(paddingValues)

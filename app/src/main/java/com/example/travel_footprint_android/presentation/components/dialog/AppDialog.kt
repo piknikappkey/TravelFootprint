@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
  * @param maskAlpha 遮罩透明度，默认 0.4f
  * @param maskColor 遮罩颜色，默认黑色
  * @param animationDurationMs 进出场动画时长（毫秒），默认 250ms
+ * @param interceptDismissOnClick 拦截点击关闭的回调，返回 true 表示拦截关闭（不执行关闭动画），返回 false 或 null 表示正常关闭
  * @param content 弹窗内容
  */
 @Composable
@@ -51,6 +52,7 @@ fun AppDialog(
     maskAlpha: Float = 0.4f,
     maskColor: Color = Color.Black,
     animationDurationMs: Int = 250,
+    interceptDismissOnClick: (() -> Boolean)? = null,
     content: @Composable () -> Unit,
 ) {
     // 控制动画状态
@@ -120,7 +122,13 @@ fun AppDialog(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = dismissWithAnimation,
+                        onClick = {
+                            // 如果提供了拦截回调，先调用它判断是否要拦截关闭
+                            val intercepted = interceptDismissOnClick?.invoke() ?: false
+                            if (!intercepted) {
+                                dismissWithAnimation()
+                            }
+                        },
                     )
             )
 

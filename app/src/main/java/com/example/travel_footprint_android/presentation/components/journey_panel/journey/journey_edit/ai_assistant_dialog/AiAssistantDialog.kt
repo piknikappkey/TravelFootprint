@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +32,6 @@ import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.button.button_border.ButtonBorder
 import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
-import com.example.travel_footprint_android.presentation.components.dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.dialog.DialogBox
 import com.example.travel_footprint_android.presentation.components.dialog.TipDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.ai_assistant_dialog.components.AiFillField
@@ -48,14 +48,18 @@ import com.example.travel_footprint_android.ui.theme.MainColor3
  * 包含：
  * 1. 右下角 FAB 按钮，点击打开 AI 功能弹窗
  * 2. AI 功能弹窗：包含"AI 智能填写"和"AI 封面涂鸦"两个功能
- * 3. 关闭确认弹窗：当 AI 功能正在运行时，关闭前弹出确认提示
- * 4. 无封面提示弹窗：使用涂鸦功能但未选择封面时弹出
+ * 3. 无封面提示弹窗：使用涂鸦功能但未选择封面时弹出
+ *
+ * 后台运行支持：
+ * - 关闭弹窗时，若 AI 正在运行，操作仍在后台继续
+ * - 通过 onDialogOpenChange 通知 JourneyScreen 控制浮窗显示
  *
  * @param modifier 外部 Modifier
  * @param aiState AI 生成状态（包含加载状态等信息）
  * @param journey 当前编辑中的旅程数据
  * @param aiGenerateViewModel AI 生成 ViewModel
  * @param onJourneyUpdate 更新旅程数据的回调
+ * @param onDialogOpenChange 弹窗打开/关闭状态变化回调
  */
 @Composable
 fun AiAssistantDialog(
@@ -63,13 +67,14 @@ fun AiAssistantDialog(
     aiState: AiGenerateState,
     journey: Journey,
     aiGenerateViewModel: AiGenerateViewModel,
-    onJourneyUpdate: (Journey) -> Unit,
+    onDialogOpenChange: (Boolean) -> Unit = {},
+    onTitleChange: (String) -> Unit = {},
+    onDescriptionChange: (String) -> Unit = {},
+    onAddressChange: (String, Double, Double) -> Unit = { _, _, _ -> },
+    onCoverPathChange: (String) -> Unit = {},
 ) {
     // AI 功能弹窗是否显示
     var showAiDialog by remember { mutableStateOf(false) }
-
-    // AI 关闭确认弹窗是否显示
-    var showCloseConfirmDialog by remember { mutableStateOf(false) }
 
     // 无封面提示弹窗是否显示
     var showNoCoverTip by remember { mutableStateOf(false) }
@@ -77,6 +82,11 @@ fun AiAssistantDialog(
     val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) {
         focusManager.clearFocus()
+    }
+
+    // 弹窗打开/关闭时通知外部
+    LaunchedEffect(showAiDialog) {
+        onDialogOpenChange(showAiDialog)
     }
 
     Box(modifier = modifier) {
@@ -106,40 +116,22 @@ fun AiAssistantDialog(
 
         // AI 功能弹窗
         if (showAiDialog) {
-            // 关闭弹窗的逻辑：如果 AI 正在运行则弹确认框，否则直接关闭
-            val tryClose: () -> Unit = {
-                if (aiState.isLoading || aiState.isPaintLoading) {
-                    showCloseConfirmDialog = true
-                } else {
-                    showAiDialog = false
-                }
-            }
-
             DialogBox(
                 R.drawable.bg_rectangular_1__2__1,
                 R.drawable.bg_rectangular_1__2__2,
-                onDismissRequest = tryClose) {
+                onDismissRequest = { showAiDialog = false }
+            ) {
                 Content(
                     aiState = aiState,
                     journey = journey,
                     aiGenerateViewModel = aiGenerateViewModel,
-                    onJourneyUpdate = onJourneyUpdate,
                     setShowNoCoverTip = { bool -> showNoCoverTip = bool},
+                    onTitleChange = onTitleChange,
+                    onDescriptionChange = onDescriptionChange,
+                    onAddressChange = onAddressChange,
+                    onCoverPathChange = onCoverPathChange,
                 )
             }
-        }
-
-        // AI 关闭确认弹窗
-        if (showCloseConfirmDialog) {
-            ConfirmDeleteDialog(
-                title = "关闭 AI 助手",
-                message = "AI 功能正在运行中，关闭弹窗后正在进行的操作将失效，确定关闭吗？",
-                onConfirm = {
-                    showCloseConfirmDialog = false
-                    showAiDialog = false
-                },
-                onDismiss = { showCloseConfirmDialog = false }
-            )
         }
 
         // 无封面提示弹窗
@@ -158,14 +150,21 @@ private fun Content(
     aiState: AiGenerateState,
     journey: Journey,
     aiGenerateViewModel: AiGenerateViewModel,
-    onJourneyUpdate: (Journey) -> Unit,
     setShowNoCoverTip: (Boolean) -> Unit,
+    onTitleChange: (String) -> Unit = {},
+    onDescriptionChange: (String) -> Unit = {},
+    onAddressChange: (String, Double, Double) -> Unit = { _, _, _ -> },
+    onCoverPathChange: (String) -> Unit = {},
 ) {
     // 字段选择状态，默认全选
     var selectedFields by remember { mutableStateOf(AiFillField.entries.toSet()) }
     
     // 未选择字段提示弹窗状态
     var showSelectTip by remember { mutableStateOf(false) }
+
+    // 使用 rememberUpdatedState 确保异步回调中始终读取到最新的 journey 值
+    // 避免 paintCover 完成时覆盖 generate 已写入的标题/描述/地址
+    val currentJourney by rememberUpdatedState(journey)
     
     val scrollState = rememberScrollState()
 
@@ -203,15 +202,15 @@ private fun Content(
                             selectedFields,
                             customPrompt
                         ) { locationName, latitude, longitude, title, description ->
-                            onJourneyUpdate(
-                                journey.copy(
-                                    title = if (AiFillField.TITLE in selectedFields) title else journey.title,
-                                    description = if (AiFillField.DESCRIPTION in selectedFields) description else journey.description,
-                                    address = if (AiFillField.ADDRESS in selectedFields) locationName else journey.address,
-                                    latitude = if (AiFillField.ADDRESS in selectedFields) latitude else journey.latitude,
-                                    longitude = if (AiFillField.ADDRESS in selectedFields) longitude else journey.longitude
-                                )
-                            )
+                            if (AiFillField.TITLE in selectedFields) {
+                                onTitleChange(title)
+                            }
+                            if (AiFillField.DESCRIPTION in selectedFields) {
+                                onDescriptionChange(description)
+                            }
+                            if (AiFillField.ADDRESS in selectedFields) {
+                                onAddressChange(locationName, latitude, longitude)
+                            }
                         }
                     }
                 }
@@ -223,11 +222,11 @@ private fun Content(
             AiPaintButton(
                 isLoading = aiState.isPaintLoading,
                 onPaintWithPrompt = { prompt ->
-                    if (journey.coverImagePath.isBlank()) {
+                    if (currentJourney.coverImagePath.isBlank()) {
                         setShowNoCoverTip(true)
                     } else {
-                        aiGenerateViewModel.paintCover(journey.coverImagePath, prompt) { newPath ->
-                            onJourneyUpdate(journey.copy(coverImagePath = newPath))
+                        aiGenerateViewModel.paintCover(currentJourney.coverImagePath, prompt) { newPath ->
+                            onCoverPathChange(newPath)
                         }
                     }
                 }

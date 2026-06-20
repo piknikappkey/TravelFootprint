@@ -647,6 +647,155 @@ class AiService @Inject constructor() {
     }
 
     /**
+     * 根据文件扩展名获取图片的 MIME 类型
+     *
+     * @param file 图片文件
+     * @return MIME 类型字符串
+     */
+    private fun getImageMimeType(file: File): String {
+        val extension = file.extension.lowercase()
+        return when (extension) {
+            // 常见格式
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "gif" -> "image/gif"
+            "bmp" -> "image/bmp"
+            "webp" -> "image/webp"
+            
+            // 专业格式
+            "tiff", "tif" -> "image/tiff"
+            "svg" -> "image/svg+xml"
+            "ico" -> "image/x-icon"
+            
+            // RAW 格式
+            "raw" -> "image/x-raw"
+            "arw" -> "image/x-sony-arw"
+            "cr2" -> "image/x-canon-cr2"
+            "cr3" -> "image/x-canon-cr3"
+            "nef" -> "image/x-nikon-nef"
+            "nrw" -> "image/x-nikon-nrw"
+            "dng" -> "image/x-adobe-dng"
+            "orf" -> "image/x-olympus-orf"
+            "rw2" -> "image/x-panasonic-rw2"
+            "pef" -> "image/x-pentax-pef"
+            "srw" -> "image/x-samsung-srw"
+            "raf" -> "image/x-fuji-raf"
+            
+            // 其他格式
+            "psd" -> "image/vnd.adobe.photoshop"
+            "ai" -> "application/postscript"
+            "eps" -> "application/postscript"
+            "heic" -> "image/heic"
+            "heif" -> "image/heif"
+            "avif" -> "image/avif"
+            "jxl" -> "image/jxl"
+            "jp2" -> "image/jp2"
+            "j2k" -> "image/jp2"
+            "jpf" -> "image/jp2"
+            "jpm" -> "image/jpm"
+            "jpx" -> "image/jpx"
+            "jxr" -> "image/jxr"
+            "wdp" -> "image/jxr"
+            "apng" -> "image/apng"
+            
+            // 默认返回 JPEG
+            else -> "image/jpeg"
+        }
+    }
+
+    /**
+     * 压缩图片用于 AI 生成
+     *
+     * 将图片缩放到 1920x1080 以内（保持宽高比），并转换为 WebP 格式以减小文件体积。
+     * 压缩后的文件保存在应用缓存目录，文件名以 "ai_upload_" 为前缀。
+     *
+     * @param imageFile 原始图片文件
+     * @return 压缩后的文件，失败返回 null
+     */
+    private fun compressImageForAI(imageFile: File): File? {
+        return try {
+            val MAX_WIDTH = 1920
+            val MAX_HEIGHT = 1080
+            val WEBP_QUALITY = 80
+
+            // 1. 先解码获取图片尺寸（不加载完整 Bitmap 到内存）
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(imageFile.absolutePath, options)
+
+            val srcWidth = options.outWidth
+            val srcHeight = options.outHeight
+
+            if (srcWidth <= 0 || srcHeight <= 0) {
+                Log.e(TAG, "无法获取图片尺寸")
+                return null
+            }
+
+            Log.d(TAG, "原始图片尺寸: ${srcWidth}x${srcHeight}")
+
+            // 2. 计算缩放比例（保持宽高比，确保不超过最大尺寸）
+            val ratio = minOf(
+                MAX_WIDTH.toFloat() / srcWidth,
+                MAX_HEIGHT.toFloat() / srcHeight,
+                1f // 不放大，只缩小
+            )
+
+            val targetWidth = (srcWidth * ratio).toInt()
+            val targetHeight = (srcHeight * ratio).toInt()
+
+            // 3. 计算 inSampleSize（2 的幂次，减少内存占用）
+            val sampleSize = calculateSampleSize(srcWidth, srcHeight, targetWidth, targetHeight)
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            val sampledBitmap = BitmapFactory.decodeFile(imageFile.absolutePath, decodeOptions)
+                ?: return null
+
+            // 4. 精确缩放到目标尺寸
+            val scaledBitmap = if (sampledBitmap.width != targetWidth || sampledBitmap.height != targetHeight) {
+                val result = Bitmap.createScaledBitmap(sampledBitmap, targetWidth, targetHeight, true)
+                if (result !== sampledBitmap) sampledBitmap.recycle()
+                result
+            } else {
+                sampledBitmap
+            }
+
+            Log.d(TAG, "缩放后尺寸: ${scaledBitmap.width}x${scaledBitmap.height}")
+
+            // 5. 压缩为 WebP 格式写入缓存文件
+            val compressedFile = File(imageFile.parent, "ai_upload_${System.currentTimeMillis()}.webp")
+            FileOutputStream(compressedFile).use { out ->
+                scaledBitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, out)
+            }
+
+            scaledBitmap.recycle()
+
+            Log.d(TAG, "图片压缩完成: ${compressedFile.length() / 1024} KB")
+            compressedFile
+        } catch (e: Exception) {
+            Log.e(TAG, "图片压缩失败", e)
+            null
+        }
+    }
+
+    /**
+     * 计算 BitmapFactory 的 inSampleSize
+     *
+     * 返回 2 的幂次值，用于在解码阶段减少内存占用。
+     */
+    private fun calculateSampleSize(srcWidth: Int, srcHeight: Int, targetWidth: Int, targetHeight: Int): Int {
+        var sampleSize = 1
+        val halfWidth = srcWidth / 2
+        val halfHeight = srcHeight / 2
+        while (halfWidth / sampleSize >= targetWidth && halfHeight / sampleSize >= targetHeight) {
+            sampleSize *= 2
+        }
+        return sampleSize
+    }
+
+    /**
      * AI 图生图：将封面图片发送到服务端生成手绘漫画风格图片
      *
      * @param imagePath 本地图片路径
@@ -669,13 +818,22 @@ class AiService @Inject constructor() {
                 return@withContext Result.failure(IOException("图片文件不存在"))
             }
 
+            val originalSize = imageFile.length()
+            Log.d(TAG, "原始图片大小: ${originalSize / 1024} KB")
+
+            // 1.5 压缩图片：缩放到 1920x1080 以内 + 转换为 WebP 格式
+            val compressedFile = compressImageForAI(imageFile)
+                ?: imageFile // 压缩失败则使用原图
+            val uploadFile = compressedFile
+            Log.d(TAG, "压缩后图片大小: ${uploadFile.length() / 1024} KB, 路径: ${uploadFile.absolutePath}")
+
             // 2. 构建 Multipart 请求
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(
                     "image",
-                    imageFile.name,
-                    imageFile.asRequestBody("image/*".toMediaType())
+                    uploadFile.name,
+                    uploadFile.asRequestBody("image/webp".toMediaType())
                 )
                 .addFormDataPart("prompt", prompt)
                 .build()

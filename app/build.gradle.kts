@@ -20,6 +20,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = true
+        }
+    }
+
     signingConfigs {
         create("release") {
             storeFile = file("../release.jks")
@@ -31,12 +40,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -186,10 +190,6 @@ dependencies {
 
     // 权限请求库（可选，简化权限处理）
     implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
-
-    //pag动效依赖
-    // 企业版基础版本（推荐）
-    implementation ("com.tencent.tav:libpag-enterprise:latest.release")
 
     // 或者使用社区版
     // implementation 'com.tencent.tav:libpag:latest.release'

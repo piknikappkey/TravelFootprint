@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -111,6 +112,17 @@ fun FootprintEdit(
 
     LaunchedEffect(Unit) {
         journeyMapViewModel.startLocation()
+    }
+
+    // 当 FootprintEdit 进入组合时，通知状态持有者"AI 弹窗已关闭"（隐藏浮窗）
+    // 当 FootprintEdit 离开组合时，通知状态持有者"AI 弹窗已打开"（显示浮窗）
+    LaunchedEffect(Unit) {
+        aiGenerateViewModel.setDialogOpen(true)
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            aiGenerateViewModel.setDialogOpen(false)
+        }
     }
 
     // 用 Box 包裹，用于定位右下角 AI FAB 按钮

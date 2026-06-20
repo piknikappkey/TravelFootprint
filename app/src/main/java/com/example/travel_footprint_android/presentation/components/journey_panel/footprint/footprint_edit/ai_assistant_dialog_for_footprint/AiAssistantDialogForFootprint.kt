@@ -30,7 +30,6 @@ import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.presentation.components.button.button_border.ButtonBorder
 import com.example.travel_footprint_android.presentation.components.custom_scrollbar.VerticalCustomScrollbar
-import com.example.travel_footprint_android.presentation.components.dialog.ConfirmDeleteDialog
 import com.example.travel_footprint_android.presentation.components.dialog.DialogBox
 import com.example.travel_footprint_android.presentation.components.dialog.TipDialog
 import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit.ai_assistant_dialog_for_footprint.components.AiFillFieldForFootprint
@@ -47,7 +46,10 @@ import com.example.travel_footprint_android.ui.theme.MainColor3
  * 包含：
  * 1. 右下角 FAB 按钮，点击打开 AI 功能弹窗
  * 2. AI 功能弹窗：仅包含"AI 智能填写"功能
- * 3. 关闭确认弹窗：当 AI 功能正在运行时，关闭前弹出确认提示
+ *
+ * 后台运行支持：
+ * - 用户可随时关闭弹窗，AI 操作在后台继续运行
+ * - 通过 onDialogOpenChange 通知 JourneyScreen 控制浮窗显示
  *
  * @param modifier 外部 Modifier
  * @param aiState AI 生成状态（包含加载状态等信息）
@@ -55,6 +57,7 @@ import com.example.travel_footprint_android.ui.theme.MainColor3
  * @param journey 所属旅程数据（提供上下文信息）
  * @param aiGenerateViewModel AI 生成 ViewModel
  * @param onFootprintUpdate 更新足迹数据的回调
+ * @param onDialogOpenChange 弹窗打开/关闭状态变化回调
  */
 @Composable
 fun AiAssistantDialogForFootprint(
@@ -64,16 +67,19 @@ fun AiAssistantDialogForFootprint(
     journey: Journey,
     aiGenerateViewModel: AiGenerateViewModel,
     onFootprintUpdate: (Footprint) -> Unit,
+    onDialogOpenChange: (Boolean) -> Unit = {},
 ) {
     // AI 功能弹窗是否显示
     var showAiDialog by remember { mutableStateOf(false) }
 
-    // AI 关闭确认弹窗是否显示
-    var showCloseConfirmDialog by remember { mutableStateOf(false) }
-
     val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) {
         focusManager.clearFocus()
+    }
+
+    // 弹窗打开/关闭时通知外部
+    LaunchedEffect(showAiDialog) {
+        onDialogOpenChange(showAiDialog)
     }
 
     Box(modifier = modifier) {
@@ -103,19 +109,11 @@ fun AiAssistantDialogForFootprint(
 
         // AI 功能弹窗
         if (showAiDialog) {
-            // 关闭弹窗的逻辑：如果 AI 正在运行则弹确认框，否则直接关闭
-            val tryClose: () -> Unit = {
-                if (aiState.isLoading) {
-                    showCloseConfirmDialog = true
-                } else {
-                    showAiDialog = false
-                }
-            }
-
             DialogBox(
                 R.drawable.bg_rectangular_1__2__1,
                 R.drawable.bg_rectangular_1__2__2,
-                onDismissRequest = tryClose) {
+                onDismissRequest = { showAiDialog = false }
+            ) {
                 Content(
                     aiState = aiState,
                     footprint = footprint,
@@ -124,19 +122,6 @@ fun AiAssistantDialogForFootprint(
                     onFootprintUpdate = onFootprintUpdate,
                 )
             }
-        }
-
-        // AI 关闭确认弹窗
-        if (showCloseConfirmDialog) {
-            ConfirmDeleteDialog(
-                title = "关闭 AI 助手",
-                message = "AI 功能正在运行中，关闭弹窗后正在进行的操作将失效，确定关闭吗？",
-                onConfirm = {
-                    showCloseConfirmDialog = false
-                    showAiDialog = false
-                },
-                onDismiss = { showCloseConfirmDialog = false }
-            )
         }
     }
 }

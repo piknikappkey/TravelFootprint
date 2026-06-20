@@ -36,6 +36,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -64,6 +65,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.travel_footprint_android.presentation.components.ai_indicator.AiRunningIndicator
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
 import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMap
 import com.example.travel_footprint_android.presentation.components.journey_map.JourneyMapSplashScreen
@@ -73,6 +75,7 @@ import com.example.travel_footprint_android.presentation.components.journey_map.
 import com.example.travel_footprint_android.presentation.components.journey_panel.JourneyPanel
 import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_list.DraggableRecordingIndicator
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
+import com.example.travel_footprint_android.presentation.viewmodel.AiOperationViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.RecordingViewModel
 
@@ -92,6 +95,8 @@ fun JourneyScreen(
     recordingViewModel: RecordingViewModel = hiltViewModel(),
     // journeyPanelViewModel：管理面板导航状态，全局共享
     journeyPanelViewModel: JourneyPanelViewModel = hiltViewModel(),
+    // aiOperationViewModel：管理 AI 运行状态，全局共享
+    aiOperationViewModel: AiOperationViewModel = hiltViewModel(),
 ) {
     // journeyUiState：收集旅程 UI 状态流，包含旅程列表、足迹计数、位置列表等数据
     val journeyUiState by journeyViewModel.uiState.collectAsState()
@@ -135,6 +140,18 @@ fun JourneyScreen(
 
     // 录制状态：用于控制可拖拽录制指示器的显示
     val recordingState by recordingViewModel.uiState.collectAsState()
+
+    // AI 操作状态：用于控制 AI 运行浮窗的显示
+    val aiOperationList by aiOperationViewModel.operationList.collectAsState()
+    val aiDialogOpen by aiOperationViewModel.isDialogOpen.collectAsState()
+
+    // 监听 AI 操作完成事件，显示 Toast 提示
+    val aiContext = context
+    LaunchedEffect(Unit) {
+        aiOperationViewModel.completionEvent.collect { message ->
+            Toast.makeText(aiContext, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // ===== 主布局：Box 容器实现多层叠加效果 =====
     Box(
@@ -206,6 +223,18 @@ fun JourneyScreen(
                 recordingState = recordingState,
                 journeys = journeyUiState.journeys,
                 journeyPanelViewModel = journeyPanelViewModel,
+            )
+        }
+
+        // ===== AI 运行浮窗：有 AI 任务在后台运行时显示单个浮窗 =====
+        AnimatedVisibility(
+            visible = aiOperationList.isNotEmpty() && !aiDialogOpen,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            AiRunningIndicator(
+                operations = aiOperationList,
+                onCancel = { id -> aiOperationViewModel.cancelOperation(id) }
             )
         }
     }

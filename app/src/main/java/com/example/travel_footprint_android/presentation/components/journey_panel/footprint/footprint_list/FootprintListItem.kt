@@ -70,6 +70,7 @@ import com.example.travel_footprint_android.presentation.components.bg_box.BGImg
 import com.example.travel_footprint_android.presentation.components.icon.icon_edit.IconEdit
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.line_between.LineBetween
+import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.presentation.components.text.text_small.TextSmall
 import com.example.travel_footprint_android.ui.theme.FontDark4
@@ -184,8 +185,12 @@ fun HeadRow(
                 colorFilter = ColorFilter.tint(SecondColor3), // 使用主题色着色
             )
         }
+        Spacer(Modifier.width(5.dp))
         // 足迹标题文本（始终显示）
-        TextMedium(text = footprint.title)
+        Headline(
+            text = footprint.title,
+            fontSize = 15.sp
+        )
         Spacer(Modifier.weight(1f))
         // 编辑图标：仅展开时可见，点击导航到足迹编辑页面
         AnimatedVisibility(
