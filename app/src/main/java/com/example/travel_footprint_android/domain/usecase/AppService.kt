@@ -1,0 +1,800 @@
+// app/src/main/java/com/example/travel_footprint_android/domain/usecase/AppService.kt
+package com.example.travel_footprint_android.domain.usecase
+
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import com.example.travel_footprint_android.data.dao.LightedProvince
+import com.example.travel_footprint_android.data.dao.ProvinceCityCount
+import com.example.travel_footprint_android.data.entity.CheckInRecordEntity
+import com.example.travel_footprint_android.data.entity.City
+import com.example.travel_footprint_android.data.entity.Footprint
+import com.example.travel_footprint_android.data.entity.Journey
+import com.example.travel_footprint_android.data.entity.LightedCity
+import com.example.travel_footprint_android.data.entity.Location
+import com.example.travel_footprint_android.data.entity.MediaAttachment
+import com.example.travel_footprint_android.data.entity.Province
+import com.example.travel_footprint_android.data.repository.CheckInRecordRepository
+import com.example.travel_footprint_android.data.repository.FootprintRepository
+import com.example.travel_footprint_android.data.repository.JourneyRepository
+import com.example.travel_footprint_android.data.repository.LightedCityRepository
+import com.example.travel_footprint_android.data.repository.MediaRepository
+import com.example.travel_footprint_android.data.repository.RegionRepository
+import com.example.travel_footprint_android.domain.service.LocationService
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Date
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * 应用统一服务接口
+ * 前端只需注入这个类，即可调用所有后端功能
+ */
+@Singleton
+class AppService @Inject constructor(
+    private val journeyRepository: JourneyRepository,
+    private val footprintRepository: FootprintRepository,
+    private val mediaRepository: MediaRepository,
+    private val locationService: LocationService,
+    private val lightedCityRepository: LightedCityRepository,
+    private val regionRepository: RegionRepository,
+    private val checkInRecordRepository: CheckInRecordRepository,
+    @ApplicationContext private val context: Context  // 添加这一行
+) {
+
+    // ==================== 旅程相关 ====================
+
+    fun getAllJourneys(): Flow<List<Journey>> = journeyRepository.getAllJourneys()
+
+    fun getJourneyById(id: Long): Flow<Journey> = journeyRepository.getJourneyById(id)
+
+    suspend fun createJourney(
+        title: String,
+        coverStyle: String = "BlackAndWhite",
+        description: String = "这是一个旅程",
+        startDate: Date = Date(),
+        endDate: Date = Date(),
+        coverImagePath: String = "这里需要图片地址",
+        journeyImagePaths: List<String> = emptyList(),
+        address: String = "这里需要旅程地址",
+        longitude: Double = 0.0,
+        latitude: Double = 0.0
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.createJourney(
+                title = title,
+                coverStyle = coverStyle,
+                description = description,
+                startDate = startDate,
+                endDate = endDate,
+                coverImagePath = coverImagePath,
+                journeyImagePaths = journeyImagePaths,
+                address = address,
+                longitude = longitude,
+                latitude = latitude
+            )
+        }
+    }
+
+
+    // 🆕 附近旅程查询
+    suspend fun getNearbyJourneys(
+        centerLat: Double,
+        centerLng: Double,
+        radiusKm: Double = 50.0
+    ): List<Journey> {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.getNearbyJourneys(centerLat, centerLng, radiusKm)
+        }
+    }
+
+    // 🆕 获取所有有坐标的旅程（用于地图）
+    fun getAllJourneysWithCoordinates(): Flow<List<Journey>> {
+        return journeyRepository.getAllJourneysWithCoordinates()
+    }
+
+    /**
+     * 更新旅程
+     */
+    suspend fun updateJourney(journey: Journey) {
+        withContext(Dispatchers.IO) {
+            journeyRepository.updateJourney(journey)
+        }
+    }
+
+    suspend fun updateJourneyCover(journeyId: Long, imagePath: String) {
+        withContext(Dispatchers.IO) {
+            journeyRepository.updateJourneyCover(journeyId, imagePath)
+        }
+    }
+
+    suspend fun deleteJourney(journeyId: Long) {
+        withContext(Dispatchers.IO) {
+            journeyRepository.deleteJourneyWithAllData(journeyId)
+        }
+    }
+
+    suspend fun deleteJourney(journey: Journey){
+        withContext(Dispatchers.IO){
+            journeyRepository.deleteJourney(journey)
+        }
+    }
+
+    suspend fun searchJourneys(keyword: String): List<Journey> {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.searchJourneys(keyword)
+        }
+    }
+
+    suspend fun getAllFootprintCounts(): Map<Long, Int> {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.getFootprintCounts()
+        }
+    }
+
+    suspend fun getFootprintCount(journeyId: Long): Int {
+        return withContext(Dispatchers.IO) {
+            journeyRepository.getFootprintCount(journeyId)
+        }
+    }
+
+    // ==================== 足迹相关 ====================
+
+    fun getFootprintsForMap(journeyId: Long): Flow<List<Footprint>> =
+        footprintRepository.getFootprintsForMap(journeyId)
+
+    fun getAllFootprints(): Flow<List<Footprint>> =
+        footprintRepository.getAllFootprints()
+
+    suspend fun addFootprint(
+        journeyId: Long,
+        lat: Double,
+        lng: Double,
+        notes: String,//旅程描述
+        title:String,
+        photos: List<String>? = null,
+        rating:Int=0
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            footprintRepository.addFootprint(journeyId, lat, lng, photos, notes,title, rating)
+        }
+    }
+
+    /**
+     * 更新足迹 - 需要在 FootprintRepository 中添加此方法
+     */
+    suspend fun updateFootprint(footprint: Footprint) {
+        withContext(Dispatchers.IO) {
+            footprintRepository.updateFootprint(footprint)
+        }
+    }
+
+    suspend fun updateFootprintLocation(footprintId: Long, lat: Double, lng: Double) {
+        withContext(Dispatchers.IO) {
+            footprintRepository.updateFootprintLocation(footprintId, lat, lng)
+        }
+    }
+
+    /**
+     * 删除单个足迹 - 需要在 FootprintRepository 中添加此方法
+     */
+    suspend fun deleteFootprint(footprintId: Long) {
+        withContext(Dispatchers.IO) {
+            footprintRepository.deleteFootprint(footprintId)
+        }
+    }
+
+    suspend fun clearAllFootprints(journeyId: Long) {
+        withContext(Dispatchers.IO) {
+            footprintRepository.clearAllFootprints(journeyId)
+        }
+    }
+
+    fun getFootprintDetail(footprintId: Long) = footprintRepository.getFootprintDetail(footprintId)
+
+    // ==================== 地址管理（Location） ====================
+
+    suspend fun getAddressesByFootprint(footprintId: Long): Flow<List<Location>> {
+        return footprintRepository.getAddressesByFootprint(footprintId)
+    }
+
+    suspend fun addAddress(location: Location) {
+        footprintRepository.addAddress(location)
+    }
+
+    suspend fun deleteLocation(location: Location) {
+        footprintRepository.deleteLocation(location)
+    }
+
+    suspend fun setAddressByFootprint(id: Long, footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        footprintRepository.setAddressByFootprint(id, footprintId, latitude, longitude, index)
+    }
+
+    suspend fun updateLocationByFootprint(footprintId: Long, latitude: Double, longitude: Double, index: Int) {
+        footprintRepository.updateLocationsByFootprint(footprintId, latitude, longitude, index)
+    }
+
+    suspend fun getFootprintById(footprintId: Long): Footprint? {
+        return footprintRepository.getFootprintById(footprintId)
+    }
+
+    // ==================== 标签相关 ====================
+
+    suspend fun addTagToFootprint(footprintId: Long, tagName: String) {
+        withContext(Dispatchers.IO) {
+            footprintRepository.addTagToFootprint(footprintId, tagName)
+        }
+    }
+
+    suspend fun getTagsByFootprint(footprintId: Long): List<String> {
+        return withContext(Dispatchers.IO) {
+            footprintRepository.getTagsByFootprint(footprintId).map { it.name }
+        }
+    }
+
+    suspend fun getFootprintsByTag(tagName: String): List<Footprint> {
+        return withContext(Dispatchers.IO) {
+            footprintRepository.getFootprintsByTag(tagName)
+        }
+    }
+
+    // ==================== 位置相关 ====================
+
+    suspend fun getCurrentLocation(): LocationService.LocationData? {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentLocation()
+        }
+    }
+
+    /**
+     * 获取当前位置的经纬度（简化版）
+     */
+    suspend fun getCurrentLatLng(): Pair<Double, Double>? {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentLocation()?.let {
+                Pair(it.latitude, it.longitude)
+            }
+        }
+    }
+
+    suspend fun reverseGeocode(lat: Double, lng: Double): String {
+        return withContext(Dispatchers.IO) {
+            locationService.reverseGeocode(lat, lng)
+        }
+    }
+
+    fun hasLocationPermission(): Boolean = locationService.hasLocationPermission()
+
+    // 单独获取
+    suspend fun getCurrentProvince(): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentProvince()
+        }
+    }
+
+    suspend fun getCurrentCity(): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentCity()
+        }
+    }
+
+    suspend fun getCurrentDistrict(): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentDistrict()
+        }
+    }
+
+    suspend fun getProvince(lat: Double, lng: Double): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getProvince(lat, lng)
+        }
+    }
+
+    suspend fun getCity(lat: Double, lng: Double): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getCity(lat, lng)
+        }
+    }
+
+    suspend fun getDistrict(lat: Double, lng: Double): String {
+        return withContext(Dispatchers.IO) {
+            locationService.getDistrict(lat, lng)
+        }
+    }
+
+    // 综合获取
+    suspend fun getCurrentLocationDetail(): LocationService.LocationDetail? {
+        return withContext(Dispatchers.IO) {
+            locationService.getCurrentLocationDetail()
+        }
+    }
+
+    suspend fun getLocationDetail(lat: Double, lng: Double): LocationService.LocationDetail {
+        return withContext(Dispatchers.IO) {
+            locationService.getLocationDetail(lat, lng)
+        }
+    }
+
+    // ==================== 媒体相关 ====================
+
+    suspend fun savePhotoToLocal(uri: String): String {
+        return withContext(Dispatchers.IO) {
+            mediaRepository.savePhotoToLocal(uri)
+        }
+    }
+
+    suspend fun generateThumbnail(imagePath: String): String {
+        return withContext(Dispatchers.IO) {
+            mediaRepository.generateThumbnail(imagePath)
+        }
+    }
+
+    fun getAllPhotos(): Flow<List<MediaAttachment>> = mediaRepository.getAllPhotos()
+
+    /**
+     * 获取足迹的所有照片 - 需要在 MediaRepository 中添加此方法
+     */
+    suspend fun getPhotosByFootprint(footprintId: Long): List<MediaAttachment> {
+        return withContext(Dispatchers.IO) {
+            mediaRepository.getPhotosByFootprint(footprintId)
+        }
+    }
+
+    suspend fun deletePhoto(mediaId: Long) {
+        withContext(Dispatchers.IO) {
+            mediaRepository.deleteMediaFile(mediaId)
+        }
+    }
+
+
+    /**
+     * 为足迹添加图片
+     */
+    suspend fun addPhotoToFootprint(
+        footprintId: Long,
+        imagePath: String,
+        caption: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            // 生成缩略图
+            val thumbnailPath = mediaRepository.generateThumbnail(imagePath)
+
+            // 创建媒体附件
+            val media = MediaAttachment(
+                footprintId = footprintId,
+                type = "photo",
+                localPath = imagePath,
+                thumbnailPath = thumbnailPath,
+                createTime = Date(),
+                caption = caption
+            )
+            mediaRepository.insertMedia(media)
+        }
+    }
+
+
+    /**
+     * 为足迹添加图片并保存到数据库
+     * @param footprintId 足迹ID
+     * @param imagePath 图片本地路径
+     * @param thumbnailPath 缩略图路径
+     * @param caption 图片说明
+     * @return 插入的 mediaId，失败返回 0
+     */
+    suspend fun addPhotoToFootprint(
+        footprintId: Long,
+        imagePath: String,
+        thumbnailPath: String,
+        caption: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            try {
+                val media = MediaAttachment(
+                    footprintId = footprintId,
+                    type = "photo",
+                    localPath = imagePath,
+                    thumbnailPath = thumbnailPath,
+                    createTime = Date(),
+                    caption = caption
+                )
+                mediaRepository.insertMedia(media)
+            } catch (e: Exception) {
+                Log.e("AppService", "添加图片失败: ${e.message}")
+                0L
+            }
+        }
+    }
+
+    /**
+     * 从 Uri 复制图片到应用本地目录
+     * @param uri 图片的 Uri（从相册选择或相机拍摄）
+     * @return 保存后的本地路径，失败返回空字符串
+     */
+    suspend fun copyImageToLocal(uri: Uri): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val contentResolver = context.contentResolver
+                val fileName = "image_${System.currentTimeMillis()}.jpg"
+                val destFile = File(context.filesDir, "images/$fileName")
+
+                // 创建目录
+                destFile.parentFile?.mkdirs()
+
+                // 复制文件
+                contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(destFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                destFile.absolutePath
+            } catch (e: Exception) {
+                Log.e("AppService", "复制图片失败: ${e.message}")
+                ""
+            }
+        }
+    }
+
+    /**
+     * 从本地文件路径复制图片到应用目录
+     * @param imagePath 本地图片绝对路径
+     * @return 保存后的本地路径
+     */
+    suspend fun saveImageToApp(imagePath: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val sourceFile = File(imagePath)
+                if (!sourceFile.exists()) {
+                    return@withContext ""
+                }
+
+                val fileName = "image_${System.currentTimeMillis()}.jpg"
+                val destFile = File(context.filesDir, "images/$fileName")
+                destFile.parentFile?.mkdirs()
+
+                sourceFile.inputStream().use { input ->
+                    FileOutputStream(destFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                destFile.absolutePath
+            } catch (e: Exception) {
+                Log.e("AppService", "保存图片失败: ${e.message}")
+                ""
+            }
+        }
+    }
+
+    // ==================== 点亮城市相关 ====================
+
+    suspend fun lightCity(
+        cityAdcode: String,
+        cityName: String,
+        provinceAdcode: String,
+        provinceName: String,
+        latitude: Double,
+        longitude: Double,
+        remark: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            lightedCityRepository.lightCity(
+                cityAdcode=cityAdcode,
+                cityName=cityName,
+                provinceAdcode=provinceAdcode,
+                provinceName=provinceName,
+                latitude=latitude,
+                longitude=longitude,
+                remark=remark
+            )
+        }
+    }
+
+    suspend fun unlightCity(cityAdcode: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.unlightCity(cityAdcode)
+        }
+    }
+
+    fun getAllLightedCities(): Flow<List<LightedCity>> =
+        lightedCityRepository.getAllLightedCities()
+
+    suspend fun getLightedCityCount(): Int = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedCityCount()
+    }
+
+    suspend fun isCityLighted(cityAdcode: String): Boolean = withContext(Dispatchers.IO) {
+        lightedCityRepository.isCityLighted(cityAdcode)
+    }
+
+    /**
+     * 更新某个点亮城市记录的省份名称
+     */
+    suspend fun updateProvinceName(cityAdcode: String, provinceName: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.updateProvinceName(cityAdcode, provinceName)
+        }
+    }
+
+    /**
+     * 获取所有点亮城市记录（用于修复数据）
+     */
+    suspend fun getAllLightedCitiesSync(): List<LightedCity> = withContext(Dispatchers.IO) {
+        lightedCityRepository.getAllLightedCitiesSync()
+    }
+
+    // ==================== 地区数据初始化 ====================
+
+    /**
+     * 初始化省份和城市数据（从 china_all_data.json 读取并写入数据库）
+     * 仅当 provinces 表为空时执行
+     */
+    suspend fun initializeRegionData() {
+        withContext(Dispatchers.IO) {
+            val count = regionRepository.getProvinceCount()
+            if (count > 0) {
+                Log.d("AppService", "省份数据已存在（${count}条），跳过初始化")
+                // 修复已有省份的经纬度（补充真实坐标）
+                fixProvinceCoordinates()
+                return@withContext
+            }
+
+            Log.d("AppService", "开始初始化地区数据...")
+            try {
+                val jsonString = context.assets.open("china_all_data.json")
+                    .bufferedReader().use { it.readText() }
+                val json = org.json.JSONObject(jsonString)
+
+                // 解析省份（使用真实省份中心经纬度）
+                val provincesArray = json.getJSONArray("provinces")
+                val provinces = mutableListOf<Province>()
+                for (i in 0 until provincesArray.length()) {
+                    val obj = provincesArray.getJSONObject(i)
+                    val adcode = obj.getInt("adcode").toString()
+                    val coords = PROVINCE_COORDS[adcode]
+                    provinces.add(
+                        Province(
+                            adcode = adcode,
+                            name = obj.getString("name"),
+                            centerLat = coords?.first ?: obj.optDouble("centerLat", 0.0),
+                            centerLng = coords?.second ?: obj.optDouble("centerLng", 0.0),
+                            sortOrder = i
+                        )
+                    )
+                }
+                regionRepository.getProvinceCount() // 仅用于确认
+                regionRepository.insertProvinces(provinces)
+                Log.d("AppService", "省份数据初始化完成: ${provinces.size}条")
+
+                // 解析城市
+                val citiesArray = json.getJSONArray("cities")
+                val cities = mutableListOf<City>()
+                for (i in 0 until citiesArray.length()) {
+                    val obj = citiesArray.getJSONObject(i)
+                    cities.add(
+                        City(
+                            adcode = obj.getInt("adcode").toString(),
+                            name = obj.getString("name"),
+                            provinceAdcode = obj.getInt("parent").toString(),
+                            centerLat = obj.optDouble("centerLat", 0.0),
+                            centerLng = obj.optDouble("centerLng", 0.0),
+                            sortOrder = i
+                        )
+                    )
+                }
+                regionRepository.insertCities(cities)
+                Log.d("AppService", "城市数据初始化完成: ${cities.size}条")
+            } catch (e: Exception) {
+                Log.e("AppService", "地区数据初始化失败", e)
+            }
+        }
+    }
+
+    /**
+     * 修复已点亮城市记录中错误的省份名称
+     * 遍历所有 lighted_cities 记录，将 provinceName 修正为 provinces 表中正确的名称
+     */
+    suspend fun fixLightedCityProvinceNames() {
+        withContext(Dispatchers.IO) {
+            try {
+                val allCities = lightedCityRepository.getAllLightedCitiesSync()
+                var fixedCount = 0
+                for (city in allCities) {
+                    // 查省份名称
+                    val province = regionRepository.getProvinceByAdcode(city.provinceAdcode)
+                    val correctName = province?.name
+                    if (correctName != null && city.provinceName != correctName) {
+                        Log.d("AppService", "修复省份名称: ${city.cityName} (${city.provinceName} -> ${correctName})")
+                        lightedCityRepository.updateProvinceName(city.cityAdcode, correctName)
+                        fixedCount++
+                    }
+                }
+                Log.d("AppService", "省份名称修复完成: 共检查${allCities.size}条，修复${fixedCount}条")
+            } catch (e: Exception) {
+                Log.e("AppService", "修复省份名称失败", e)
+            }
+        }
+    }
+
+    /**
+     * 修复已有省份记录中缺失的经纬度坐标
+     * 遍历所有 provinces 记录，将 centerLat/centerLng 为 0 的记录更新为真实坐标
+     */
+    suspend fun fixProvinceCoordinates() {
+        withContext(Dispatchers.IO) {
+            try {
+                val allProvinces = regionRepository.getAllProvincesList()
+                var fixedCount = 0
+                for (province in allProvinces) {
+                    if (province.centerLat == 0.0 && province.centerLng == 0.0) {
+                        val coords = PROVINCE_COORDS[province.adcode]
+                        if (coords != null) {
+                            val updatedProvince = province.copy(
+                                centerLat = coords.first,
+                                centerLng = coords.second
+                            )
+                            regionRepository.insertProvince(updatedProvince)
+                            fixedCount++
+                        }
+                    }
+                }
+                if (fixedCount > 0) {
+                    Log.d("AppService", "省份经纬度修复完成: 修复${fixedCount}条")
+                }
+                else{
+                    Log.d("经纬度ch","")
+                }
+            } catch (e: Exception) {
+                Log.e("AppService", "修复省份经纬度失败", e)
+            }
+        }
+    }
+
+    /** 中国各省份中心经纬度坐标（adcode → Pair(lat, lng)） */
+    companion object {
+        val PROVINCE_COORDS = mapOf(
+            "110000" to (39.9042 to 116.4074),   // 北京市
+            "120000" to (39.1422 to 117.1767),   // 天津市
+            "130000" to (38.0428 to 114.5149),   // 河北省
+            "140000" to (37.8706 to 112.5489),   // 山西省
+            "150000" to (40.8183 to 111.7655),   // 内蒙古自治区
+            "210000" to (41.8057 to 123.4315),   // 辽宁省
+            "220000" to (43.8868 to 125.3245),   // 吉林省
+            "230000" to (45.7420 to 126.6610),   // 黑龙江省
+            "310000" to (31.2304 to 121.4737),   // 上海市
+            "320000" to (32.0617 to 118.7778),   // 江苏省
+            "330000" to (30.2741 to 120.1551),   // 浙江省
+            "340000" to (31.8612 to 117.2830),   // 安徽省
+            "350000" to (26.0745 to 119.2965),   // 福建省
+            "360000" to (28.6820 to 115.8922),   // 江西省
+            "370000" to (36.6683 to 116.9972),   // 山东省
+            "410000" to (34.7657 to 113.7536),   // 河南省
+            "420000" to (30.5928 to 114.3055),   // 湖北省
+            "430000" to (28.2282 to 112.9388),   // 湖南省
+            "440000" to (23.1317 to 113.2664),   // 广东省
+            "450000" to (22.8170 to 108.3665),   // 广西壮族自治区
+            "460000" to (20.0174 to 110.3492),   // 海南省
+            "500000" to (29.5630 to 106.5516),   // 重庆市
+            "510000" to (30.5723 to 104.0665),   // 四川省
+            "520000" to (26.6470 to 106.6302),   // 贵州省
+            "530000" to (25.0389 to 102.7183),   // 云南省
+            "540000" to (29.6500 to 91.1000),    // 西藏自治区
+            "610000" to (34.2658 to 108.9541),   // 陕西省
+            "620000" to (36.0611 to 103.8343),   // 甘肃省
+            "630000" to (36.6171 to 101.7782),   // 青海省
+            "640000" to (38.4872 to 106.2309),   // 宁夏回族自治区
+            "650000" to (43.7930 to 87.6271),    // 新疆维吾尔自治区
+            "710000" to (25.0330 to 121.5654),   // 台湾省
+            "810000" to (22.3193 to 114.1694),   // 香港特别行政区
+            "820000" to (22.1987 to 113.5439)    // 澳门特别行政区
+        )
+    }
+
+    // ==================== 点亮省份相关 ====================
+
+    /**
+     * 获取所有已点亮的省份
+     */
+    fun getLightedProvinces(): Flow<List<LightedProvince>> =
+        lightedCityRepository.getLightedProvinces()
+
+    /**
+     * 获取已点亮省份的数量
+     */
+    suspend fun getLightedProvinceCount(): Int = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedProvinceCount()
+    }
+
+    /**
+     * 检查省份是否已点亮
+     */
+    suspend fun isProvinceLighted(provinceAdcode: String): Boolean = withContext(Dispatchers.IO) {
+        lightedCityRepository.isProvinceLighted(provinceAdcode)
+    }
+
+    /**
+     * 获取省份下所有点亮的城市
+     */
+    fun getLightedCitiesByProvince(provinceAdcode: String): Flow<List<LightedCity>> =
+        lightedCityRepository.getLightedCitiesByProvince(provinceAdcode)
+
+    /**
+     * 按省份统计点亮城市数量
+     */
+    suspend fun getLightedCitiesCountByProvince(): List<ProvinceCityCount> = withContext(Dispatchers.IO) {
+        lightedCityRepository.getLightedCitiesCountByProvince()
+    }
+
+
+    /**
+     * 点亮省份（独立点亮）
+     */
+    suspend fun lightProvince(
+        provinceAdcode: String,
+        provinceName: String,
+        remark: String = ""
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            lightedCityRepository.lightProvince(provinceAdcode, provinceName, remark)
+        }
+    }
+
+
+    /**
+     * 取消点亮省份
+     */
+    suspend fun unlightProvince(provinceAdcode: String) {
+        withContext(Dispatchers.IO) {
+            lightedCityRepository.unlightProvince(provinceAdcode)
+        }
+    }
+
+    // ==================== 地区数据相关 ====================
+
+    fun getAllProvinces(): Flow<List<Province>> = regionRepository.getAllProvinces()
+
+    suspend fun getProvinceByAdcode(adcode: String): Province? =
+        regionRepository.getProvinceByAdcode(adcode)
+
+    fun getAllCities(): Flow<List<City>> = regionRepository.getAllCities()
+       
+    fun getCitiesByProvince(provinceAdcode: String): Flow<List<City>> =
+        regionRepository.getCitiesByProvince(provinceAdcode)
+
+    suspend fun getCityByAdcode(adcode: String): City? =
+        regionRepository.getCityByAdcode(adcode)
+
+    suspend fun searchCities(keyword: String): List<City> =
+        regionRepository.searchCities(keyword)
+
+    // ==================== 打卡记录相关 ====================
+
+    fun getAllCheckInRecords(): Flow<List<CheckInRecordEntity>> =
+        checkInRecordRepository.getAllRecords()
+
+    fun getCheckInRecordsByCity(adcode: String): Flow<List<CheckInRecordEntity>> =
+        checkInRecordRepository.getRecordsByCity(adcode)
+
+    suspend fun addCheckInRecord(
+        cityAdcode: String,
+        cityName: String,
+        note: String,
+        tags: List<String> = emptyList(),
+        photoPaths: List<String> = emptyList()
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            checkInRecordRepository.insertRecord(cityAdcode, cityName, note, tags, photoPaths)
+        }
+    }
+
+    suspend fun deleteCheckInRecordsByCity(adcode: String) {
+        withContext(Dispatchers.IO) {
+            checkInRecordRepository.deleteRecordsByCity(adcode)
+        }
+    }
+}

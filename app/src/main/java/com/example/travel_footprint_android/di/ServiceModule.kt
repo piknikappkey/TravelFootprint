@@ -2,6 +2,7 @@
 package com.example.travel_footprint_android.di
 
 import android.content.Context
+import com.example.travel_footprint_android.data.network.AiService
 import com.example.travel_footprint_android.domain.service.*
 import dagger.Module
 import dagger.Provides
@@ -48,5 +49,11 @@ object ServiceModule {
     @Singleton
     fun provideTrailAnimator(): TrailAnimator {
         return TrailAnimator()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiService(): AiService {
+        return AiService()
     }
 }

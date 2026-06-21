@@ -20,6 +20,10 @@ import androidx.room.ForeignKey
             childColumns = ["tagId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        androidx.room.Index(value = ["tagId"]),
+        androidx.room.Index(value = ["footprintId"])
     ]
 )
 data class FootprintTagCrossRef(

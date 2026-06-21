@@ -2,7 +2,6 @@
 package com.example.travel_footprint_android.domain.service
 
 import android.graphics.*
-import com.example.travel_footprint_android.utils.BitmapUtils
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton

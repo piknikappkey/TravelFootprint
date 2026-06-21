@@ -20,9 +20,13 @@ interface FootprintDao {
     @Update
     suspend fun updateFootprint(footprint: Footprint)
 
-    //删除足迹
+    // 方式1：按对象删除
     @Delete
     suspend fun deleteFootprint(footprint: Footprint)
+
+    // 方式2：按ID删除（推荐）
+    @Query("DELETE FROM footprints WHERE id = :footprintId")
+    suspend fun deleteFootprintById(footprintId: Long)
 
     //删除旅程足迹
     @Query("DELETE FROM footprints WHERE journeyId = :journeyId")
@@ -31,6 +35,10 @@ interface FootprintDao {
     //查询旅程足迹
     @Query("SELECT * FROM footprints WHERE journeyId = :journeyId ORDER BY createTime")
     fun getFootprintsByJourney(journeyId: Long): Flow<List<Footprint>>
+
+    //获取所有足迹（按创建时间排序）
+    @Query("SELECT * FROM footprints ORDER BY createTime")
+    fun getAllFootprints(): Flow<List<Footprint>>
 
     //查询足迹通过日期
     @Query("SELECT * FROM footprints WHERE createTime BETWEEN :start AND :end ORDER BY createTime")
@@ -78,6 +86,37 @@ interface FootprintDao {
         val count: Int
     )
 
+    @Query("SELECT * FROM footprints WHERE id = :footprintId")
+    suspend fun getFootprintById(footprintId: Long): Footprint?
+
+    /**
+     * 仅更新运动录制数据字段（轻量级更新，避免覆盖其他字段）
+     */
+    @Query("""
+        UPDATE footprints SET
+            startTime = :startTime,
+            duration = :duration,
+            distance = :distance,
+            speed = :speed,
+            calories = :calories
+        WHERE id = :footprintId
+    """)
+    suspend fun updateRecordingData(
+        footprintId: Long,
+        startTime: Date?,
+        duration: Long,
+        distance: Double,
+        speed: Double,
+        calories: Double,
+    )
+
+    // ==================== 统计查询 ====================
+
+    /**
+     * 获取足迹总数
+     */
+    @Query("SELECT COUNT(*) FROM footprints")
+    suspend fun getFootprintCount(): Int
 
 }
 

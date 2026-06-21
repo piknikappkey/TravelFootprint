@@ -2,6 +2,7 @@
 package com.example.travel_footprint_android.data.entity
 
 import android.graphics.PointF
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
@@ -15,7 +16,8 @@ import androidx.room.ForeignKey
             childColumns = ["footprintId"],
             onDelete = ForeignKey.CASCADE  // 删除足迹时同时删除位置
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["footprintId"])]
 )
 data class Location(
     @PrimaryKey(autoGenerate = true)
@@ -23,7 +25,8 @@ data class Location(
     val footprintId: Long,                       // 所属足迹编号
     val latitude: Double,                         // 纬度
     val longitude: Double,                        // 经度
-    val orderIndex: Int = 0                       // 顺序索引（用于多个坐标点）
+    @ColumnInfo(name = "idx")
+    val index: Int = 0                            // 顺序索引（用于多个坐标点）
 ) {
     fun getLatLng(): PointF {
         return PointF(latitude.toFloat(), longitude.toFloat())

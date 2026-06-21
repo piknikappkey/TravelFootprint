@@ -57,4 +57,16 @@ class MediaRepository @Inject constructor(
             mediaDao.deleteMedia(it)
         }
     }
+
+    //
+    suspend fun getPhotosByFootprint(footprintId: Long): List<MediaAttachment> {
+        return mediaDao.getMediaByFootprint(footprintId)
+    }
+
+    /**
+    * 插入媒体附件
+    */
+    suspend fun insertMedia(media: MediaAttachment): Long {
+        return mediaDao.insertMedia(media)
+    }
 }

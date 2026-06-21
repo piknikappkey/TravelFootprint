@@ -3,7 +3,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp") version "1.9.20-1.0.14"  // 添加版本号
+    id("com.google.devtools.ksp") version "1.9.24-1.0.20"
 }
 
 android {
@@ -20,13 +20,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = true
+        }
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../release.jks")
+            storePassword = "466306"
+            keyAlias = "release"
+            keyPassword = "466306"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -34,6 +49,7 @@ android {
         compileOptions {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
+            isCoreLibraryDesugaringEnabled = true
         }
 
         kotlinOptions {
@@ -46,10 +62,9 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 }
-
 
 // ksp 配置
 ksp {
@@ -59,6 +74,7 @@ ksp {
 dependencies {
     // ================== 核心依赖 ==================
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.0")
 
@@ -73,6 +89,14 @@ dependencies {
     // ================== Hilt ==================
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("androidx.compose.foundation:foundation")
+    implementation(libs.androidx.ui)
+    implementation(libs.play.services.maps)
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.runtime)
+    // ❌ 删除这行: implementation(libs.androidx.compose.remote.creation.core)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
@@ -84,11 +108,17 @@ dependencies {
     // ================== 图片加载 ==================
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // ================== DataStore ==================
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
     // ================== 协程 ==================
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // ================== 序列化 ==================
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
+    // ================== 网络请求 ==================
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // ================== 测试 ==================
     testImplementation("junit:junit:4.13.2")
@@ -101,6 +131,9 @@ dependencies {
 
     // 定位服务需要
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // 核心库去糖化（支持Java 8+特性在旧设备上运行）
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.6")
@@ -137,4 +170,30 @@ dependencies {
     // Material Icons 扩展（包含更多图标）- 使用 BOM 管理版本
     implementation("androidx.compose.material:material-icons-extended")
 
+    // 高德地图 SDK
+    implementation("com.amap.api:3dmap:10.0.600")
+    implementation("com.amap.api:search:9.7.0")
+//    // 3D地图
+//    implementation("com.amap.api:3dmap:9.7.0"){
+//        // 排除 location 相关重复类
+//        exclude(group = "com.amap.api", module = "location")
+//    }
+//    // 定位
+//    implementation("com.amap.api:location:6.4.3")
+//    // 搜索
+//    implementation("com.amap.api:search:9.7.0")
+
+    // 权限库（用于运行时权限申请）
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    // 图片加载库（用于显示）
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // 权限请求库（可选，简化权限处理）
+    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+
+    // 或者使用社区版
+    // implementation 'com.tencent.tav:libpag:latest.release'
+
+    // 必需依赖
+    implementation("androidx.exifinterface:exifinterface:1.3.3")
 }

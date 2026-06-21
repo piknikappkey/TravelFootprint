@@ -3,6 +3,7 @@ package com.example.travel_footprint_android.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.travel_footprint_android.data.dao.*
 import com.example.travel_footprint_android.data.database.AppDatabase
 import dagger.Module
@@ -25,7 +26,10 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "travel_journal.db"
-        ).build()
+        )
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -56,5 +60,83 @@ object DatabaseModule {
     @Singleton
     fun provideTagDao(database: AppDatabase): TagDao {
         return database.tagDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLightedCityDao(database: AppDatabase): LightedCityDao {
+        return database.lightedCityDao()
+    }
+
+    // ========== 新增：省份和城市 DAO ==========
+    @Provides
+    @Singleton
+    fun provideProvinceDao(database: AppDatabase): ProvinceDao {
+        return database.provinceDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCityDao(database: AppDatabase): CityDao {
+        return database.cityDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckInRecordDao(database: AppDatabase): CheckInRecordDao {
+        return database.checkInRecordDao()
+    }
+
+    // 数据库迁移：从版本1到版本2（添加 lighted_cities 表）
+    private val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `lighted_cities` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `cityAdcode` TEXT NOT NULL,
+                    `cityName` TEXT NOT NULL,
+                    `provinceAdcode` TEXT NOT NULL,
+                    `provinceName` TEXT NOT NULL,
+                    `lightedTime` INTEGER NOT NULL,
+                    `latitude` REAL NOT NULL,
+                    `longitude` REAL NOT NULL,
+                    `remark` TEXT NOT NULL DEFAULT ''
+                )
+            """)
+            // 创建索引以提高查询性能
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_cityAdcode ON lighted_cities(cityAdcode)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_provinceAdcode ON lighted_cities(provinceAdcode)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lighted_cities_lightedTime ON lighted_cities(lightedTime)")
+        }
+    }
+
+    // 数据库迁移：从版本2到版本3（添加 provinces 和 cities 表）
+    private val MIGRATION_2_3 = object : androidx.room.migration.Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // 创建省份表
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `provinces` (
+                    `adcode` TEXT NOT NULL PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `centerLat` REAL NOT NULL,
+                    `centerLng` REAL NOT NULL,
+                    `sortOrder` INTEGER NOT NULL DEFAULT 0
+                )
+            """)
+            // 创建城市表
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `cities` (
+                    `adcode` TEXT NOT NULL PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `provinceAdcode` TEXT NOT NULL,
+                    `centerLat` REAL NOT NULL,
+                    `centerLng` REAL NOT NULL,
+                    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY(`provinceAdcode`) REFERENCES `provinces`(`adcode`) ON DELETE CASCADE
+                )
+            """)
+            // 创建索引
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_cities_provinceAdcode ON cities(provinceAdcode)")
+        }
     }
 }

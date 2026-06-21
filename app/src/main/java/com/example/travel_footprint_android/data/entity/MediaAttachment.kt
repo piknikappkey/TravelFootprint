@@ -16,7 +16,8 @@ import java.util.Date
             childColumns = ["footprintId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [androidx.room.Index(value = ["footprintId"])]
 )
 data class MediaAttachment(
     @PrimaryKey(autoGenerate = true)

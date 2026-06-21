@@ -2,4 +2,12 @@
 <resources>
 
     <style name="Theme.Travelfootprintandroid" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Travelfootprintandroid.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
 </resources>
