@@ -16,7 +16,7 @@
 
 | 类别 | 技术 |
 |------|------|
-| 语言 | Kotlin 100% |
+| 语言 | Kotlin |
 | UI | Jetpack Compose, Material 3 |
 | 依赖注入 | Dagger Hilt + KSP |
 | 数据库 | Room + KSP |
