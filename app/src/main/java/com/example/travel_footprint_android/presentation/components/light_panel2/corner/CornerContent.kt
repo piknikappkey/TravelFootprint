@@ -695,7 +695,7 @@ private fun ProvinceCard(
                             Log.d("ViewFootprint", "传入足迹总数: ${allFootprints.size}")
                             // 查找该省份区域内的所有足迹
                             val footprintsInProvince = findFootprintsInProvince(
-                                allFootprints, data.provinceAdcode
+                                allFootprints, data.provinceAdcode, data.provinceName
                             )
                             onViewFootprint?.invoke(footprintsInProvince, data.provinceName)
                         },
@@ -1124,84 +1124,46 @@ private fun haversineDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Do
  */
 private fun findFootprintsInProvince(
     footprints: List<Footprint>,
-    provinceAdcode: String
+    provinceAdcode: String,
+    provinceName: String
 ): List<Footprint> {
     val tag = "ViewFootprint"
-    Log.d(tag, "===== 查找省份足迹 =====")
-    Log.d(tag, "省份adcode: $provinceAdcode")
-    Log.d(tag, "总足迹数: ${footprints.size}")
+    Log.d(tag, "查找省份足迹: adcode=$provinceAdcode, name=$provinceName, count=${footprints.size}")
 
     if (footprints.isEmpty()) {
         Log.w(tag, "足迹列表为空，无法筛选")
         return emptyList()
     }
 
-    val bounds = PROVINCE_BOUNDS[provinceAdcode]
-    if (bounds == null) {
-        Log.e(tag, "未找到省份边界数据: adcode=$provinceAdcode")
-        return emptyList()
-    }
-    Log.d(tag, "省份边界: lat[${bounds.minLat}, ${bounds.maxLat}], lng[${bounds.minLng}, ${bounds.maxLng}]")
+    // 构造匹配关键词：完整名称 + 去掉行政后缀的简称
+    val provinceKeywords = listOfNotNull(
+        provinceName,
+        provinceName
+            .removeSuffix("省")
+            .removeSuffix("市")
+            .removeSuffix("自治区")
+            .removeSuffix("特别行政区")
+            .takeIf { it.isNotEmpty() && it != provinceName }
+    )
+    Log.d(tag, "省份匹配关键词: $provinceKeywords")
 
-    // 打印每条足迹的坐标，方便调试
+    // 打印每条足迹的地址，方便调试
     footprints.forEachIndexed { index, fp ->
-        Log.d(tag, "  足迹[$index] title=${fp.title}, lat=${fp.latitude}, lng=${fp.longitude}, address=${fp.address}")
+        Log.d(tag, "  足迹[$index] title=${fp.title}, address=${fp.address}")
     }
 
     val result = footprints.filter { fp ->
-        fp.latitude != 0.0 && fp.longitude != 0.0 &&
-                fp.latitude in bounds.minLat..bounds.maxLat &&
-                fp.longitude in bounds.minLng..bounds.maxLng
+        provinceKeywords.any { keyword -> fp.address.contains(keyword) }
     }
 
     Log.d(tag, "筛选结果: ${result.size} 条足迹在该省份区域内")
     result.forEach { fp ->
-        Log.d(tag, "  ✓ ${fp.title} (lat=${fp.latitude}, lng=${fp.longitude})")
+        Log.d(tag, "  ✓ ${fp.title} (address=${fp.address})")
     }
     Log.d(tag, "========================")
 
     return result
 }
-
-/** 省份边界矩形（minLat, maxLat, minLng, maxLng） */
-private data class ProvinceBounds(val minLat: Double, val maxLat: Double, val minLng: Double, val maxLng: Double)
-
-private val PROVINCE_BOUNDS = mapOf(
-    "110000" to ProvinceBounds(39.4, 40.6, 115.7, 117.1),     // 北京市
-    "120000" to ProvinceBounds(38.6, 39.7, 116.7, 117.9),     // 天津市
-    "130000" to ProvinceBounds(36.0, 42.6, 113.5, 119.9),     // 河北省
-    "140000" to ProvinceBounds(34.6, 40.7, 110.2, 114.6),     // 山西省
-    "150000" to ProvinceBounds(37.4, 53.3, 97.2, 126.1),      // 内蒙古自治区
-    "210000" to ProvinceBounds(38.7, 43.5, 119.0, 125.8),     // 辽宁省
-    "220000" to ProvinceBounds(40.8, 46.3, 121.6, 131.3),     // 吉林省
-    "230000" to ProvinceBounds(43.4, 53.6, 121.2, 135.1),     // 黑龙江省
-    "310000" to ProvinceBounds(30.7, 31.9, 120.9, 122.0),     // 上海市
-    "320000" to ProvinceBounds(30.8, 35.1, 116.4, 121.9),     // 江苏省
-    "330000" to ProvinceBounds(27.1, 31.2, 118.0, 122.4),     // 浙江省
-    "340000" to ProvinceBounds(29.4, 34.6, 114.9, 119.9),     // 安徽省
-    "350000" to ProvinceBounds(23.5, 28.3, 115.8, 120.7),     // 福建省
-    "360000" to ProvinceBounds(24.5, 30.1, 113.6, 118.5),     // 江西省
-    "370000" to ProvinceBounds(34.4, 38.4, 114.8, 122.7),     // 山东省
-    "410000" to ProvinceBounds(31.4, 36.4, 110.4, 116.7),     // 河南省
-    "420000" to ProvinceBounds(29.0, 33.3, 108.4, 116.1),     // 湖北省
-    "430000" to ProvinceBounds(24.6, 30.1, 108.8, 114.3),     // 湖南省
-    "440000" to ProvinceBounds(20.2, 25.5, 109.7, 117.3),     // 广东省
-    "450000" to ProvinceBounds(20.9, 26.4, 104.3, 112.1),     // 广西壮族自治区
-    "460000" to ProvinceBounds(18.2, 20.2, 108.4, 111.1),     // 海南省
-    "500000" to ProvinceBounds(28.1, 32.2, 105.3, 110.2),     // 重庆市
-    "510000" to ProvinceBounds(26.0, 34.3, 97.4, 108.6),      // 四川省
-    "520000" to ProvinceBounds(24.6, 29.2, 103.6, 109.5),     // 贵州省
-    "530000" to ProvinceBounds(21.1, 29.2, 97.5, 106.2),      // 云南省
-    "540000" to ProvinceBounds(26.9, 36.5, 78.4, 99.1),       // 西藏自治区
-    "610000" to ProvinceBounds(31.7, 39.6, 105.5, 111.2),     // 陕西省
-    "620000" to ProvinceBounds(32.6, 42.8, 92.3, 108.7),      // 甘肃省
-    "630000" to ProvinceBounds(31.6, 39.2, 89.4, 103.0),      // 青海省
-    "640000" to ProvinceBounds(35.2, 39.4, 104.3, 107.7),     // 宁夏回族自治区
-    "650000" to ProvinceBounds(34.3, 49.2, 73.5, 96.4),       // 新疆维吾尔自治区
-    "710000" to ProvinceBounds(21.9, 25.3, 120.0, 122.0),     // 台湾省
-    "810000" to ProvinceBounds(22.2, 22.6, 113.8, 114.4),     // 香港特别行政区
-    "820000" to ProvinceBounds(22.1, 22.3, 113.5, 113.7)      // 澳门特别行政区
-)
 
 private data class ChineseProvince(
     val name: String,

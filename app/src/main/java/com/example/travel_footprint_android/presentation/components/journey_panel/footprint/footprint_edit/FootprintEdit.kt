@@ -1,5 +1,6 @@
 package com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -200,6 +201,7 @@ private fun HeadRow(
                     !titleValid -> Toast.makeText(context, "请输入有效的足迹标题", Toast.LENGTH_SHORT).show()
                     !descValid -> Toast.makeText(context, "请输入有效的足迹描述", Toast.LENGTH_SHORT).show()
                     else -> {
+                        Log.d("FootprintEdit", "save footprint lat=${footprint.latitude} lng=${footprint.longitude} address=${footprint.address}")
                         if (footprintSelected == null) {
                             addFootprint(journeySelected, footprint.copy())
                         } else {
