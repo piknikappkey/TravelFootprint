@@ -290,6 +290,7 @@ class JourneyViewModel @Inject constructor(
 
             try {
                 // 通过 Repository 添加足迹（需要先扩展 Repository 方法）
+                Log.d("JourneyViewModel", "addFootprintsForJourney footprint lat=${footprint.latitude} lng=${footprint.longitude} address=${footprint.address}")
                 val footprintId = FootprintRepository.addFootprint(
                    footprint
                 )

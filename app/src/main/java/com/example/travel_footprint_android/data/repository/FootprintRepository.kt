@@ -87,40 +87,32 @@ class FootprintRepository @Inject constructor(
     ): Long {
         // 1. 获取地址
         val address = footprint.address
+        Log.d("FootprintRepository", "addFootprint input lat=${footprint.latitude} lng=${footprint.longitude} address=$address")
 
-        // 2. 插入足迹
+        // 2. 插入足迹（保留传入的经纬度）
         val footprint = Footprint(
             journeyId = footprint.journeyId,
-            title =footprint.title,
+            title = footprint.title,
             description = footprint.description,
             createTime = Date(),
             address = address,
+            longitude = footprint.longitude,
+            latitude = footprint.latitude,
             rating = footprint.rating,
             startTime = footprint.startTime
         )
         val footprintId = footprintDao.insertFootprint(footprint)
+        Log.d("FootprintRepository", "addFootprint inserted id=$footprintId lat=${footprint.latitude} lng=${footprint.longitude}")
 
-//        // 3. 插入位置
-//        val location = Location(
-//            footprintId = footprintId,
-//            latitude = lat,
-//            longitude = lng,
-//            index = 0
-//        )
-//        locationDao.insertLocation(location)
-
-//        // 4. 插入照片
-//        photos?.forEachIndexed { index, photoPath ->
-//            val media = MediaAttachment(
-//                footprintId = footprintId,
-//                type = "photo",
-//                localPath = photoPath,
-//                thumbnailPath = "",  // 稍后生成
-//                createTime = Date(),
-//                caption = "照片 ${index + 1}"
-//            )
-//            mediaDao.insertMedia(media)
-//        }
+        // 3. 插入位置
+        val location = Location(
+            footprintId = footprintId,
+            latitude = footprint.latitude,
+            longitude = footprint.longitude,
+            index = 0
+        )
+        locationDao.insertLocation(location)
+        Log.d("FootprintRepository", "addFootprint inserted location lat=${location.latitude} lng=${location.longitude}")
 
         return footprintId //返回足迹ID
     }

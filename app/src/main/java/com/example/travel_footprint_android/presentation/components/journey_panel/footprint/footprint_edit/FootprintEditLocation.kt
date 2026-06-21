@@ -33,6 +33,9 @@ fun FootprintEditLocation(
 
     var address by remember { mutableStateOf(if(footprint.address != "") footprint.address.split("\n").last() else "") }
 
+    var latitude by remember { mutableStateOf(footprint.latitude) }
+
+    var longitude by remember { mutableStateOf(footprint.longitude) }
 
     var showButton by remember { mutableStateOf(false) }
 
@@ -58,6 +61,8 @@ fun FootprintEditLocation(
                 showButton = true
                 name = location.name
                 address = location.address
+                latitude = location.latitude
+                longitude = location.longitude
         }
     )
 
@@ -71,7 +76,11 @@ fun FootprintEditLocation(
                 Log.d("FootprintEditLocation", "submit")
                 Log.d("FootprintEditLocation", "showButton = $showButton")
                 setFootprint(
-                    footprint.copy(address = "${address}\n${name}")
+                    footprint.copy(
+                        address = "${address}\n${name}",
+                        latitude = latitude,
+                        longitude = longitude
+                    )
                 )
                 showButton = false
                 Log.d("FootprintEditLocation", "showButton = $showButton")
@@ -83,6 +92,8 @@ fun FootprintEditLocation(
                     Log.d("FootprintEditLocation", "footprint.address != \"\"")
                     name = footprint.address.split("\n")[0]
                     address = footprint.address.split("\n").last()
+                    latitude = footprint.latitude
+                    longitude = footprint.longitude
                     isSelectedLocation = true
                     Log.d("FootprintEditLocation", "name = $name")
                     Log.d("FootprintEditLocation", "address = $address")
@@ -90,6 +101,8 @@ fun FootprintEditLocation(
                     Log.d("FootprintEditLocation", "footprint.address == \"\"")
                     name = ""
                     address = ""
+                    latitude = 0.0
+                    longitude = 0.0
                     isSelectedLocation = false
                 }
                 showButton = false
@@ -99,12 +112,18 @@ fun FootprintEditLocation(
                 isSelectedLocation = false
                 name = ""
                 address = ""
+                latitude = 0.0
+                longitude = 0.0
                 setFootprint(
-                    footprint.copy(address = "")
+                    footprint.copy(
+                        address = "",
+                        latitude = 0.0,
+                        longitude = 0.0
+                    )
                 )
             },
-            latitude = 0.0,
-            longitude = 0.0
+            latitude = latitude,
+            longitude = longitude
         )
     }
 }
