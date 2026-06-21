@@ -32,16 +32,14 @@ android {
         }
     }
 
-    android {
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-            isCoreLibraryDesugaringEnabled = true
-        }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
+    }
 
-        kotlinOptions {
-            jvmTarget = "17"
-        }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -65,25 +63,31 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.0")
 
-    // ================== Compose ==================
-    implementation(platform("androidx.compose:compose-bom:2024.09.00"))
+    // ================== Compose (统一版本) ==================
+    val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.animation:animation")
+    
+    // Material Icons 扩展（包含更多图标）
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // Compose 运行时
+    implementation("androidx.compose.runtime:runtime")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+
+    // ================== Lifecycle ==================
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
     // ================== Hilt ==================
     implementation("com.google.dagger:hilt-android:2.48")
-    implementation("androidx.compose.foundation:foundation")
-    implementation(libs.androidx.ui)
-    implementation(libs.play.services.maps)
-    implementation(libs.androidx.compose.animation)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.runtime)
-    // ❌ 删除这行: implementation(libs.androidx.compose.remote.creation.core)
     ksp("com.google.dagger:hilt-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
@@ -107,84 +111,39 @@ dependencies {
     // ================== 网络请求 ==================
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // ================== Google Play Services ==================
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // ================== 核心库去糖化 ==================
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // ================== Navigation Compose ==================
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    // ================== Gson ==================
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // ================== 高德地图 SDK ==================
+    implementation("com.amap.api:3dmap:10.0.600")
+    implementation("com.amap.api:search:9.7.0")
+
+    // ================== 权限库 ==================
+    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
+
+    // ================== PAG 动效 ==================
+    implementation("com.tencent.tav:libpag-enterprise:latest.release")
+
+    // ================== ExifInterface ==================
+    implementation("androidx.exifinterface:exifinterface:1.3.3")
+
     // ================== 测试 ==================
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    
+    // Debug 依赖
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-
-    // 定位服务需要
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-
-    // 核心库去糖化（支持Java 8+特性在旧设备上运行）
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    // Navigation Compose
-    implementation("androidx.navigation:navigation-compose:2.7.6")
-
-    // Gson
-    implementation("com.google.code.gson:gson:2.10.1")
-
-    // 文件提供器（用于分享）
-    implementation("androidx.core:core-ktx:1.12.0")
-
-    // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-
-    // Compose BOM (Bill of Materials)
-    implementation(platform("androidx.compose:compose-bom:2024.02.00"))
-
-    // Compose 核心库
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
-
-    // Compose 生命周期相关
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-
-    // 用于 collectAsStateWithLifecycle
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-
-    debugImplementation("androidx.compose.ui:ui-tooling")
-
-    // Material Icons 扩展（包含更多图标）- 使用 BOM 管理版本
-    implementation("androidx.compose.material:material-icons-extended")
-
-    // 高德地图 SDK
-    implementation("com.amap.api:3dmap:10.0.600")
-    implementation("com.amap.api:search:9.7.0")
-//    // 3D地图
-//    implementation("com.amap.api:3dmap:9.7.0"){
-//        // 排除 location 相关重复类
-//        exclude(group = "com.amap.api", module = "location")
-//    }
-//    // 定位
-//    implementation("com.amap.api:location:6.4.3")
-//    // 搜索
-//    implementation("com.amap.api:search:9.7.0")
-
-    // 权限库（用于运行时权限申请）
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-    // 图片加载库（用于显示）
-    implementation("io.coil-kt:coil-compose:2.5.0")
-
-    // 权限请求库（可选，简化权限处理）
-    implementation("com.google.accompanist:accompanist-permissions:0.35.0-alpha")
-
-    //pag动效依赖
-    // 企业版基础版本（推荐）
-    implementation ("com.tencent.tav:libpag-enterprise:latest.release")
-
-    // 或者使用社区版
-    // implementation 'com.tencent.tav:libpag:latest.release'
-
-    // 必需依赖
-    implementation("androidx.exifinterface:exifinterface:1.3.3")
 }
