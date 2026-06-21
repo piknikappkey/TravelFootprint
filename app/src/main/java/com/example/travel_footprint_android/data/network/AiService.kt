@@ -47,7 +47,7 @@ class AiService @Inject constructor() {
         private const val TAG = "AiService"
 
         // 服务端基础地址（后续可提取到 BuildConfig 或配置文件）
-        private const val SERVER_BASE_URL = "http://64.188.24.155:5000"
+        private const val SERVER_BASE_URL = "http://YOUR_SERVER_IP:5000"
         private const val CHAT_URL = "$SERVER_BASE_URL/chat"
 
         // JSON 媒体类型

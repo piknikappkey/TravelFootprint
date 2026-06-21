@@ -55,7 +55,7 @@
         <!-- 高德地图 API Key -->
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="83279a23557952f6b018e06064b2ed24"/>
+            android:value="YOUR_AMAP_API_KEY_HERE"/>
 
         <!-- 开启持续定位服务 -->
         <service android:name="com.amap.api.location.APSService" />
