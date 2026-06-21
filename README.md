@@ -94,5 +94,5 @@
 
 ```bash
 
-git clone https://github.com/你的用户名/TravelFootprint.git
+git clone https://github.com/piknikappkey/TravelFootprint.git
 
