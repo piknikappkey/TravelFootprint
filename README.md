@@ -58,16 +58,18 @@
 
 ## 项目截图
 
-| 页面 | 页面 |
-|:---:|:---:|
-| ![点亮页面](final_product_image/点亮页面.jpg) | ![点亮打卡](final_product_image/点亮打卡.jpg) |
-| 点亮页面 | 点亮打卡 |
-| ![点亮角落](final_product_image/点亮角落.jpg) | ![足迹路线](final_product_image/足迹路线.jpg) |
-| 点亮角落 | 足迹路线 |
-| ![旅程页面](final_product_image/旅程页面.jpg) | ![旅程详情](final_product_image/旅程详情.jpg) |
-| 旅程页面 | 旅程详情 |
-| ![AI编辑](final_product_image/AI编辑.jpg) | ![我的页面](final_product_image/我的页面.jpg) |
-| AI编辑 | 我的页面 |
+<div align="center">
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="final_product_image/点亮页面.jpg" width="220"/> | <img src="final_product_image/点亮打卡.jpg" width="220"/> | <img src="final_product_image/点亮角落.jpg" width="220"/> |
+| <b>点亮页面</b> | <b>点亮打卡</b> | <b>点亮角落</b> |
+| <img src="final_product_image/足迹路线.jpg" width="220"/> | <img src="final_product_image/旅程页面.jpg" width="220"/> | <img src="final_product_image/旅程详情.jpg" width="220"/> |
+| <b>足迹路线</b> | <b>旅程页面</b> | <b>旅程详情</b> |
+| <img src="final_product_image/AI编辑.jpg" width="220"/> | <img src="final_product_image/我的页面.jpg" width="220"/> | |
+| <b>AI编辑</b> | <b>我的页面</b> | |
+
+</div>
 
 
 ## 本地运行
