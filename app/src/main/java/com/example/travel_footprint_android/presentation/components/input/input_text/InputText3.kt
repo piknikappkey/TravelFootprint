@@ -54,6 +54,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -101,15 +104,25 @@ fun InputText3(
     onSurfaceColor: Color = MainColor2,
     // 左侧前缀图标，默认为 Material Edit 图标
     imageVector: ImageVector = Icons.Default.Edit,
+    // 是否在组件首次进入合成时自动请求焦点（默认 false，不自动聚焦）
+    autoFocus: Boolean = false,
     modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
     // 跟踪输入框是否获得焦点，用于切换边框样式
     var isFocused by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
 
     // 动态边框颜色：聚焦时完整主色，否则半透明
     val borderColor = if (isFocused) primaryColor else onSurfaceColor.copy(.6f)
     // 动态边框宽度：聚焦时 2dp 加粗，否则 1dp 细线
     val borderWidth = if (isFocused) 2.dp else 1.dp
+
+    // 控制自动聚焦：仅在 autoFocus=true 时请求焦点
+    LaunchedEffect(autoFocus) {
+        if (autoFocus) {
+            focusRequester.requestFocus()
+        }
+    }
 
     // 外层容器：圆角裁剪 + 动态边框
     Box(
@@ -137,6 +150,7 @@ fun InputText3(
                     primaryColor,
                     onSurfaceColor,
                     imageVector,
+                    focusRequester,
                     // 将焦点状态变化传递给外层 isFocused
                     { bool ->
                         isFocused = bool
@@ -166,6 +180,8 @@ fun InputContent(
     onSurfaceColor: Color,
     // 左侧图标
     imageVector: ImageVector,
+    // 聚焦请求器，由外层控制是否自动聚焦
+    focusRequester: FocusRequester,
     // 焦点变化回调，用于联动外层的边框视觉切换
     setIsFocused: (Boolean) -> Unit,
 ) {
@@ -193,6 +209,7 @@ fun InputContent(
             cursorBrush = SolidColor(primaryColor),
             modifier = Modifier
                 .weight(1f)
+                .focusRequester(focusRequester)
                 // 焦点变化时通知外层，驱动边框样式切换
                 .onFocusChanged { focusState ->
                     setIsFocused(focusState.isFocused)

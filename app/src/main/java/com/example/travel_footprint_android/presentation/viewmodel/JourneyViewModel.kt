@@ -62,6 +62,7 @@ class JourneyViewModel @Inject constructor(
     // ==================== 数据加载 ====================
 
     fun loadData() {
+        Log.d("JourneyViewModel_Debug", "loadData() 被调用 — 当前线程: ${Thread.currentThread().name}")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -69,6 +70,7 @@ class JourneyViewModel @Inject constructor(
                 val counts = appService.getAllFootprintCounts()
 
                 journeysFlow.collect { journeyList ->
+                    Log.d("JourneyViewModel_Debug", "Flow 推送数据 — journeyList.size=${journeyList.size}, journeys=${journeyList.map { "${it.id}:${it.title}" }}")
                     _uiState.update { state ->
                         state.copy(
                             isLoading = false,
@@ -79,6 +81,7 @@ class JourneyViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                Log.e("JourneyViewModel_Debug", "loadData() 异常: ${e.message}", e)
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -172,6 +175,7 @@ class JourneyViewModel @Inject constructor(
      *     latitude: Double = 0.0
      */
     fun createJourney(journey: Journey) {
+        Log.d("JourneyViewModel_Debug", "createJourney(journey) 被调用 — title=${journey.title}, id=${journey.id}")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
@@ -187,10 +191,12 @@ class JourneyViewModel @Inject constructor(
                     longitude=journey.longitude,
                     latitude=journey.latitude
                 )
+                Log.d("JourneyViewModel_Debug", "createJourney — Room 写入完成，即将 loadData()")
                 hideAddDialog()
                 loadData()
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
+                Log.e("JourneyViewModel_Debug", "createJourney 异常: ${e.message}", e)
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -388,15 +394,18 @@ class JourneyViewModel @Inject constructor(
      * @param journey Journey 实体对象（必须包含有效的 id）
      */
     fun updateJourney(journey: Journey) {
+        Log.d("JourneyViewModel_Debug", "updateJourney(journey) 被调用 — id=${journey.id}, title=${journey.title}")
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
                 require(journey.id > 0) { "旅程ID不能为空" }
                 appService.updateJourney(journey)
+                Log.d("JourneyViewModel_Debug", "updateJourney — Room 写入完成 (id=${journey.id})，即将 loadData()")
                 hideEditDialog()
                 loadData()
                 _uiState.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
+                Log.e("JourneyViewModel_Debug", "updateJourney 异常: ${e.message}", e)
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -867,6 +876,12 @@ class JourneyViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** 清除位置列表（面板关闭时调用，使重新打开同一足迹时 LaunchedEffect 能检测到变化） */
+    fun clearLocationList() {
+        getLocationJob?.cancel()
+        _uiState.update { it.copy(LocationList = emptyList()) }
     }
 
     // ==================== 足迹管理 - 删除 ====================

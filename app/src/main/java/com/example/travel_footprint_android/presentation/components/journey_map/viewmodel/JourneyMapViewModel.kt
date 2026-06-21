@@ -455,6 +455,46 @@ class JourneyMapViewModel @Inject constructor(
         Log.d("JourneyMap3ViewModel", "stopFollowUser: restored aniMoveTime=$_aniMoveTime")
     }
 
+    // ========== 相机控制 ==========
+
+    /**
+     * 将地图相机移动到 locationList 的第一个坐标位置（带面板补偿）
+     *
+     * 利用已存储的面板偏移数据（由 JourneyPanel 通过 setPanelOffset 写入），
+     * 使第一个足迹定位点显示在面板上方可见区域的中心位置，而非屏幕正中心。
+     * 若无面板数据则直接移动到目标位置。
+     *
+     * @param locationList 足迹位置列表，取第一个元素作为目标
+     * @param aniMoveTime 相机移动动画时长（毫秒），默认 1000ms
+     */
+    fun moveCameraToFirstLocation(locationList: List<Location>, aniMoveTime: Long = 1000) {
+        val aMap = _aMap.value ?: return
+        if (locationList.isEmpty()) return
+
+        val first = locationList.first()
+        val latLng = LatLng(first.latitude, first.longitude)
+
+        // 如果有面板偏移数据，使用补偿定位使目标出现在可见区域中心
+        if (_storedScreenWidthPx > 0 && _storedScreenHeightPx > 0 && _storedPanelTopY > 0) {
+            animateCameraToPanelCompensatedCenter(
+                aMap = aMap,
+                userLatLng = latLng,
+                aniTime = aniMoveTime,
+                screenWidthPx = _storedScreenWidthPx,
+                screenHeightPx = _storedScreenHeightPx.toFloat(),
+                panelTopY = _storedPanelTopY.toFloat()
+            )
+        } else {
+            // 无面板数据时，直接移动到目标位置并缩放到 17 级
+            aMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(latLng, 17f),
+                aniMoveTime, null
+            )
+        }
+
+        Log.d("JourneyMap3ViewModel", "moveCameraToFirstLocation: lat=${latLng.latitude} lng=${latLng.longitude} aniTime=$aniMoveTime hasPanelCompensation=${_storedPanelTopY > 0}")
+    }
+
     // ========== 路线绘制 ==========
 
     /**

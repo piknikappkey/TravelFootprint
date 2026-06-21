@@ -32,9 +32,3 @@ val FFRuanMengChuLianTi = FontFamily(
     Font(R.font.ruan_meng_chu_lian_ti, FontWeight.Normal),
     Font(R.font.ruan_meng_chu_lian_ti, FontWeight.Bold)
 )
-
-// 汉仪楷体简字体
-val FFHanYiKaiTiJian = FontFamily(
-    Font(R.font.han_yi_kai_ti_jian, FontWeight.Normal),
-    Font(R.font.han_yi_kai_ti_jian, FontWeight.Bold)
-)

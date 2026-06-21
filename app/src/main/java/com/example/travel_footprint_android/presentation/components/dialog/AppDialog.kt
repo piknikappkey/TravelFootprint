@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,7 @@ import kotlinx.coroutines.launch
  * @param maskAlpha 遮罩透明度，默认 0.4f
  * @param maskColor 遮罩颜色，默认黑色
  * @param animationDurationMs 进出场动画时长（毫秒），默认 250ms
+ * @param interceptDismissOnClick 拦截点击关闭的回调，返回 true 表示拦截关闭（不执行关闭动画），返回 false 或 null 表示正常关闭
  * @param content 弹窗内容
  */
 @Composable
@@ -50,6 +52,7 @@ fun AppDialog(
     maskAlpha: Float = 0.4f,
     maskColor: Color = Color.Black,
     animationDurationMs: Int = 250,
+    interceptDismissOnClick: (() -> Boolean)? = null,
     content: @Composable () -> Unit,
 ) {
     // 控制动画状态
@@ -58,7 +61,7 @@ fun AppDialog(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    // 弹窗打开时触发动画
+    // 弹窗打开时触发动画，并请求根容器焦点以截断焦点传递链
     LaunchedEffect(Unit) {
         visible = true
         focusRequester.requestFocus()
@@ -109,6 +112,7 @@ fun AppDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .focusRequester(focusRequester)
+                .focusable()
         ) {
             // 遮罩层：全屏覆盖，拦截点击事件
             Box(
@@ -118,7 +122,13 @@ fun AppDialog(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = dismissWithAnimation,
+                        onClick = {
+                            // 如果提供了拦截回调，先调用它判断是否要拦截关闭
+                            val intercepted = interceptDismissOnClick?.invoke() ?: false
+                            if (!intercepted) {
+                                dismissWithAnimation()
+                            }
+                        },
                     )
             )
 

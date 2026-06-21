@@ -6,9 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
+import com.example.travel_footprint_android.data.entity.Footprint
 import com.example.travel_footprint_android.data.entity.Journey
 import com.example.travel_footprint_android.data.network.AiService
+import com.example.travel_footprint_android.domain.service.AiOperationInfo
+import com.example.travel_footprint_android.domain.service.AiOperationStateHolder
+import com.example.travel_footprint_android.presentation.components.journey_panel.footprint.footprint_edit.ai_assistant_dialog_for_footprint.components.AiFillFieldForFootprint
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,11 +46,18 @@ data class AiGenerateState(
  * 2. 逆地理编码获取地址名称
  * 3. 调用 AiService 生成标题和描述
  * 4. 管理加载状态和错误处理
+ *
+ * 多操作后台运行支持：
+ * - 当用户关闭 AI 助手弹窗时，操作仍在后台继续执行
+ * - 通过 AiOperationStateHolder 向 JourneyScreen 暴露运行状态
+ * - 每个操作有唯一 ID，支持独立取消
+ * - AI 智能填写和 AI 封面涂鸦可同时运行
  */
 @HiltViewModel
 class AiGenerateViewModel @Inject constructor(
     private val application: Application,
-    private val aiService: AiService
+    private val aiService: AiService,
+    private val stateHolder: AiOperationStateHolder,
 ) : ViewModel() {
 
     // 私有可变状态流
@@ -54,8 +66,42 @@ class AiGenerateViewModel @Inject constructor(
     // 对外只读状态流
     val state: StateFlow<AiGenerateState> = _state.asStateFlow()
 
+    // 按操作 ID 存储的协程 Job，支持多操作独立取消
+    private val operationJobs = mutableMapOf<String, Job>()
+
     companion object {
         private const val TAG = "AiGenerateViewModel"
+    }
+
+    /**
+     * 通过操作 ID 取消指定的 AI 操作
+     *
+     * 由 AiRunningIndicator 的取消按钮通过 stateHolder 触发
+     *
+     * @param id 要取消的操作 ID
+     */
+    fun cancelOperationById(id: String) {
+        Log.d(TAG, "取消 AI 操作: $id")
+        operationJobs[id]?.cancel()
+        operationJobs.remove(id)
+        // 清理状态（可能影响 isLoading 或 isPaintLoading）
+        _state.update {
+            it.copy(
+                isLoading = false,
+                isPaintLoading = false,
+                error = null,
+                paintError = null
+            )
+        }
+    }
+
+    /**
+     * 设置 AI 助手弹窗的打开/关闭状态
+     *
+     * 弹窗打开时隐藏浮窗，关闭时若操作仍在运行则显示浮窗
+     */
+    fun setDialogOpen(open: Boolean) {
+        stateHolder.setDialogOpen(open)
     }
 
     /**
@@ -122,12 +168,6 @@ class AiGenerateViewModel @Inject constructor(
         customPrompt: String? = null,
         onResult: (locationName: String, latitude: Double, longitude: Double, title: String, description: String) -> Unit
     ) {
-        // 如果正在加载中，直接返回防止重复请求
-        if (_state.value.isLoading) {
-            Log.w(TAG, "正在加载中，忽略重复请求")
-            return
-        }
-
         // 如果没有选中任何字段，直接返回（由调用方处理提示）
         if (selectedFields.isEmpty()) {
             Log.w(TAG, "未选择任何字段，忽略请求")
@@ -139,7 +179,18 @@ class AiGenerateViewModel @Inject constructor(
         Log.d(TAG, "当前旅程标题: '${journey.title}'")
         Log.d(TAG, "当前旅程描述: '${journey.description}'")
 
-        viewModelScope.launch {
+        val operationInfo = AiOperationInfo(
+            type = AiOperationInfo.AiOperationType.GENERATE_INFO,
+            description = "正在通过 AI 生成旅程信息(约45s)..."
+        )
+        val operationId = operationInfo.id
+
+        stateHolder.startOperation(
+            operationInfo,
+            onCancel = { cancelOperationById(operationId) }
+        )
+
+        operationJobs[operationId] = viewModelScope.launch {
             // 1. 设置加载状态
             Log.d(TAG, "步骤1: 设置加载状态 isLoading=true")
             _state.update { it.copy(isLoading = true, error = null) }
@@ -159,6 +210,8 @@ class AiGenerateViewModel @Inject constructor(
                         _state.update {
                             it.copy(isLoading = false, error = "无法获取位置，请检查定位权限和网络")
                         }
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 生成失败：无法获取位置")
                         return@launch
                     }
 
@@ -216,6 +269,8 @@ class AiGenerateViewModel @Inject constructor(
                         // 通过回调返回结果（调用方会根据 selectedFields 决定哪些字段写入）
                         Log.d(TAG, "调用 onResult 回调...")
                         onResult(addressName, latitude, longitude, aiResult.title, aiResult.description)
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 信息生成完成")
                         Log.d(TAG, "========== AI 生成流程完成 ==========")
                     },
                     onFailure = { e ->
@@ -225,6 +280,8 @@ class AiGenerateViewModel @Inject constructor(
                         _state.update {
                             it.copy(isLoading = false, error = "AI 生成失败: ${e.message}")
                         }
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 生成失败：${e.message}")
                     }
                 )
 
@@ -235,6 +292,156 @@ class AiGenerateViewModel @Inject constructor(
                 Log.e(TAG, "异常堆栈: ${e.stackTraceToString()}")
                 _state.update {
                     it.copy(isLoading = false, error = "生成失败: ${e.message}")
+                }
+                operationJobs.remove(operationId)
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    stateHolder.finishOperation(operationId, "AI 生成失败：${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * 执行 AI 自动生成足迹信息
+     *
+     * @param footprint 当前编辑中的足迹数据
+     * @param journey 所属旅程数据（提供上下文信息）
+     * @param selectedFields 用户选择要生成的字段集合
+     * @param customPrompt 自定义提示词（可选）
+     * @param onResult 回调函数，返回更新后的地址信息和 AI 生成结果
+     */
+    fun generateForFootprint(
+        footprint: Footprint,
+        journey: Journey,
+        selectedFields: Set<AiFillFieldForFootprint>,
+        customPrompt: String? = null,
+        onResult: (locationName: String, latitude: Double, longitude: Double, title: String, description: String, rating: Int) -> Unit
+    ) {
+        // 如果没有选中任何字段，直接返回（由调用方处理提示）
+        if (selectedFields.isEmpty()) {
+            Log.w(TAG, "未选择任何字段，忽略请求")
+            return
+        }
+
+        Log.d(TAG, "========== AI 足迹生成流程开始 ==========")
+        Log.d(TAG, "选中的字段: $selectedFields")
+        Log.d(TAG, "当前足迹标题: '${footprint.title}'")
+        Log.d(TAG, "当前足迹描述: '${footprint.description}'")
+
+        val operationInfo = AiOperationInfo(
+            type = AiOperationInfo.AiOperationType.GENERATE_FOOTPRINT,
+            description = "正在通过 AI 生成足迹信息(约45s)..."
+        )
+        val operationId = operationInfo.id
+
+        stateHolder.startOperation(
+            operationInfo,
+            onCancel = { cancelOperationById(operationId) }
+        )
+
+        operationJobs[operationId] = viewModelScope.launch {
+            // 1. 设置加载状态
+            Log.d(TAG, "步骤1: 设置加载状态 isLoading=true")
+            _state.update { it.copy(isLoading = true, error = null) }
+
+            try {
+                // 2. 如果选中了地址字段，通过高德 SDK 获取当前位置和详细地址
+                var latitude = footprint.latitude
+                var longitude = footprint.longitude
+                var addressName = footprint.address.split("\n").firstOrNull() ?: ""
+
+                if (AiFillFieldForFootprint.ADDRESS in selectedFields) {
+                    Log.d(TAG, "步骤2: 开始通过高德 SDK 获取当前位置...")
+                    val locationResult = getAmapLocation()
+
+                    if (locationResult == null) {
+                        Log.e(TAG, "步骤2失败: 无法获取位置")
+                        _state.update {
+                            it.copy(isLoading = false, error = "无法获取位置，请检查定位权限和网络")
+                        }
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 生成失败：无法获取位置")
+                        return@launch
+                    }
+
+                    latitude = locationResult.first
+                    longitude = locationResult.second
+                    addressName = locationResult.third
+                    Log.d(TAG, "步骤2成功: 获取到位置 lat=$latitude, lng=$longitude")
+                    Log.d(TAG, "高德返回的详细地址: '$addressName'")
+
+                    // 3. 更新状态（保存地址信息）
+                    Log.d(TAG, "步骤3: 更新状态保存地址信息")
+                    _state.update { it.copy(locationName = addressName) }
+                } else {
+                    Log.d(TAG, "步骤2: 跳过定位（未选中地址字段）")
+                }
+
+                // 4. 构造 prompt 并调用 AI 服务
+                Log.d(TAG, "步骤4: 开始调用 AI 服务...")
+                Log.d(TAG, "传入参数: lat=$latitude, lng=$longitude, address='$addressName'")
+                val startTime = System.currentTimeMillis()
+
+                val result = aiService.generateFootprintInfo(
+                    latitude = latitude,
+                    longitude = longitude,
+                    addressName = addressName,
+                    journeyTitle = journey.title,
+                    journeyDescription = journey.description,
+                    existingTitle = footprint.title.takeIf { it.isNotBlank() },
+                    existingDescription = footprint.description.takeIf { it.isNotBlank() },
+                    existingRating = footprint.rating.takeIf { it > 0 },
+                    customPrompt = customPrompt
+                )
+
+                val endTime = System.currentTimeMillis()
+                Log.d(TAG, "步骤4完成: AI 服务调用耗时 ${endTime - startTime}ms")
+
+                // 5. 处理结果
+                Log.d(TAG, "步骤5: 处理 AI 返回结果")
+                result.fold(
+                    onSuccess = { aiResult ->
+                        Log.d(TAG, "步骤5成功: AI 生成成功")
+                        Log.d(TAG, "生成的标题: '${aiResult.title}'")
+                        Log.d(TAG, "生成的描述: '${aiResult.description}'")
+                        Log.d(TAG, "生成的评分: ${aiResult.rating}")
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                generatedTitle = aiResult.title,
+                                generatedDescription = aiResult.description
+                            )
+                        }
+                        // 通过回调返回结果（调用方会根据 selectedFields 决定哪些字段写入）
+                        Log.d(TAG, "调用 onResult 回调...")
+                        onResult(addressName, latitude, longitude, aiResult.title, aiResult.description, aiResult.rating)
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 足迹信息生成完成")
+                        Log.d(TAG, "========== AI 足迹生成流程完成 ==========")
+                    },
+                    onFailure = { e ->
+                        Log.e(TAG, "步骤5失败: AI 生成失败", e)
+                        Log.e(TAG, "错误类型: ${e.javaClass.simpleName}")
+                        Log.e(TAG, "错误信息: ${e.message}")
+                        _state.update {
+                            it.copy(isLoading = false, error = "AI 生成失败: ${e.message}")
+                        }
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 生成失败：${e.message}")
+                    }
+                )
+
+            } catch (e: Exception) {
+                Log.e(TAG, "生成过程发生异常", e)
+                Log.e(TAG, "异常类型: ${e.javaClass.simpleName}")
+                Log.e(TAG, "异常信息: ${e.message}")
+                Log.e(TAG, "异常堆栈: ${e.stackTraceToString()}")
+                _state.update {
+                    it.copy(isLoading = false, error = "生成失败: ${e.message}")
+                }
+                operationJobs.remove(operationId)
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    stateHolder.finishOperation(operationId, "AI 生成失败：${e.message}")
                 }
             }
         }
@@ -266,16 +473,21 @@ class AiGenerateViewModel @Inject constructor(
         prompt: String,
         onResult: (newImagePath: String) -> Unit
     ) {
-        // 如果正在加载中，直接返回防止重复请求
-        if (_state.value.isPaintLoading) {
-            Log.w(TAG, "正在涂鸦中，忽略重复请求")
-            return
-        }
-
         Log.d(TAG, "========== AI 封面涂鸦流程开始 ==========")
         Log.d(TAG, "封面图片路径: $coverImagePath")
 
-        viewModelScope.launch {
+        val operationInfo = AiOperationInfo(
+            type = AiOperationInfo.AiOperationType.PAINT_COVER,
+            description = "正在通过 AI 生成封面涂鸦(约2分钟)..."
+        )
+        val operationId = operationInfo.id
+
+        stateHolder.startOperation(
+            operationInfo,
+            onCancel = { cancelOperationById(operationId) }
+        )
+
+        operationJobs[operationId] = viewModelScope.launch {
             // 1. 设置加载状态
             Log.d(TAG, "步骤1: 设置加载状态 isPaintLoading=true")
             _state.update { it.copy(isPaintLoading = true, paintError = null) }
@@ -314,6 +526,8 @@ class AiGenerateViewModel @Inject constructor(
                                     it.copy(isPaintLoading = false, paintedImagePath = localPath)
                                 }
                                 onResult(localPath)
+                                operationJobs.remove(operationId)
+                                stateHolder.finishOperation(operationId, "AI 封面涂鸦完成")
                                 Log.d(TAG, "========== AI 封面涂鸦流程完成 ==========")
                             },
                             onFailure = { e ->
@@ -321,6 +535,8 @@ class AiGenerateViewModel @Inject constructor(
                                 _state.update {
                                     it.copy(isPaintLoading = false, paintError = "下载图片失败: ${e.message}")
                                 }
+                                operationJobs.remove(operationId)
+                                stateHolder.finishOperation(operationId, "AI 涂鸦失败：下载图片失败")
                             }
                         )
                     },
@@ -331,6 +547,8 @@ class AiGenerateViewModel @Inject constructor(
                         _state.update {
                             it.copy(isPaintLoading = false, paintError = "AI 涂鸦失败: ${e.message}")
                         }
+                        operationJobs.remove(operationId)
+                        stateHolder.finishOperation(operationId, "AI 涂鸦失败：${e.message}")
                     }
                 )
 
@@ -341,6 +559,10 @@ class AiGenerateViewModel @Inject constructor(
                 Log.e(TAG, "异常堆栈: ${e.stackTraceToString()}")
                 _state.update {
                     it.copy(isPaintLoading = false, paintError = "涂鸦失败: ${e.message}")
+                }
+                operationJobs.remove(operationId)
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    stateHolder.finishOperation(operationId, "AI 涂鸦失败：${e.message}")
                 }
             }
         }

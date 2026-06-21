@@ -294,7 +294,13 @@ class WeatherViewModel @Inject constructor(
                                 // 7=网络异常, 18=网络超时, 19=网络连接异常
                                 "网络连接不可用，请检查网络"
                             } else {
-                                "定位失败: ${amapLocation.errorCode} ${amapLocation.errorInfo}"
+                                // 完整错误信息记录日志，UI 只显示精简文案
+                                Log.w("WeatherViewModel", "定位失败: code=${amapLocation.errorCode}, info=${amapLocation.errorInfo}")
+                                when (code) {
+                                    12 -> "定位权限被拒绝"
+                                    8, 13 -> "定位失败，请重试"
+                                    else -> "定位服务异常"
+                                }
                             }
                         } else {
                             "网络连接不可用，请检查网络"

@@ -36,8 +36,8 @@ class AiService @Inject constructor() {
     // OkHttp 客户端，设置较长超时时间（图生图操作可能需要较长时间）
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(180, TimeUnit.SECONDS)  // 图生图可能需要 1-2 分钟
-        .writeTimeout(60, TimeUnit.SECONDS)  // 上传图片可能较大
+        .readTimeout(600, TimeUnit.SECONDS)  // 图生图可能需要 5-10 分钟
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     // Gson 实例用于 JSON 序列化/反序列化
@@ -74,6 +74,15 @@ class AiService @Inject constructor() {
     data class AiGenerateResult(
         val title: String,
         val description: String
+    )
+
+    /**
+     * 足迹 AI 生成结果数据类
+     */
+    data class AiFootprintResult(
+        val title: String,
+        val description: String,
+        val rating: Int
     )
 
     /**
@@ -201,6 +210,234 @@ class AiService @Inject constructor() {
             Log.e(TAG, "未知错误", e)
             Result.failure(Exception("未知错误: ${e.message}"))
         }
+    }
+
+    /**
+     * 生成足迹标题、描述和评分
+     *
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @param addressName 地址名称
+     * @param journeyTitle 所属旅程标题
+     * @param journeyDescription 所属旅程描述
+     * @param existingTitle 用户已有的标题（可选）
+     * @param existingDescription 用户已有的描述（可选）
+     * @param existingRating 用户已有的评分（可选）
+     * @param customPrompt 自定义提示词（可选）
+     * @return Result<AiFootprintResult> 成功返回标题、描述和评分，失败返回异常
+     */
+    suspend fun generateFootprintInfo(
+        latitude: Double,
+        longitude: Double,
+        addressName: String,
+        journeyTitle: String,
+        journeyDescription: String,
+        existingTitle: String? = null,
+        existingDescription: String? = null,
+        existingRating: Int? = null,
+        customPrompt: String? = null
+    ): Result<AiFootprintResult> = withContext(Dispatchers.IO) {
+        try {
+            // 1. 构造 prompt
+            Log.d(TAG, "===== 开始构造足迹 prompt =====")
+            val prompt = buildFootprintPrompt(
+                latitude, longitude, addressName,
+                journeyTitle, journeyDescription,
+                existingTitle, existingDescription, existingRating,
+                customPrompt
+            )
+            Log.d(TAG, "Prompt 内容:\n$prompt")
+
+            // 2. 构建纯文本 JSON 请求
+            val request = buildTextRequest(prompt)
+
+            // 3. 发送请求并获取响应
+            Log.d(TAG, "===== 开始发送网络请求 =====")
+            val startTime = System.currentTimeMillis()
+            val response = client.newCall(request).execute()
+            val endTime = System.currentTimeMillis()
+            Log.d(TAG, "网络请求完成，耗时: ${endTime - startTime}ms")
+            Log.d(TAG, "响应状态码: ${response.code}")
+
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "无响应体"
+                Log.e(TAG, "请求失败: ${response.code} ${response.message}")
+                Log.e(TAG, "错误响应体: $errorBody")
+                return@withContext Result.failure(
+                    IOException("请求失败: ${response.code} ${response.message} - $errorBody")
+                )
+            }
+
+            // 4. 解析响应
+            val responseBody = response.body?.string()
+            Log.d(TAG, "响应体: $responseBody")
+
+            if (responseBody == null) {
+                Log.e(TAG, "响应体为空")
+                return@withContext Result.failure(IOException("响应体为空"))
+            }
+
+            val chatResponse = gson.fromJson(responseBody, ChatResponse::class.java)
+            val reply = chatResponse.reply
+            if (reply == null) {
+                Log.e(TAG, "AI 返回内容为空")
+                return@withContext Result.failure(IOException("AI 返回内容为空"))
+            }
+
+            // 5. 从 AI 回复中提取标题、描述和评分
+            Log.d(TAG, "===== 开始解析 AI 回复 =====")
+            val result = parseFootprintAiReply(reply)
+            if (result == null) {
+                Log.e(TAG, "无法解析 AI 返回的内容")
+                return@withContext Result.failure(
+                    IOException("无法解析 AI 返回的内容，请重试")
+                )
+            }
+
+            Log.d(TAG, "===== AI 足迹生成成功 =====")
+            Log.d(TAG, "标题: ${result.title}")
+            Log.d(TAG, "描述: ${result.description}")
+            Log.d(TAG, "评分: ${result.rating}")
+            Result.success(result)
+
+        } catch (e: JsonSyntaxException) {
+            Log.e(TAG, "JSON 解析错误", e)
+            Result.failure(IOException("JSON 解析错误: ${e.message}"))
+        } catch (e: IOException) {
+            Log.e(TAG, "网络请求失败", e)
+            Result.failure(IOException("网络请求失败: ${e.message}"))
+        } catch (e: Exception) {
+            Log.e(TAG, "未知错误", e)
+            Result.failure(Exception("未知错误: ${e.message}"))
+        }
+    }
+
+    /**
+     * 构造发送给 AI 的足迹 prompt
+     */
+    private fun buildFootprintPrompt(
+        latitude: Double,
+        longitude: Double,
+        addressName: String,
+        journeyTitle: String,
+        journeyDescription: String,
+        existingTitle: String?,
+        existingDescription: String?,
+        existingRating: Int?,
+        customPrompt: String?
+    ): String {
+        val sb = StringBuilder()
+        sb.appendLine("你是一个旅行足迹记录助手。请根据以下信息为用户的旅行足迹生成一个简洁的标题、一段生动的描述和一个评分建议。")
+        sb.appendLine()
+
+        sb.appendLine("所属旅程信息：")
+        if (journeyTitle.isNotBlank()) {
+            sb.appendLine("- 旅程标题：$journeyTitle")
+        }
+        if (journeyDescription.isNotBlank()) {
+            sb.appendLine("- 旅程描述：$journeyDescription")
+        }
+        sb.appendLine()
+
+        sb.appendLine("足迹位置信息：")
+        sb.appendLine("- 经纬度：$latitude, $longitude")
+        sb.appendLine("- 地址：$addressName")
+        sb.appendLine()
+
+        if (!existingTitle.isNullOrBlank() || !existingDescription.isNullOrBlank() || existingRating != null) {
+            sb.appendLine("用户已有的信息（仅供参考，请在此基础上优化）：")
+            if (!existingTitle.isNullOrBlank()) {
+                sb.appendLine("- 标题：$existingTitle")
+            }
+            if (!existingDescription.isNullOrBlank()) {
+                sb.appendLine("- 描述：$existingDescription")
+            }
+            if (existingRating != null) {
+                sb.appendLine("- 评分：$existingRating 星")
+            }
+            sb.appendLine()
+        }
+
+        if (!customPrompt.isNullOrBlank()) {
+            sb.appendLine("用户额外要求：")
+            sb.appendLine(customPrompt)
+            sb.appendLine()
+        }
+
+        sb.appendLine("要求：")
+        sb.appendLine("1. 标题不超过20个字，简洁有吸引力")
+        sb.appendLine("2. 描述不超过200个字，生动有趣，体现该足迹点的特色")
+        sb.appendLine("3. 评分为1-5的整数，根据景点特色和体验价值给出合理建议")
+        sb.appendLine()
+        sb.appendLine("请严格按以下JSON格式返回，不要包含其他任何内容：")
+        sb.append("{\"title\": \"生成的标题\", \"description\": \"生成的描述\", \"rating\": 4}")
+
+        return sb.toString()
+    }
+
+    /**
+     * 从 AI 回复中解析足迹的标题、描述和评分
+     */
+    private fun parseFootprintAiReply(reply: String): AiFootprintResult? {
+        Log.d(TAG, "开始解析足迹 AI 回复，长度: ${reply.length}")
+
+        // 尝试直接解析整个回复
+        Log.d(TAG, "尝试方式1: 直接解析整个回复")
+        try {
+            val result = gson.fromJson(reply, AiFootprintResult::class.java)
+            if (!result.title.isNullOrBlank() && !result.description.isNullOrBlank()) {
+                Log.d(TAG, "方式1成功: title=${result.title}, description=${result.description}, rating=${result.rating}")
+                return result
+            }
+            Log.d(TAG, "方式1失败: title 或 description 为空")
+        } catch (e: JsonSyntaxException) {
+            Log.d(TAG, "方式1失败: JSON 语法错误 - ${e.message}")
+        }
+
+        // 尝试提取 markdown 代码块中的 JSON
+        Log.d(TAG, "尝试方式2: 提取 markdown 代码块")
+        val codeBlockRegex = Regex("```(?:json)?\\s*\\n?(\\{.*?})\\s*\\n?```", RegexOption.DOT_MATCHES_ALL)
+        val codeBlockMatch = codeBlockRegex.find(reply)
+        if (codeBlockMatch != null) {
+            try {
+                val jsonStr = codeBlockMatch.groupValues[1]
+                Log.d(TAG, "方式2提取的 JSON: $jsonStr")
+                val result = gson.fromJson(jsonStr, AiFootprintResult::class.java)
+                if (!result.title.isNullOrBlank() && !result.description.isNullOrBlank()) {
+                    Log.d(TAG, "方式2成功: title=${result.title}, description=${result.description}, rating=${result.rating}")
+                    return result
+                }
+                Log.d(TAG, "方式2失败: title 或 description 为空")
+            } catch (e: JsonSyntaxException) {
+                Log.d(TAG, "方式2失败: JSON 语法错误 - ${e.message}")
+            }
+        } else {
+            Log.d(TAG, "方式2失败: 未找到 markdown 代码块")
+        }
+
+        // 尝试查找第一个 { 和最后一个 } 之间的内容
+        Log.d(TAG, "尝试方式3: 查找 JSON 对象边界")
+        val firstBrace = reply.indexOf('{')
+        val lastBrace = reply.lastIndexOf('}')
+        if (firstBrace != -1 && lastBrace > firstBrace) {
+            try {
+                val jsonStr = reply.substring(firstBrace, lastBrace + 1)
+                Log.d(TAG, "方式3提取的 JSON: $jsonStr")
+                val result = gson.fromJson(jsonStr, AiFootprintResult::class.java)
+                if (!result.title.isNullOrBlank() && !result.description.isNullOrBlank()) {
+                    Log.d(TAG, "方式3成功: title=${result.title}, description=${result.description}, rating=${result.rating}")
+                    return result
+                }
+                Log.d(TAG, "方式3失败: title 或 description 为空")
+            } catch (e: JsonSyntaxException) {
+                Log.d(TAG, "方式3失败: JSON 语法错误 - ${e.message}")
+            }
+        } else {
+            Log.d(TAG, "方式3失败: 未找到 JSON 对象边界 (firstBrace=$firstBrace, lastBrace=$lastBrace)")
+        }
+
+        Log.e(TAG, "所有解析方式都失败")
+        return null
     }
 
     /**
@@ -410,6 +647,155 @@ class AiService @Inject constructor() {
     }
 
     /**
+     * 根据文件扩展名获取图片的 MIME 类型
+     *
+     * @param file 图片文件
+     * @return MIME 类型字符串
+     */
+    private fun getImageMimeType(file: File): String {
+        val extension = file.extension.lowercase()
+        return when (extension) {
+            // 常见格式
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "gif" -> "image/gif"
+            "bmp" -> "image/bmp"
+            "webp" -> "image/webp"
+            
+            // 专业格式
+            "tiff", "tif" -> "image/tiff"
+            "svg" -> "image/svg+xml"
+            "ico" -> "image/x-icon"
+            
+            // RAW 格式
+            "raw" -> "image/x-raw"
+            "arw" -> "image/x-sony-arw"
+            "cr2" -> "image/x-canon-cr2"
+            "cr3" -> "image/x-canon-cr3"
+            "nef" -> "image/x-nikon-nef"
+            "nrw" -> "image/x-nikon-nrw"
+            "dng" -> "image/x-adobe-dng"
+            "orf" -> "image/x-olympus-orf"
+            "rw2" -> "image/x-panasonic-rw2"
+            "pef" -> "image/x-pentax-pef"
+            "srw" -> "image/x-samsung-srw"
+            "raf" -> "image/x-fuji-raf"
+            
+            // 其他格式
+            "psd" -> "image/vnd.adobe.photoshop"
+            "ai" -> "application/postscript"
+            "eps" -> "application/postscript"
+            "heic" -> "image/heic"
+            "heif" -> "image/heif"
+            "avif" -> "image/avif"
+            "jxl" -> "image/jxl"
+            "jp2" -> "image/jp2"
+            "j2k" -> "image/jp2"
+            "jpf" -> "image/jp2"
+            "jpm" -> "image/jpm"
+            "jpx" -> "image/jpx"
+            "jxr" -> "image/jxr"
+            "wdp" -> "image/jxr"
+            "apng" -> "image/apng"
+            
+            // 默认返回 JPEG
+            else -> "image/jpeg"
+        }
+    }
+
+    /**
+     * 压缩图片用于 AI 生成
+     *
+     * 将图片缩放到 1920x1080 以内（保持宽高比），并转换为 WebP 格式以减小文件体积。
+     * 压缩后的文件保存在应用缓存目录，文件名以 "ai_upload_" 为前缀。
+     *
+     * @param imageFile 原始图片文件
+     * @return 压缩后的文件，失败返回 null
+     */
+    private fun compressImageForAI(imageFile: File): File? {
+        return try {
+            val MAX_WIDTH = 1920
+            val MAX_HEIGHT = 1080
+            val WEBP_QUALITY = 80
+
+            // 1. 先解码获取图片尺寸（不加载完整 Bitmap 到内存）
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeFile(imageFile.absolutePath, options)
+
+            val srcWidth = options.outWidth
+            val srcHeight = options.outHeight
+
+            if (srcWidth <= 0 || srcHeight <= 0) {
+                Log.e(TAG, "无法获取图片尺寸")
+                return null
+            }
+
+            Log.d(TAG, "原始图片尺寸: ${srcWidth}x${srcHeight}")
+
+            // 2. 计算缩放比例（保持宽高比，确保不超过最大尺寸）
+            val ratio = minOf(
+                MAX_WIDTH.toFloat() / srcWidth,
+                MAX_HEIGHT.toFloat() / srcHeight,
+                1f // 不放大，只缩小
+            )
+
+            val targetWidth = (srcWidth * ratio).toInt()
+            val targetHeight = (srcHeight * ratio).toInt()
+
+            // 3. 计算 inSampleSize（2 的幂次，减少内存占用）
+            val sampleSize = calculateSampleSize(srcWidth, srcHeight, targetWidth, targetHeight)
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+            }
+            val sampledBitmap = BitmapFactory.decodeFile(imageFile.absolutePath, decodeOptions)
+                ?: return null
+
+            // 4. 精确缩放到目标尺寸
+            val scaledBitmap = if (sampledBitmap.width != targetWidth || sampledBitmap.height != targetHeight) {
+                val result = Bitmap.createScaledBitmap(sampledBitmap, targetWidth, targetHeight, true)
+                if (result !== sampledBitmap) sampledBitmap.recycle()
+                result
+            } else {
+                sampledBitmap
+            }
+
+            Log.d(TAG, "缩放后尺寸: ${scaledBitmap.width}x${scaledBitmap.height}")
+
+            // 5. 压缩为 WebP 格式写入缓存文件
+            val compressedFile = File(imageFile.parent, "ai_upload_${System.currentTimeMillis()}.webp")
+            FileOutputStream(compressedFile).use { out ->
+                scaledBitmap.compress(Bitmap.CompressFormat.WEBP, WEBP_QUALITY, out)
+            }
+
+            scaledBitmap.recycle()
+
+            Log.d(TAG, "图片压缩完成: ${compressedFile.length() / 1024} KB")
+            compressedFile
+        } catch (e: Exception) {
+            Log.e(TAG, "图片压缩失败", e)
+            null
+        }
+    }
+
+    /**
+     * 计算 BitmapFactory 的 inSampleSize
+     *
+     * 返回 2 的幂次值，用于在解码阶段减少内存占用。
+     */
+    private fun calculateSampleSize(srcWidth: Int, srcHeight: Int, targetWidth: Int, targetHeight: Int): Int {
+        var sampleSize = 1
+        val halfWidth = srcWidth / 2
+        val halfHeight = srcHeight / 2
+        while (halfWidth / sampleSize >= targetWidth && halfHeight / sampleSize >= targetHeight) {
+            sampleSize *= 2
+        }
+        return sampleSize
+    }
+
+    /**
      * AI 图生图：将封面图片发送到服务端生成手绘漫画风格图片
      *
      * @param imagePath 本地图片路径
@@ -432,13 +818,22 @@ class AiService @Inject constructor() {
                 return@withContext Result.failure(IOException("图片文件不存在"))
             }
 
+            val originalSize = imageFile.length()
+            Log.d(TAG, "原始图片大小: ${originalSize / 1024} KB")
+
+            // 1.5 压缩图片：缩放到 1920x1080 以内 + 转换为 WebP 格式
+            val compressedFile = compressImageForAI(imageFile)
+                ?: imageFile // 压缩失败则使用原图
+            val uploadFile = compressedFile
+            Log.d(TAG, "压缩后图片大小: ${uploadFile.length() / 1024} KB, 路径: ${uploadFile.absolutePath}")
+
             // 2. 构建 Multipart 请求
             val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(
                     "image",
-                    imageFile.name,
-                    imageFile.asRequestBody("image/*".toMediaType())
+                    uploadFile.name,
+                    uploadFile.asRequestBody("image/webp".toMediaType())
                 )
                 .addFormDataPart("prompt", prompt)
                 .build()

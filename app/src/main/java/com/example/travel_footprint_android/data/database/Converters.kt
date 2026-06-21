@@ -10,6 +10,7 @@ class Converters {
 
     companion object {
         val gson = Gson()
+        private val listStringType = TypeToken.getParameterized(List::class.java, String::class.java).type
     }
 
     // Date 转换
@@ -32,7 +33,6 @@ class Converters {
     @TypeConverter
     fun toStringList(value: String?): List<String>? {
         if (value == null) return null
-        val type = object : TypeToken<List<String>>() {}.type
-        return gson.fromJson(value, type)
+        return gson.fromJson(value, listStringType)
     }
 }

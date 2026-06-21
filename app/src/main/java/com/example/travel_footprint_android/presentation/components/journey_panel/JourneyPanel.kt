@@ -43,6 +43,7 @@ package com.example.travel_footprint_android.presentation.components.journey_pan
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -86,14 +87,13 @@ import com.example.travel_footprint_android.presentation.components.journey_pane
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_detail.JourneyDetail
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_edit.JourneyEdit
 import com.example.travel_footprint_android.presentation.components.journey_panel.journey.journey_list.JourneyList
+import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.FOOTPRINT_EDIT
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.FOOTPRINT_LIST
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.JOURNEY_DETAIL
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.JOURNEY_EDIT
 import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanel2State.JOURNEY_LIST
-import com.example.travel_footprint_android.presentation.components.journey_panel.viewmodel.JourneyPanelState
-import com.example.travel_footprint_android.presentation.components.journey_panel.journey.viewmodel.JourneyPanelViewModel
 import com.example.travel_footprint_android.presentation.viewmodel.JourneyViewModel
 
 // =========================================================================
@@ -111,6 +111,9 @@ fun JourneyPanel(
     // ===== 1. 从 JourneyViewModel 收集 UI 状态 =====
     val journeyUiState by journeyViewModel.uiState.collectAsState()
     val journeyList = journeyUiState.journeys
+
+    // [DEBUG] 打印 ViewModel 实例 hashCode，检查是否存在多个实例
+    Log.d("JourneyPanel_Debug", "journeyViewModel.hashCode()=${journeyViewModel.hashCode()}, journeyList.size=${journeyList.size}")
 
     // ===== 面板状态管理（从 JourneyPanelViewModel 收集） =====
     val panelState by journeyPanelViewModel.panelState.collectAsState()
@@ -173,8 +176,8 @@ fun JourneyPanel(
     val onDragDelta = { deltaY: Float ->
         targetOffsetY = (targetOffsetY + deltaY.toInt())
             .coerceIn(
-                (screenHeightPx * 0.1f).toInt(),  // 最小偏移：面板底部露出 90%
-                (screenHeightPx * 0.8f).toInt()   // 最大偏移：面板底部露出 20%
+                (screenHeightPx * 0.2f).toInt(),  // 最小偏移：面板底部露出 90%
+                (screenHeightPx * 0.7f).toInt()   // 最大偏移：面板底部露出 20%
             )
     }
 

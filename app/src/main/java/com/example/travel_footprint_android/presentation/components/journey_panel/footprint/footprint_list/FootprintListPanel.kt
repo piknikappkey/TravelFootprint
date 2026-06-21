@@ -118,6 +118,7 @@ fun FootprintListPanel(
         onDispose {
             Log.d("FootprintListPanel", "onDispose")
             journeyMapViewModel.clearAllRoutes()
+            journeyViewModel.clearLocationList()
         }
     }
 

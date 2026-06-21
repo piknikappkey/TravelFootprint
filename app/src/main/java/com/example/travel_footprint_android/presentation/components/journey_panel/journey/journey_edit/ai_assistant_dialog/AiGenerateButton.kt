@@ -51,12 +51,13 @@ fun AiGenerateButton(
         tipText = "AI 生成功能会根据您的选择自动填充对应内容，生成时间较长，请耐心等待约 1-2 分钟，旅程封面需要您自行提供。",
         footerText = "注：内容由豆包(doubao-seed-2-0-pro)生成~",
         isLoading = isLoading,
+        estimatedLoadTimeMs  = 45_000L,
         autoShowTipOnClick = true,
         onButtonClick = { onClick(customPrompt) },
         extraContent = {
             Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 4.dp)) {
                 TextMedium(
-                    text = "预设提示词：",
+                    text = "需要填写的内容：",
                     color = if (customPrompt.isNotEmpty()) FontDark4 else MainColor3,
                     fontSize = 14.sp,
                 )

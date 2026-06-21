@@ -189,6 +189,19 @@ fun JourneyMap(
         }
     }
 
+    // ========== 自动重试：错误时每 2 秒尝试刷新 ==========
+    // 当 networkError 非空（网络异常/定位权限缺失/GPS 未开启等）时，
+    // 每 2 秒调用一次 startLocation 重新发起定位，直到定位成功（networkError 被清空）
+    LaunchedEffect(networkError) {
+        if (networkError != null) {
+            while (journeyMapViewModel.networkError.value != null) {
+                delay(2000)
+                Log.d("JourneyMap3", "自动重试定位...")
+                journeyMapViewModel.startLocation(aniMoveTime = 1500)
+            }
+        }
+    }
+
     // ========== 监听位置列表变化 → 更新路线 ==========
     // isInitialized 确保地图就绪后才操作，locationList 变化时：
     //   - 有数据 → 调用 updateRoutesWithAnimation 首次逐点动画/后续增量绘制轨迹
@@ -201,6 +214,10 @@ fun JourneyMap(
                 Log.d("JourneyMap3Routes", "locationList = ${locationList.first()}, size = ${locationList.size}")
             }
             if (locationList.isNotEmpty()) {
+                // 非录制状态下，将地图中心移动到路线起点（录制时由 startFollowUser 控制相机，不干扰）
+                if (!recordingState.isRecording) {
+                    journeyMapViewModel.moveCameraToFirstLocation(locationList, aniMoveTime = 800)
+                }
                 journeyMapViewModel.updateRoutesWithAnimation(locationList)
             } else {
                 journeyMapViewModel.clearAllRoutes()

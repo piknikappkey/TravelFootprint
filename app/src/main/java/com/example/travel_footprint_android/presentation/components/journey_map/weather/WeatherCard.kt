@@ -16,11 +16,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,6 +47,18 @@ fun WeatherCard(
     modifier: Modifier = Modifier,
 ) {
     val weatherState by weatherViewModel.weatherState.collectAsState()
+
+    // ========== 自动重试：天气错误时每 2 秒尝试刷新 ==========
+    // 当 weatherState.error 非空（定位失败/网络异常等）时，
+    // 每 2 秒调用一次 loadWeatherForCurrentLocation 重新加载天气数据
+    LaunchedEffect(weatherState.error) {
+        if (weatherState.error != null) {
+            while (weatherViewModel.weatherState.value.error != null) {
+                delay(2000)
+                weatherViewModel.loadWeatherForCurrentLocation()
+            }
+        }
+    }
 
     if(!weatherState.showWeatherCard) return
 
