@@ -18,6 +18,7 @@ private val Context.appDataStore: DataStore<Preferences> by preferencesDataStore
 
 data class AppSettings(
     val showWeatherCard: Boolean = true,
+    val weatherAnimationEnabled: Boolean = true,
 )
 
 @Singleton
@@ -26,17 +27,25 @@ class AppSettingsStore @Inject constructor(
 ) {
     private object Keys {
         val showWeatherCard = booleanPreferencesKey("show_weather_card")
+        val weatherAnimationEnabled = booleanPreferencesKey("weather_animation_enabled")
     }
 
     val settingsFlow: Flow<AppSettings> = context.appDataStore.data.map { prefs ->
         AppSettings(
             showWeatherCard = prefs[Keys.showWeatherCard] ?: true,
+            weatherAnimationEnabled = prefs[Keys.weatherAnimationEnabled] ?: true,
         )
     }
 
     suspend fun updateShowWeatherCard(show: Boolean) {
         context.appDataStore.edit { prefs ->
             prefs[Keys.showWeatherCard] = show
+        }
+    }
+
+    suspend fun updateWeatherAnimationEnabled(enabled: Boolean) {
+        context.appDataStore.edit { prefs ->
+            prefs[Keys.weatherAnimationEnabled] = enabled
         }
     }
 }
