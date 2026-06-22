@@ -1,3 +1,4 @@
+@file:Suppress("ComposeNestedInList", "LocaleUsedInComposable")
 package com.example.travel_footprint_android.presentation.components.light_panel2
 
 import android.annotation.SuppressLint
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -86,6 +86,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
@@ -298,72 +299,59 @@ private fun DragPanelContainer(
         { if (currentHeightRatio < 0.5f) currentHeightRatio = 0.6f }
     }
 
-    // NestedScrollConnection：当子级 Scrollable（LazyColumn）滚动到边界后，
-    // 剩余的拖拽距离用于面板缩放
-    val nestedScrollConnection = remember(screenHeightPixels) {
+    // NestedScrollConnection：不干预子级任何滚动，完全交给 LazyColumn 自己处理
+    val nestedScrollConnection = remember {
         object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // 不干预子级滚动前的消费
-                return Offset.Zero
-            }
-
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource
-            ): Offset {
-                // 子级消费后还有剩余（overscroll），用来缩放面板
-                if (available.y != 0f) {
-                    val ratioDelta = -available.y / screenHeightPixels
-                    currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
-                    return Offset(0f, available.y)
-                }
-                return Offset.Zero
-            }
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset = Offset.Zero
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset = Offset.Zero
         }
     }
 
-    // 固定 Box 高度 = 最大可能高度（ratio 上限 0.8），通过 offset 模拟不同可见高度
-    // 底部始终锚定：offset 只向下推（正值），不向上拉
-    //   aniPanelHeight=0.8f → offset=0       → 可见高度 = 80%（全量）
-    //   aniPanelHeight=0.4f → offset=max*0.5  → 可见高度 = 40%
-    //   aniPanelHeight=0.2f → offset=max*0.75 → 可见高度 = 20%
+    // 直接使用 aniPanelHeight 计算可见高度，不再用 offset 模拟
+    // 底部锚定：外层 Box 固定最大高度，内层 Box 锚定到底部并动态改变高度
     val maxHeightDp = screenHeightDp.dp * 0.7f
-    val offsetDp = maxHeightDp * (0.8f - aniPanelHeight) / 0.8f
+    val visibleHeightDp = maxHeightDp * aniPanelHeight / 0.8f
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(maxHeightDp)
-            .offset(y = offsetDp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
-                clip = true
-            )
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
-            )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(nestedScrollConnection)
+                .fillMaxWidth()
+                .height(visibleHeightDp)
+                .align(Alignment.BottomCenter)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp),
+                    clip = true
+                )
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp, 12.dp, 0.dp, 0.dp)
+                )
+                .clipToBounds()
         ) {
-            // 整个顶部区域（手柄指示条 + tab栏）支持拖拽
-            DragHeader(
-                screenHeightPixels = screenHeightPixels,
-                onDragStart = { isDragging = true },
-                onDrag = { ratioDelta ->
-                    currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
-                },
-                onDragEnd = { isDragging = false },
-                titleContent = titleContent
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(nestedScrollConnection)
+            ) {
+                // 整个顶部区域（手柄指示条 + tab栏）支持拖拽
+                DragHeader(
+                    screenHeightPixels = screenHeightPixels,
+                    onDragStart = { isDragging = true },
+                    onDrag = { ratioDelta ->
+                        currentHeightRatio = (currentHeightRatio + ratioDelta).coerceIn(0.2f, 0.8f)
+                    },
+                    onDragEnd = { isDragging = false },
+                    titleContent = titleContent
+                )
 
-            // 面板主体（ColumnScope 上下文）
-            bodyContent(isExpanded, requestExpand)
+                // 面板主体（ColumnScope 上下文）
+                bodyContent(isExpanded, requestExpand)
+            }
         }
     }
 }
