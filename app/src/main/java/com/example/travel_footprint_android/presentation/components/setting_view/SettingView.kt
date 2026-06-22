@@ -62,6 +62,11 @@ fun SettingView(
                     checked = weatherState.showWeatherCard,
                     onCheckedChange = { weatherViewModel.toggleWeatherCard() }
                 )
+                SwitchRow(
+                    label = "天气背景动画",
+                    checked = weatherState.weatherAnimationEnabled,
+                    onCheckedChange = { weatherViewModel.toggleWeatherAnimation() }
+                )
                 Spacer(Modifier.height(10.dp))
 
                 SettingTitle("涂鸦雨设置")

@@ -35,7 +35,7 @@
  * ============================================================================
  */
 
-package com.example.travel_footprint_android.presentation.components.image_random
+package com.example.travel_footprint_android.presentation.components.bg_animotion
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
