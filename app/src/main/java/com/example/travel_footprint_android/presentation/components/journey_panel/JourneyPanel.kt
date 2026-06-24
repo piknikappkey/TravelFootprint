@@ -176,8 +176,8 @@ fun JourneyPanel(
     val onDragDelta = { deltaY: Float ->
         targetOffsetY = (targetOffsetY + deltaY.toInt())
             .coerceIn(
-                (screenHeightPx * 0.2f).toInt(),  // 最小偏移：面板底部露出 90%
-                (screenHeightPx * 0.7f).toInt()   // 最大偏移：面板底部露出 20%
+                (screenHeightPx * 0.2f).toInt(),  // 最小偏移
+                (screenHeightPx * 0.6f).toInt()   // 最大偏移
             )
     }
 

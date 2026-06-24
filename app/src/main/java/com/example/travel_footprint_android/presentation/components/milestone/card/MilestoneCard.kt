@@ -44,14 +44,16 @@ import kotlinx.coroutines.delay
  * - 未解锁：灰色背景、锁图标、部分进度条
  */
 
+val MilestoneCardLoadTime = 100
+
 object MilestoneCardControl {
     // 当前正在加载或等待加载的图片数量
     var loadMilestoneCard = 0
 
-    // 开始加载一张图片，计数器 +1，返回递增的延迟毫秒数（每张间隔 200ms + 基础 300ms）
+    // 开始加载一张图片，计数器 +1，返回递增的延迟毫秒数（每张间隔 100ms）
     fun loadMilestoneCardStart(): Long {
         loadMilestoneCard++
-        return ((loadMilestoneCard - 1) * 200).toLong()
+        return ((loadMilestoneCard - 1) * MilestoneCardLoadTime).toLong()
     }
 
     // 图片加载完成，计数器 -1
@@ -82,7 +84,7 @@ internal fun MilestoneCard(
         try {
             delay(MilestoneCardControl.loadMilestoneCardStart())
             show = true
-            delay(200)
+            delay(MilestoneCardLoadTime.toLong())
         } finally {
             MilestoneCardControl.loadMilestoneCardOver()
         }
