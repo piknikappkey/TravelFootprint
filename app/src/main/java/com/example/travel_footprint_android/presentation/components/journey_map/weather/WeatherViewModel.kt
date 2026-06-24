@@ -107,6 +107,7 @@ data class ForecastData(
 data class WeatherUiState(
     val isLoading: Boolean = false, // 是否正在加载（定位/天气查询进行中）
     val showWeatherCard: Boolean = true, // 是否显示天气卡片（外部可控制显隐）
+    val weatherAnimationEnabled: Boolean = true, // 是否启用天气背景动画
     val liveWeather: LiveWeatherData? = null, // 实况天气数据（null 表示未加载或失败）
     val forecast: List<ForecastData>? = null, // 天气预报数据列表（null 表示未加载或失败）
     val cityName: String? = null, // 当前城市名称（如"北京市"）
@@ -213,7 +214,8 @@ class WeatherViewModel @Inject constructor(
         viewModelScope.launch {
             appSettingsStore.settingsFlow.collect { settings ->
                 _weatherState.value = _weatherState.value.copy(
-                    showWeatherCard = settings.showWeatherCard
+                    showWeatherCard = settings.showWeatherCard,
+                    weatherAnimationEnabled = settings.weatherAnimationEnabled
                 )
             }
         }
@@ -253,6 +255,15 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
+    // 切换天气背景动画的启用/禁用状态，并持久化存储
+    fun toggleWeatherAnimation() {
+        val newState = !_weatherState.value.weatherAnimationEnabled
+        _weatherState.value = _weatherState.value.copy(weatherAnimationEnabled = newState)
+        viewModelScope.launch {
+            appSettingsStore.updateWeatherAnimationEnabled(newState)
+        }
+    }
+
     // 对外入口：加载当前定位城市的天气数据（定位 → 实况查询 → 预报查询）
     fun loadWeatherForCurrentLocation() {
         // 重置数据字段，保留 showWeatherCard 等 UI 控制字段不丢失
@@ -281,7 +292,9 @@ class WeatherViewModel @Inject constructor(
                     // 定位成功判断：amapLocation 非 null 且 errorCode == 0
                     if (amapLocation != null && amapLocation.errorCode == 0) {
                         val adcode = amapLocation.adCode // 行政区编码，用于天气查询
-                        val cityName = amapLocation.city ?: amapLocation.province // 城市名（兜底用省份）
+                        val cityName = amapLocation.district?.takeIf { it.isNotBlank() }
+    ?: amapLocation.city
+    ?: amapLocation.province // 城市名（兜底用省份）
                         _weatherState.value = _weatherState.value.copy(cityName = cityName)
                         // 并发发起实况和预报查询
                         queryLiveWeather(adcode)

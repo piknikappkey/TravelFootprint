@@ -52,16 +52,16 @@ fun InteractiveChinaProviceMap(
              *
              * 外层可以用这个值来切换省级/市级地图
              */
-            addJavascriptInterface(
-                object {
-                    @JavascriptInterface
-                    fun onScaleChanged(scale: Float) {
-                        Log.d("ZoomListener", "Province map scale: $scale")
-                        onZoomChange?.invoke(scale)
-                    }
-                },
-                "AndroidScale"
-            )
+//            addJavascriptInterface(
+//                object {
+//                    @JavascriptInterface
+//                    fun onScaleChanged(scale: Float) {
+//                        Log.d("ZoomListener", "Province map scale: $scale")
+//                        onZoomChange?.invoke(scale)
+//                    }
+//                },
+//                "AndroidScale"
+//            )
             /**
              * 用户点击地图上的省份时，HTML 调用 Android.onCityClicked()
              * 触发 onCityClick 回调，告诉 Compose 哪个省份被点击了

@@ -24,9 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.travel_footprint_android.R
 import com.example.travel_footprint_android.presentation.viewmodel.LightenViewModel
+import com.example.travel_footprint_android.presentation.components.bg_animotion.CloudFloat
 import com.example.travel_footprint_android.presentation.components.bg_animotion.RainEffect
 import com.example.travel_footprint_android.presentation.components.bg_animotion.SnowEffect
+import com.example.travel_footprint_android.presentation.components.bg_animotion.SunGlowEffect
 import com.example.travel_footprint_android.presentation.components.image_random.ImageRain
+import com.example.travel_footprint_android.presentation.components.journey_map.weather.WeatherViewModel
 import com.example.travel_footprint_android.presentation.components.lighten.LightenWeatherCard
 import com.example.travel_footprint_android.presentation.components.light_panel2.LightPanel2
 import com.example.travel_footprint_android.presentation.components.svg_map.SVGMap
@@ -35,8 +38,11 @@ import com.example.travel_footprint_android.presentation.components.svg_map.Show
 @Composable
 fun LightenScreen2(
     lightenViewModel: LightenViewModel = hiltViewModel(),
+    weatherViewModel: WeatherViewModel = hiltViewModel(),
 ) {
     val uiState by lightenViewModel.uiState.collectAsState()
+    val weatherState by weatherViewModel.weatherState.collectAsState()
+    val weather = weatherState.liveWeather?.weather ?: ""
     val lightedProvinces = uiState.lightedProvinces
     val lightedCity = uiState.lightedCities
     var lightenCityMode by remember { mutableStateOf(LightenCityMode.PROVINCE) }
@@ -95,8 +101,18 @@ fun LightenScreen2(
 //            enableSplash = true    // 启用溅射效果
 //        )
             LightenWeatherCard(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(12.dp))
-//            //外层天气动效
-            SnowEffect(isSnowing = true)
+
+            // 天气背景动画：根据天气卡片天气自动切换，开关关闭时不显示，默认下雪
+            if (weatherState.weatherAnimationEnabled) {
+                when {
+                    weather.contains("晴") -> SunGlowEffect(modifier = Modifier.fillMaxSize())
+                    weather.contains("雨") -> RainEffect(modifier = Modifier.fillMaxSize())
+                    weather.contains("云") || weather.contains("阴") -> CloudFloat(modifier = Modifier.fillMaxSize())
+                    weather.contains("雪") -> SnowEffect(modifier = Modifier.fillMaxSize())
+                    else -> SunGlowEffect(modifier = Modifier.fillMaxSize()) // 默认下雪
+                }
+            }
+
 //
 //            /////////////第二卡顿//////////////
 //            // 底部可拖拽面板（覆盖在地图之上）
