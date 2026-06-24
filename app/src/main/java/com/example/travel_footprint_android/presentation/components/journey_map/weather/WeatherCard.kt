@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +37,7 @@ import com.example.travel_footprint_android.presentation.components.bg_box.Dragg
 import com.example.travel_footprint_android.presentation.components.text.headline.Headline
 import com.example.travel_footprint_android.presentation.components.text.text_medium.TextMedium
 import com.example.travel_footprint_android.ui.theme.FontDark5
+import kotlinx.coroutines.delay
 
 @Composable
 fun WeatherCard(
@@ -89,9 +89,8 @@ fun WeatherCard(
                 .graphicsLayer {
                     scaleX = aniScale
                     scaleY = aniScale
-                    alpha = aniAlpha
                 }
-                .background(Color(0xFFF8F8F8))
+                .background(Color(0xFFF8F8F8).copy(aniAlpha))
                 .padding(horizontal = 14.dp, vertical = 10.dp)
                 .animateContentSize(),
             verticalAlignment = Alignment.CenterVertically,
